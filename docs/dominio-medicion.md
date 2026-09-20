@@ -51,6 +51,37 @@ Los registros `1.8.1`, `1.8.2`… muestran que **existen** medidores capaces de 
 franja tarifaria por sí mismos. Deliberadamente no dependemos de eso, y el porqué está en la
 decisión 7 de `decisiones-de-diseno.md`.
 
+## Cómo se ve una lectura, en concreto
+
+Un readout en modo ASCII (IEC 62056-21) devuelve una lista de registros. Esquemáticamente:
+
+```
+96.1.0(000000000000)                       identificación del equipo
+15.8.0(014380.81*kWh)                      energía activa absoluta, acumulada
+3.8.0(004299.39*kvarh)                     energía reactiva, acumulada
+1.6.0(0003.0844*kW)(26-05-08 23:00:00)     demanda máxima, y cuándo ocurrió
+31.7.0(0000.86*A)                          corriente instantánea
+```
+
+Tres cosas que se leen de ahí y que condicionan el modelo:
+
+**La unidad viaja en el dato**, después del `*`. No hay que inferirla de una tabla de
+códigos: el medidor la informa. Por eso el contrato la guarda tal como llegó, y validarla
+contra el código es opcional — sirve para detectar un equipo mal configurado, no para saber
+en qué unidad está el valor.
+
+**Los registros no son todos de la misma naturaleza.** Conviven acumulados (`15.8.0`,
+`3.8.0`), un máximo con su propio instante de ocurrencia (`1.6.0`) y un valor instantáneo
+(`31.7.0`). Restar dos lecturas consecutivas tiene sentido para un acumulado y **ninguno** para
+una corriente instantánea. El pipeline solo diferencia los acumulados.
+
+**Algunos registros traen su propio timestamp.** `1.6.0` lo necesita porque la demanda máxima
+tiene que decir cuándo ocurrió el máximo, que es un instante distinto del de la lectura. El
+modelo debe admitirlo aunque hoy no se use.
+
+**No todos los medidores responden el mismo conjunto de registros.** El contrato no puede
+asumir un conjunto fijo: por eso los registros van en una lista y no como campos.
+
 ## De contador acumulado a consumo: hay que restar
 
 Como `15.8.0` es un contador, el consumo de un intervalo **no viene en el evento**: se obtiene

@@ -128,8 +128,16 @@ intervalo que cruce dos franjas**, y atribuir por el inicio es exacto en lugar d
   corrección se pierde.
 - **Qué registros son obligatorios**, y qué hacer con una lectura que no trae `15.8.0`: ¿es
   inválida, o es válida pero no aporta al cálculo?
-- Si la **unidad** se valida contra el código OBIS —`15.8.0` siempre debería venir en kWh— o
-  si se acepta lo que llegue.
+- ✅ ~~De dónde sale la unidad~~ — **resuelto:** la manda el medidor en el propio dato
+  (`15.8.0(014380.81*kWh)`). Se guarda tal como llegó. Validarla contra el código es
+  **opcional**: sirve para detectar un equipo mal configurado, no para saber la unidad.
+- Si el registro necesita un **instante propio** opcional. Algunos lo traen —la demanda máxima
+  informa cuándo ocurrió el máximo—, y aunque `15.8.0` no lo use, admitirlo en el contrato
+  cuesta un campo opcional y evita un cambio de esquema después.
+- Si conviene declarar la **naturaleza** del registro (acumulado / instantáneo / máximo). El
+  pipeline solo puede diferenciar los acumulados: restar dos corrientes instantáneas no
+  significa nada. Hoy se sabe por el código, pero explicitarlo evita que alguien difiera lo
+  que no debe.
 - ✅ ~~Contador acumulado o consumo del intervalo~~ — **resuelto: contador acumulado**
   (OBIS `15.8.0`), y el contrato de arriba ya está corregido en consecuencia.
 
