@@ -21,13 +21,19 @@ repositorio es público y aquel código no es nuestro. Además son programas con
 opuestos — aquel simula medidores para probar un sistema real y por lo tanto se comporta
 bien; este existe para **inyectar fallas a propósito**.
 
-Genera curva de carga y produce al tópico de entrada, conformándose al contrato de Clara.
+Simula el **ciclo de pedidos** de un concentrador: para cada medidor, una lectura del contador
+en cada borde de franja (más las intermedias que se configuren), y las publica al tópico de
+entrada conformándose al contrato de Clara.
+
 Debe poder inyectar, de forma **configurable y determinista** (misma semilla, mismos fallos):
 
-- los casos de reloj de la decisión 3;
-- duplicados por reintento de descarga;
-- lotes tardíos: una descarga que entra con horas de atraso y trae intervalos viejos;
-- eventos fuera de orden dentro de un mismo lote.
+- **pedidos que se corren**: el programado para las 18:00 se resuelve a las 18:07;
+- **pedidos que fallan**: no hay lectura en ese borde;
+- **ráfagas tardías**: el concentrador pierde enlace y publica de golpe lo que juntó, con
+  instantes de horas atrás;
+- **duplicados** por reintento de publicación;
+- **desorden**: los resultados salen en el orden en que responden los medidores;
+- **reseteos de contador**, que hacen que la resta dé negativo.
 
 **Decisiones tuyas:** cómo se parametriza, si es un proceso continuo o por lotes, cómo se
 controla la velocidad de simulación.

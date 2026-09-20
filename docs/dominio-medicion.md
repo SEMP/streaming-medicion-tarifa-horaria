@@ -12,10 +12,13 @@ Un medidor eléctrico moderno es, para nosotros, dos cosas:
 
 1. **Un conjunto de registros acumulados** que solo suben, como el cuentakilómetros de un
    auto. Cada registro tiene un código estandarizado.
-2. **Una memoria de curva de carga**: el equipo guarda internamente el valor del registro cada
-   N minutos, formando una serie temporal que después se descarga completa.
+2. **Una capacidad de responder cuando se le pregunta.** El medidor **no transmite por su
+   cuenta**: espera un pedido y devuelve el valor actual de sus registros.
 
-El medidor **no transmite en el momento**. Acumula y espera a que lo lean.
+⚠️ Muchos medidores tienen además una memoria de **perfil de carga** (objeto `99.1.0`) que
+guarda internamente el valor cada N minutos, formando una serie fechada que se descarga
+completa. **En este parque no se usa**: solo se dispone del modo readout, lo que cambia todo
+el diseño. Ver más abajo.
 
 ## Códigos OBIS
 
@@ -107,46 +110,73 @@ vuelve a cero o arranca en otro valor. Una resta ingenua produce entonces un **c
 negativo enorme**, que si entra al agregado lo destruye. Hay que detectarlo —una resta
 negativa nunca es física— y mandarlo a cuarentena.
 
-## La curva de carga y por qué llega tarde
+## Solo readout: lo que eso implica
 
-El medidor guarda el valor del registro cada N minutos en su memoria interna. El sistema de
-lectura se conecta periódicamente y **descarga el lote acumulado** desde la última vez.
+Si solo se puede preguntar por el valor actual, entonces **cada medición existe porque alguien
+la pidió**, y el consumo de un período se obtiene restando dos pedidos:
 
-Con intervalos de 15 minutos y descarga diaria, cada conexión trae **96 registros que abarcan
-las últimas 24 horas**. Todos llegan en el mismo instante de reloj, pero sus tiempos de evento
-se extienden un día hacia atrás.
+```
+consumo(18:00 → 22:00) = contador(22:00) − contador(18:00)
+```
 
-De ahí salen, sin necesidad de inventar nada:
+Eso tiene una consecuencia que parece un detalle y es el requisito central del proyecto:
+**hay que pedir exactamente en los bordes de las franjas**. Sin lectura a las 18:00 y otra a
+las 22:00, no hay manera de saber cuánto se consumió en punta — el dato simplemente no existe.
 
-- **Datos tardíos y fuera de orden**, que son la condición normal y no la excepción.
-- **Duplicados**, cuando una descarga se corta a la mitad y se reintenta: los intervalos que
-  ya habían entrado vuelven a entrar.
-- **Ráfagas**, en lugar de un caudal parejo: el sistema recibe nada durante horas y después un
-  lote entero de golpe.
+Un sistema con perfil de carga no tiene este problema: la frecuencia de medición la fija el
+medidor internamente y la de recolección es independiente. **Acá son la misma cosa.**
 
-## Por qué los relojes no son confiables
+### De dónde salen los datos tardíos y los duplicados
 
-El timestamp de cada registro de la curva de carga lo pone **el medidor**, con su propio
-reloj. Y ese reloj:
+No del medidor, que no guarda nada, sino del **concentrador** que hace los pedidos y publica
+los resultados:
 
-- puede no estar sincronizado nunca desde la instalación;
-- se desfasa con el tiempo, y sin conexión permanente nadie lo corrige;
-- se pierde ante un corte de energía prolongado si la batería interna se agotó, y el equipo
-  arranca en una fecha por defecto;
-- en algunos equipos y configuraciones, directamente no acompaña a la lectura.
+- **Pierde enlace** y publica lo que juntó cuando se restablece: llega una ráfaga de lecturas
+  cuyos instantes se extienden horas hacia atrás.
+- **Reintenta** una publicación que no confirmó: las mismas lecturas entran dos veces.
+- **Atiende muchos medidores en paralelo**, así que los resultados salen en el orden en que
+  van respondiendo, no en orden de instante.
 
-Es la razón de que el gateway tenga que validar y decidir **antes** de que el evento
-participe del avance del watermark: un solo medidor con el reloj adelantado arrastraría el
-watermark hacia el futuro y provocaría el descarte de lecturas legítimas de todos los demás.
+### Los dos modos de falla propios de este esquema
+
+**El pedido se corre.** El programado para las 18:00 se resuelve a las 18:07 —el medidor tardó
+en responder, el enlace estaba ocupado—. Esos siete minutos de consumo de punta terminan
+contados en resto. El error es chico pero es **sistemático y económico**.
+
+**El pedido falla.** Sin lectura en un borde, el consumo de las dos franjas adyacentes queda
+**indistinguible**: se tiene un único número que abarca las dos y no hay forma de repartirlo
+sin inventar. Prorratear asumiría consumo uniforme, y justamente la razón de que exista la
+franja punta es que el consumo *no* es uniforme.
+
+## Sobre el reloj: lo pone quien pregunta
+
+**El readout no trae timestamp.** En el ejemplo de arriba, ninguna línea dice cuándo se hizo
+la lectura, salvo `1.6.0`, que informa cuándo ocurrió *su* máximo.
+
+Entonces el instante lo asigna el **concentrador** al recibir la respuesta, con su reloj, que
+está sincronizado. **El reloj del medidor no participa.**
+
+Vale la pena decirlo porque es un cambio respecto de lo que uno esperaría: en los sistemas que
+descargan perfil de carga, el reloj del medidor **sí** fecha cada entrada, y como esos relojes
+se desfasan, se pierden ante cortes prolongados o nunca se sincronizaron, hay que defenderse
+de ellos. **Con readout ese problema no existe**, y no tiene sentido defenderse de él.
+
+Lo que sí queda es que el instante del concentrador es confiable pero **no exacto**: hay
+latencia entre el muestreo y la recepción, y un pedido puede resolverse tarde. Eso es lo que
+hay que acotar.
 
 ## Por qué la franja horaria es un problema de tiempo de evento
 
 La distribuidora quiere cobrar distinto según la hora: no cuesta lo mismo un kWh en hora punta
 que de madrugada. Eso obliga a saber **cuándo ocurrió** cada consumo, no cuándo llegó el dato.
 
-Y como el dato llega hasta un día después, agrupado en ráfagas y con relojes dudosos, la
+Y como los resultados pueden llegar horas después de tomados, en ráfagas y fuera de orden, la
 distinción entre tiempo de evento y tiempo de procesamiento deja de ser una sutileza técnica:
 **si una medición se asigna a la franja equivocada, al cliente se le factura mal.**
+
+Hoy el sistema hace **un pedido por día**, que alcanza para facturar el consumo diario y no
+para discriminar por franja. Habilitar la tarifa horaria exige pedir en cada borde: es el
+cambio que este proyecto modela.
 
 ---
 

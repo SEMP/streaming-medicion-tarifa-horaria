@@ -42,7 +42,7 @@ enrutar o rechazar sin deserializar el cuerpo.
 | `event_id` | Identidad estable. `sha256("<medidor_id>\|<instante_lectura>")[:16]` — **determinista, no aleatorio**: un reintento del productor produce el mismo id, y por eso el duplicado es reconocible |
 | `medidor_id` | Clave de particionamiento: manda todas las lecturas de un medidor a la misma partición y preserva su orden |
 | `lote_id` | La descarga en la que vino. Es lo que permite demostrar el duplicado por reintento y rastrear un lote tardío completo |
-| `secuencia` | Índice del registro dentro de la curva de carga del medidor. Da identidad cuando el timestamp falta |
+| `secuencia` | Número de pedido del concentrador para ese medidor. Da identidad y permite detectar pedidos perdidos |
 | `instante_lectura` | **El tiempo de evento**: el momento en que se capturó el valor del contador. ISO-8601 con offset (decisión 4). No es un período — ver la nota de abajo |
 | `registros` | Lista con **todos** los registros que trajo esa lectura, cada uno con su código OBIS, su valor y su unidad. Hoy solo `15.8.0`, cuyo valor es el del contador: acumulado, solo sube. Ver la nota de abajo |
 | `calidad` | `ok` \| `estimado` \| `sin_sincronizar`. Los medidores reales marcan sus lecturas; permite decidir sin adivinar |
@@ -54,10 +54,14 @@ El simulador los produce a propósito; la validación los manda a cuarentena.
 
 | Caso | Cómo se ve |
 |---|---|
-| Sin timestamp | `instante_lectura` ausente o `null` |
+| Sin instante | `instante_lectura` ausente o `null` |
 | Sin offset | `"2026-09-20T18:00:00"` — hay hora, no se sabe de qué huso |
-| Reloj desfasado | formato válido, valor corrido minutos u horas |
-| Reloj absurdo | `"1970-01-01T00:00:00-03:00"` o una fecha futura |
+| Instante futuro | posterior a la recepción: concentrador desincronizado |
+| **Pedido corrido** | `18:07:00` cuando el borde de franja era `18:00:00` |
+| **Contador que retrocede** | `lectura_kwh` menor que la anterior del mismo medidor: es un reseteo |
+
+> Los casos de **reloj del medidor** que figuraban antes acá se eliminaron el 20/09: el
+> readout no trae timestamp, así que el reloj del medidor no interviene (decisión 3).
 
 ### Un mensaje por lectura, no uno por registro OBIS
 
@@ -172,9 +176,8 @@ que hace que los intervalos cercanos a medianoche caigan en el día equivocado.
 
 ### Lo que falta decidir — Daniel
 
-- ⚠️ **El umbral de corrección de reloj** y contra qué referencia se corrige. Derivarlo de lo
-  que cuesta equivocar la franja: una lectura cuya hora real es 17:58 pero reporta 18:02 cruza
-  a punta y se factura mal, así que no hay un umbral "chico y seguro".
+- ⚠️ **El desvío tolerado respecto del borde de franja**, y qué hacer con una lectura que lo
+  excede. Derivarlo de lo que cuesta equivocar la franja.
 - Cómo se representa `CalendarioTarifario` en memoria, y si conviene precomputar una tabla
   por la grilla.
 - Si `fecha_y_franja` es también la que valida el timestamp, o si eso es una función aparte

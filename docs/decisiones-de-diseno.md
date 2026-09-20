@@ -16,58 +16,71 @@ mismos fallos, y una prueba que falla se puede repetir.
 Todos los datos del repositorio son sintéticos. El proyecto no usa datos de ninguna
 distribuidora real.
 
-## 2. Cadencia: curva de carga, no lectura puntual
+## 2. Cadencia: pedidos en los bordes de franja
 
-El medidor registra su consumo en intervalos regulares y **acumula** los registros; el
-sistema los descarga cuando el equipo logra conectarse. Cada descarga trae un lote que cubre
-el período desde la anterior: con intervalos de 15 minutos y descarga diaria, 96 registros
-que abarcan 24 horas.
+**Los medidores de este parque solo exponen el modo readout**: devuelven el valor actual de
+sus registros cuando se les pregunta. **No se puede descargar el perfil de carga** (el objeto
+`99.1.0`, que guardaría una serie de intervalos fechados por el propio medidor). Ver
+[`dominio-medicion.md`](dominio-medicion.md).
 
-Esto importa porque **el desorden y el retraso no hay que inventarlos: son intrínsecos a
-cómo funciona la recolección**. Al conectarse un medidor entran de golpe eventos cuyo tiempo
-de evento se extiende un día hacia atrás.
-
-La **frecuencia de medición es configurable**: tanto el intervalo de la curva de carga como
-la cadencia de descarga son parámetros. Para la demostración se comprime el tiempo —
-intervalos simulados de 15 minutos y descargas cada pocos minutos de reloj real.
-
-### Cuánta frecuencia hace falta
-
-Es contraintuitivo, así que conviene decirlo: **la frecuencia que necesita la facturación la
-fija el borde de las franjas, no el deseo de tener más datos.** Si las franjas cambian solo
-en hora en punto, lecturas horarias facturan igual de bien que las de cinco minutos. Todo lo
-que esté por debajo de esa granularidad compra análisis de curva de carga, no precisión de
-facturación — y cuesta:
+Eso determina todo lo demás: **el consumo de una franja se obtiene restando dos lecturas.**
 
 ```
-eventos/día = medidores × (1440 / intervalo_en_minutos)
-
-100.000 medidores @ 15 min →  9,6 M/día
-100.000 medidores @  5 min → 28,8 M/día
+consumo(punta) = contador(22:00) − contador(18:00)
 ```
 
-Ese número es el que dimensiona las particiones de Kafka.
+De ahí se sigue lo que parece un detalle y es el requisito central:
 
-## 3. Relojes poco confiables: el gateway valida antes del watermark
+> **Hay que pedir exactamente en los bordes de franja.** Sin una lectura a las 18:00 y otra a
+> las 22:00, no existe forma de saber cuánto se consumió en punta.
 
-El simulador conoce el tiempo de evento **verdadero**, pero lo que el medidor *reporta* puede
-estar mal. Los casos que se generan:
+Hoy el sistema pide **una vez por día**, lo que alcanza para facturar el consumo diario pero
+**no permite discriminar por franja**: una sola lectura diaria da un único número. Habilitar
+la tarifa horaria exige **aumentar la frecuencia de pedidos**, y ese es el cambio que este
+proyecto modela.
 
-| Caso | Qué emite el medidor |
+Es una diferencia importante con un sistema de perfil de carga, donde la frecuencia de
+medición y la de recolección son independientes. Acá **son la misma cosa**: cada medición
+existe porque alguien la pidió.
+
+### Modos de falla, que salen del dominio sin inventarlos
+
+| Falla | Qué produce |
 |---|---|
-| Normal | timestamp correcto |
-| Sin timestamp | el campo viene ausente |
-| Sin offset | hay hora, pero no de qué huso |
-| Reloj desfasado | drift de minutos u horas |
-| Reloj absurdo | timestamp en 1970 o en el futuro |
+| **El pedido se corre.** El de las 18:00 responde a las 18:07 | Siete minutos de punta se atribuyen a resto: error de facturación medible |
+| **El pedido falla.** No hay lectura en un borde | El consumo de las dos franjas adyacentes es **indistinguible**: queda un único número combinado |
+| **El concentrador pierde enlace** y publica sus resultados más tarde | Datos tardíos y fuera de orden, en ráfaga |
+| **Reintento de publicación** | Duplicados |
 
-La validación **corrige con una regla documentada o desvía a cuarentena**, y ocurre **antes**
-de que el evento participe del cálculo del watermark. El motivo es concreto: un solo medidor
-con el reloj adelantado arrastraría el watermark hacia el futuro y provocaría el descarte de
-lecturas legítimas de todos los demás medidores.
+## 3. El instante lo pone el concentrador, no el medidor
 
-⚠️ **Abierto:** el umbral exacto a partir del cual un desfase se corrige en lugar de mandarse
-a cuarentena, y contra qué referencia se corrige.
+**El readout no trae timestamp.** Ninguna línea de la respuesta dice cuándo se hizo la
+lectura, salvo registros como la demanda máxima, que informan cuándo ocurrió *su* máximo — y
+esos no se usan acá.
+
+Por lo tanto **el tiempo de evento lo asigna el concentrador** en el momento en que obtiene la
+respuesta, con su propio reloj, que está sincronizado. **El reloj del medidor no interviene en
+este diseño**, y por eso no hay que defenderse de él.
+
+> **Decisión revisada el 20/09.** La versión anterior describía un parque de relojes poco
+> confiables, con reglas de corrección y cuarentena por desfase. Eso aplica a la **descarga de
+> perfil de carga**, donde cada entrada la fecha el propio medidor. **Con readout no aplica**,
+> y mantenerlo habría sido defendernos de un problema que este diseño no tiene.
+
+### Lo que sí hay que validar
+
+El instante es confiable, pero **no es exacto**: entre que el medidor muestrea su registro y
+que el concentrador recibe la respuesta hay latencia, y un pedido puede resolverse tarde.
+
+| Caso | Qué se hace |
+|---|---|
+| Instante ausente o mal formado | Cuarentena: sin instante no hay franja posible |
+| Instante en el futuro respecto de la recepción | Cuarentena: indica un concentrador desincronizado |
+| **Desvío respecto del borde de franja** | ⚠️ **Abierto:** cuánto se tolera antes de considerar que la lectura no sirve para cerrar la franja |
+
+El último es el interesante, y reemplaza al viejo umbral de corrección de reloj. Tiene
+consecuencia económica concreta: un pedido que se corre siete minutos mueve siete minutos de
+consumo de una franja a la otra.
 
 ## 4. Tiempo: hora local con offset explícito
 
@@ -93,25 +106,48 @@ cambio de política horaria.
 ⚠️ **Supuesto:** no rige horario de verano. Si volviera, habría dos días al año con franjas
 de duración distinta y la configuración tendría que contemplarlos.
 
-## 5. Franjas configurables, alineadas a la grilla
+## 5. Franjas configurables, y la agenda de pedidos que exigen
 
 El calendario tarifario es **configuración, no código** (ver
 [`config/franjas.example.toml`](../config/franjas.example.toml)).
 
-**Restricción que se adopta:** los bordes de las franjas deben estar alineados a la grilla de
-intervalos. Como el intervalo también es configurable, la validación es sobre la relación
-entre ambos:
+**La restricción dejó de ser formal y pasó a ser operativa** (revisado el 20/09, tras la
+decisión 2). Antes se enunciaba como una condición aritmética sobre una grilla de medición
+fija. Con readout no hay grilla: hay una **agenda de pedidos**, y la condición es que esa
+agenda **cubra todos los bordes de franja**.
 
 ```
-(borde de franja) módulo (intervalo de medición) == 0
+para cada borde de franja:  existe un pedido programado en ese instante
 ```
 
-Así **ningún intervalo de medición cruza un borde** y la atribución es exacta por
-construcción. Un calendario mal alineado se **rechaza**.
+Así el consumo de cada franja se obtiene restando dos lecturas que caen exactamente en sus
+extremos, y la atribución es **exacta** en lugar de aproximada. Una configuración cuyos bordes
+no estén cubiertos por la agenda se **rechaza**: no se prorratea en silencio.
 
-**Por qué no prorratear** un intervalo que cruza un borde: prorratear asume consumo uniforme
-dentro del intervalo, y los datos no respaldan ese supuesto. Queda disponible como opción
-configurable, pero no como comportamiento por defecto.
+Los pedidos **intermedios** entre bordes son libres: dan resolución de curva de carga, sirven
+para análisis, y no afectan la facturación.
+
+**Por qué no prorratear** cuando falta un borde: prorratear asume consumo uniforme en el
+tramo, y los datos no respaldan ese supuesto — justamente en punta el consumo no es uniforme,
+que es la razón de que exista la franja. Queda disponible como opción configurable, nunca como
+comportamiento por defecto.
+
+### Cuánta frecuencia hace falta
+
+**La facturación necesita exactamente los bordes de franja, ni uno más.** Todo pedido
+intermedio compra análisis de curva de carga, no precisión de facturación — y cuesta:
+
+```
+pedidos/día = medidores × pedidos por medidor
+
+100.000 medidores ×  4 bordes         →   400 K/día   (mínimo para facturar)
+100.000 medidores × 96 (cada 15 min)  →   9,6 M/día   (curva de carga completa)
+```
+
+Son **24 veces** de diferencia. Y a diferencia de un sistema de perfil de carga, acá cada
+pedido es una **interacción real con un medidor**: no es solo volumen en Kafka, es tiempo de
+comunicación y carga sobre el parque. Ese número dimensiona las particiones **y** decide si la
+recolección es viable.
 
 ## 6. La franja no es una ventana
 

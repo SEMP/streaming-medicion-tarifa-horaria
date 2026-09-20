@@ -12,8 +12,9 @@ decisión, en [`docs/decisiones-de-diseno.md`](docs/decisiones-de-diseno.md).
 
 Si no venís del rubro eléctrico, leé primero
 [`docs/dominio-medicion.md`](docs/dominio-medicion.md): explica cómo funciona de verdad la
-lectura remota de medidores —códigos OBIS, contador acumulado, curva de carga, por qué los
-relojes no son confiables— que es de donde salen casi todas las decisiones.
+lectura remota de medidores —códigos OBIS, contador acumulado, por qué solo hay modo readout
+y qué implica que cada medición exista porque alguien la pidió— que es de donde salen casi
+todas las decisiones.
 
 **Antes de proponer un diseño, leer ese documento.** Varias decisiones que parecen obvias ya
 se tomaron al revés por una razón — por ejemplo, la franja *no* es una ventana de Beam, y los
@@ -80,7 +81,7 @@ merge. **Antes de tocar una carpeta que no es la propia, avisar al dueño.**
 
 | Carpeta | Qué va | Dueño |
 |---|---|---|
-| `simulador/` | Productor sintético: curva de carga, casos de reloj, duplicados, lotes tardíos | Sergio |
+| `simulador/` | Productor sintético: lecturas por pedido, pedidos corridos o fallidos, duplicados, ráfagas tardías | Sergio |
 | `infra/` | `docker-compose`, Kafka, Flink, job server | Sergio |
 | `pipeline/` | Pipeline Beam: validación, salida lateral, `CombinePerKey`, escritura, ventanas | Clara |
 | `config/` | Calendario de franjas e intervalo, con su validación | Daniel |

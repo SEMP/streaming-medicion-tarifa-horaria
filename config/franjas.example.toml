@@ -7,8 +7,9 @@
 # fijo: el identificador sobrevive a un cambio de política horaria, el offset no.
 zona_horaria = "America/Asuncion"
 
-# Intervalo de la curva de carga, en minutos. Determina la grilla sobre la que se
-# alinean los bordes de las franjas.
+# Pedidos intermedios entre bordes de franja, en minutos. Los bordes SIEMPRE se piden;
+# esto agrega lecturas adicionales que dan resolución de curva de carga pero no hacen
+# falta para facturar. 0 = solo los bordes (lo mínimo viable).
 intervalo_minutos = 15
 
 # Una franja puede tener varios rangos: "resto" cubre la mañana y la noche tardía.

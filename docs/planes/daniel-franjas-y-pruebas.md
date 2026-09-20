@@ -1,7 +1,7 @@
 # Plan — Daniel: franjas horarias, validación de tiempo y pruebas
 
 Leer antes: [`../decisiones-de-diseno.md`](../decisiones-de-diseno.md), en particular las
-decisiones 3, 4 y 5.
+decisiones 2, 3, 4 y 5, y [`../dominio-medicion.md`](../dominio-medicion.md).
 
 ---
 
@@ -30,20 +30,36 @@ conversión está bien hecha.
 búsqueda de la franja (una tabla precomputada por la grilla es una opción, buscar linealmente
 es otra), qué mensajes de error da la validación.
 
-## Parte 2 — Validación de timestamps y cuarentena
+## Parte 2 — Validación del instante y desvío respecto del borde
 
-La regla que decide qué hacer con cada caso de reloj de la decisión 3: sin timestamp, sin
-offset, desfasado, absurdo.
+> **Cambió el 20/09.** Antes esta parte era sobre relojes de medidores poco confiables. Ya no
+> aplica: el readout no trae timestamp y el instante lo pone el concentrador, que está
+> sincronizado (decisión 3). El problema es otro, y mejor.
 
-⚠️ **Abierto y es tuyo resolverlo:** el **umbral** a partir del cual un desfase se corrige en
-lugar de mandarse a cuarentena, y **contra qué referencia** se corrige. Es una decisión de
-diseño real, con un trade-off: corregir de más ensucia los datos, corregir de menos descarta
-lecturas buenas. Justificá la elección; es material directo para tu sección del documento.
+Validaciones básicas, que son directas:
 
-Crítico, y la razón por la que esto va antes del pipeline: **un solo medidor con el reloj
-adelantado arrastra el watermark hacia el futuro y provoca el descarte de lecturas legítimas
-de todos los demás medidores.** La validación tiene que ocurrir antes de que el evento
-participe del avance del watermark.
+| Caso | Qué hacer |
+|---|---|
+| Instante ausente o mal formado | Cuarentena: sin instante no hay franja posible |
+| Instante en el futuro respecto de la recepción | Cuarentena: indica un concentrador desincronizado |
+
+⚠️ **Y la decisión que es tuya: el desvío tolerado respecto del borde de franja.**
+
+El consumo de una franja sale de restar la lectura de su inicio y la de su fin. Si el pedido
+programado para las 18:00 se resuelve a las 18:07, esa lectura **no marca el borde real**: los
+siete minutos de consumo entre 18:00 y 18:07 terminan atribuidos a la franja anterior.
+
+Hay que decidir cuánto desvío se acepta antes de considerar que la lectura no sirve para
+cerrar la franja, y qué se hace cuando no sirve. Es un trade-off con consecuencia económica
+medible en los dos sentidos:
+
+- **Tolerar mucho** mete consumo de una franja en la otra y se factura mal.
+- **Tolerar poco** descarta lecturas y deja franjas sin cerrar, y entonces no se factura nada.
+
+Justificá el número; es material directo para tu sección del documento. Y ojo con el caso
+peor: **si falta la lectura de un borde**, el consumo de las dos franjas adyacentes es
+indistinguible — hay un solo número que abarca las dos. Prorratearlo asumiría consumo
+uniforme, que es falso justamente en punta.
 
 ## Parte 3 — Pruebas
 
@@ -65,7 +81,8 @@ Conviene que cada prueba imprima la secuencia de lo que entró y lo que salió.
 
 - [ ] Una configuración mal alineada se rechaza con un mensaje que explica el problema.
 - [ ] La asignación de franja está probada, incluidos los bordes y los cruces de medianoche.
-- [ ] Los cuatro casos de reloj tienen su regla, probada y documentada.
+- [ ] El desvío tolerado respecto del borde tiene un número justificado y probado.
+- [ ] Está definido y probado qué pasa cuando falta la lectura de un borde.
 - [ ] Existen los cuatro escenarios con `TestStream` y dejan evidencia legible.
 - [ ] Tu sección del documento técnico justifica el umbral de corrección y la regla de
       alineación.

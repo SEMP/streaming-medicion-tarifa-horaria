@@ -16,17 +16,22 @@ hora del día**: no cuesta lo mismo un kWh en hora punta que de madrugada. Para 
 saber cuánta energía consumió cada cliente **en cada franja**, y ahí empiezan las
 dificultades.
 
-Los medidores registran su consumo en intervalos regulares —una *curva de carga*— pero **no
-lo transmiten en el momento**: lo acumulan y lo descargan cuando logran conectarse. Cuando
-eso ocurre, llega de golpe un lote de mediciones cuyas marcas de tiempo abarcan las últimas
-horas o el último día. Además:
+Los medidores de este parque **no transmiten por su cuenta ni guardan una serie histórica**:
+responden con el valor actual de sus contadores cuando se les pregunta. El consumo de un
+período se obtiene **restando dos lecturas**, y de ahí sale el requisito central: hay que
+pedir exactamente en los bordes de cada franja, porque sin lectura a las 18:00 y otra a las
+22:00 el consumo en punta simplemente no existe como dato.
 
-- **Los relojes de los medidores no son confiables.** Algunos no reportan la hora, otros la
-  tienen desfasada, otros directamente mal configurada.
-- **Los reintentos duplican mediciones.** Si una descarga se corta a la mitad y se reintenta,
-  los mismos intervalos llegan dos veces.
-- **Ningún medidor acumula por franja.** La atribución de cada intervalo a su franja la hace
-  este pipeline, no el equipo en campo.
+Hoy se pide una vez por día, lo que alcanza para facturar el consumo diario pero no para
+discriminar por franja. Sobre eso se apilan las dificultades:
+
+- **Los resultados llegan tarde y desordenados.** El concentrador que hace los pedidos pierde
+  enlace y publica en ráfaga lo que juntó, con instantes de horas atrás.
+- **Los reintentos duplican lecturas**, cuando una publicación no se confirmó.
+- **Un pedido que se corre mueve consumo de franja.** El programado para las 18:00 que se
+  resuelve a las 18:07 le atribuye a resto siete minutos de punta.
+- **Ningún medidor acumula por franja.** La atribución la hace este pipeline, no el equipo en
+  campo.
 
 Nada de eso es un detalle de implementación: **si una medición se asigna a la franja
 equivocada, al cliente se le factura mal.** Por eso el sistema procesa por *tiempo de evento*
@@ -36,9 +41,9 @@ y no por tiempo de llegada.
 
 ```
   SIMULADOR            KAFKA                 BEAM                    KAFKA
-  de medidores    →   lecturas crudas   →   validación,         →   consumo por
-  (curva de carga)    clave: medidor        franja, ventana,        medidor/día/franja
-                                            dedup                    clave estable
+  de medidores    →   lecturas crudas   →   diferenciación,     →   consumo por
+  (readout por        clave: medidor        franja, ventana,        medidor/día/franja
+   pedido)                                  dedup                    clave estable
                                                  ↓
                                             cuarentena
                                         (timestamps inválidos)
@@ -47,8 +52,8 @@ y no por tiempo de llegada.
 ## Estructura
 
 ```
-simulador/    Productor de eventos sintéticos: curva de carga, casos de reloj,
-              duplicados y lotes tardíos. Configurable y determinista.
+simulador/    Productor de eventos sintéticos: lecturas por pedido, pedidos que se
+              corren o fallan, duplicados y ráfagas tardías. Determinista.
 pipeline/     Pipeline Beam: lectura con KafkaIO, validación, asignación de franja,
               agregación incremental por clave y salida idempotente.
 config/       Calendario de franjas e intervalo de medición. Configurables, validados.
