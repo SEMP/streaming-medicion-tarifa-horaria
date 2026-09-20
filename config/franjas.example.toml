@@ -1,0 +1,48 @@
+# Calendario tarifario e intervalo de medición.
+#
+# Copiar a config/franjas.toml y ajustar. Ese archivo NO se versiona, para que cada
+# integrante pueda probar con calendarios distintos sin pisarse.
+
+# Zona horaria en la que están definidas las franjas. Identificador IANA, no un offset
+# fijo: el identificador sobrevive a un cambio de política horaria, el offset no.
+zona_horaria = "America/Asuncion"
+
+# Intervalo de la curva de carga, en minutos. Determina la grilla sobre la que se
+# alinean los bordes de las franjas.
+intervalo_minutos = 15
+
+# Una franja puede tener varios rangos: "resto" cubre la mañana y la noche tardía.
+[[franjas]]
+nombre = "valle"
+rangos = [{ desde = "00:00", hasta = "07:00" }]
+
+[[franjas]]
+nombre = "resto"
+rangos = [
+  { desde = "07:00", hasta = "18:00" },
+  { desde = "22:00", hasta = "24:00" },
+]
+
+[[franjas]]
+nombre = "punta"
+rangos = [{ desde = "18:00", hasta = "22:00" }]
+
+# ---------------------------------------------------------------------------
+# Reglas que la validación debe hacer cumplir
+# ---------------------------------------------------------------------------
+#
+# 1. ALINEACIÓN A LA GRILLA
+#    Todo borde de franja debe ser múltiplo de `intervalo_minutos`:
+#
+#        (minutos desde medianoche del borde) % intervalo_minutos == 0
+#
+#    Así ningún intervalo de medición cruza un borde y la atribución es exacta por
+#    construcción. Con intervalo de 60 min, las franjas solo pueden empezar en hora en
+#    punto. Un calendario mal alineado se RECHAZA: no se prorratea en silencio.
+#
+# 2. COBERTURA EXACTA DEL DÍA
+#    Los rangos deben cubrir de 00:00 a 24:00 sin huecos y sin superposiciones. Un hueco
+#    dejaría energía sin franja; una superposición la facturaría dos veces.
+#
+# 3. INTERVALO DIVISOR DEL DÍA
+#    1440 % intervalo_minutos == 0, para que la grilla cierre al cambiar de día.
