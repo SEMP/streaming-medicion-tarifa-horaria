@@ -24,8 +24,7 @@ Tópico `medicion.lecturas.v1`, clave de particionamiento `medidor_id`.
   "lote_id": "LOTE-2026-09-20-000123",
   "secuencia": 42,
   "instante_lectura": "2026-09-20T18:00:00-03:00",
-  "registro_obis": "15.8.0",
-  "lectura_kwh": 12843.271,
+  "registros": { "15.8.0": 12843.271 },
   "calidad": "ok",
   "reportado_at": "2026-09-21T02:14:07.220-03:00"
 }
@@ -43,8 +42,7 @@ enrutar o rechazar sin deserializar el cuerpo.
 | `lote_id` | La descarga en la que vino. Es lo que permite demostrar el duplicado por reintento y rastrear un lote tardío completo |
 | `secuencia` | Índice del registro dentro de la curva de carga del medidor. Da identidad cuando el timestamp falta |
 | `instante_lectura` | **El tiempo de evento**: el momento en que se capturó el valor del contador. ISO-8601 con offset (decisión 4). No es un período — ver la nota de abajo |
-| `registro_obis` | Qué registro se leyó. Hoy siempre `15.8.0`, pero explicitarlo evita tener que adivinarlo si mañana se lee otro |
-| `lectura_kwh` | **El valor del contador**, no el consumo. Es acumulado y solo sube |
+| `registros` | Mapa de código OBIS → valor, con **todos** los registros que trajo esa lectura. Hoy solo `15.8.0`, cuyo valor es el del contador en kWh: acumulado, solo sube. Ver la nota de abajo |
 | `calidad` | `ok` \| `estimado` \| `sin_sincronizar`. Los medidores reales marcan sus lecturas; permite decidir sin adivinar |
 | `reportado_at` | Cuándo lo emitió el medidor. Contra `inicio_intervalo` da el desfase, que es el insumo de la regla de Daniel |
 
@@ -58,6 +56,28 @@ El simulador los produce a propósito; la validación los manda a cuarentena.
 | Sin offset | `"2026-09-20T18:00:00"` — hay hora, no se sabe de qué huso |
 | Reloj desfasado | formato válido, valor corrido minutos u horas |
 | Reloj absurdo | `"1970-01-01T00:00:00-03:00"` o una fecha futura |
+
+### Un mensaje por lectura, no uno por registro OBIS
+
+Un medidor suele devolver **varios registros OBIS en respuesta a un mismo pedido**. Hay dos
+formas de modelarlo y la propuesta elige la segunda:
+
+| | Un mensaje por registro OBIS | **Un mensaje por lectura, con un mapa de registros** |
+|---|---|---|
+| Esquema | Plano y uniforme | Un nivel de anidamiento |
+| Volumen | × cantidad de registros | Uno por lectura |
+| Atomicidad | Se pierde: registros leídos juntos viajan como hechos independientes y pueden llegar parcialmente | Se preserva: un pedido, una respuesta, un instante |
+| Clave de dedup | Necesita incluir el código OBIS | `(medidor_id, instante_lectura)` alcanza |
+| Agregar un registro nuevo | Sin cambios | Sin cambios: entra en el mapa |
+
+**Por qué el mapa aunque hoy tenga una sola entrada.** El día que el medidor traiga también
+`1.8.0` o `2.8.0`, no hay que cambiar el esquema ni tocar a los consumidores que solo miran
+`15.8.0`. Eso **es** una estrategia de evolución de esquema —agregar registros deja de ser un
+cambio de versión— y el enunciado pide una explícitamente.
+
+**El costo, dicho honestamente:** la validación se complica un poco, porque hay que declarar
+qué registros son obligatorios, y el tipo es más laxo que un campo plano. Con un solo registro
+en uso es un costo chico, pero es real.
 
 ### ⚠️ Dos registros, dos etapas — no confundirlos
 
@@ -90,9 +110,13 @@ intervalo que cruce dos franjas**, y atribuir por el inicio es exacto en lugar d
 - **Nombres de tópicos** y convención de versionado.
 - **Adónde va lo rechazado**: ¿tópico propio `medicion.cuarentena.v1`, o un campo de motivo en
   el mismo tópico?
-- **Si llegan dos eventos con el mismo `event_id` y distinta `lectura_kwh`** —el medidor
+- **Si llegan dos eventos con el mismo `event_id` y distintos `registros`** —el medidor
   corrigió una lectura—: ¿gana el primero o el último? Con dedup estricto gana el primero y la
   corrección se pierde.
+- **Qué registros son obligatorios** en el mapa, y qué hacer con una lectura que no trae
+  `15.8.0`: ¿es inválida, o es válida pero no aporta al cálculo?
+- **Mapa contra campo plano**, si el costo de validación te parece que no compensa. Es tu
+  contrato.
 - ✅ ~~Contador acumulado o consumo del intervalo~~ — **resuelto: contador acumulado**
   (OBIS `15.8.0`), y el contrato de arriba ya está corregido en consecuencia.
 
@@ -174,6 +198,28 @@ si fuera real. Es la diferencia entre "consumió poco" y "todavía no llegó tod
 **`es_provisional`** implementa la decisión 8: mientras no pase la lateness, el valor puede
 cambiar. La finalidad no la anuncia un pane —después del último tardío no se emite nada—: la
 deduce el consumidor cuando su reloj pasa `ventana_fin + lateness`.
+
+### Un mensaje por lectura, no uno por registro OBIS
+
+Un medidor suele devolver **varios registros OBIS en respuesta a un mismo pedido**. Hay dos
+formas de modelarlo y la propuesta elige la segunda:
+
+| | Un mensaje por registro OBIS | **Un mensaje por lectura, con un mapa de registros** |
+|---|---|---|
+| Esquema | Plano y uniforme | Un nivel de anidamiento |
+| Volumen | × cantidad de registros | Uno por lectura |
+| Atomicidad | Se pierde: registros leídos juntos viajan como hechos independientes y pueden llegar parcialmente | Se preserva: un pedido, una respuesta, un instante |
+| Clave de dedup | Necesita incluir el código OBIS | `(medidor_id, instante_lectura)` alcanza |
+| Agregar un registro nuevo | Sin cambios | Sin cambios: entra en el mapa |
+
+**Por qué el mapa aunque hoy tenga una sola entrada.** El día que el medidor traiga también
+`1.8.0` o `2.8.0`, no hay que cambiar el esquema ni tocar a los consumidores que solo miran
+`15.8.0`. Eso **es** una estrategia de evolución de esquema —agregar registros deja de ser un
+cambio de versión— y el enunciado pide una explícitamente.
+
+**El costo, dicho honestamente:** la validación se complica un poco, porque hay que declarar
+qué registros son obligatorios, y el tipo es más laxo que un campo plano. Con un solo registro
+en uso es un costo chico, pero es real.
 
 ### ⚠️ Dos registros, dos etapas — no confundirlos
 
