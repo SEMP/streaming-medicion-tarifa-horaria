@@ -164,7 +164,11 @@ El costo del estado no es despreciable acá. Con ventanas diarias, ~48 h de late
 
 ## 9. Deduplicación
 
-Clave de deduplicación: **`(medidor_id, inicio_intervalo)`** — estable y determinista.
+Clave de deduplicación: **`(medidor_id, instante_lectura)`** — estable y determinista.
+
+⚠️ Es `instante_lectura` y no `inicio_intervalo`: lo que llega por el tópico de entrada son
+**lecturas del contador en un instante**, no consumos de un bloque (decisión 10). El intervalo
+aparece recién después de diferenciar.
 
 Los duplicados son intrínsecos al dominio: si una descarga se corta a la mitad y se
 reintenta, los mismos intervalos llegan dos veces. La deduplicación usa estado por clave con
