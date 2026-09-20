@@ -197,8 +197,9 @@ trabajo. Simplificarlo dejaría el pipeline sin nada sustantivo que hacer entre 
    dos intervalos se marcan como indeterminados o si se imputa el consumo combinado al bloque
    completo — correcto en total, pero puede caer sobre dos franjas distintas.
 3. **El contador se resetea** al cambiar o reprogramar un medidor, y la resta da un consumo
-   negativo enorme. Como se asume que no hay generación distribuida, **un consumo negativo
-   siempre es un reseteo y nunca una medición válida**: se detecta y va a cuarentena.
+   negativo enorme. Como en el mercado modelado no hay compra de energía al usuario, no hay
+   exportación y el contador solo puede subir: **un consumo negativo siempre es un reseteo y
+   nunca una medición válida**. Se detecta y va a cuarentena.
 
 ### Salida de emergencia, declarada de antemano
 

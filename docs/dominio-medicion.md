@@ -33,12 +33,19 @@ Los registros se identifican con códigos **OBIS** (*Object Identification Syste
 **Este proyecto trabaja con `15.8.0`.** Es un registro **acumulado**: cada lectura es el valor
 del contador en ese instante, no el consumo del período.
 
-⚠️ **Que sea la absoluta y no la importada tiene una consecuencia**: `15.8.0` **suma**
-importación y exportación en lugar de netearlas. En un punto de suministro con generación
-distribuida —paneles solares—, un cliente que inyecta energía hace **subir** el contador igual
-que uno que consume. Para facturación por franja eso puede no ser lo que se quiere. Queda
-declarado como supuesto: el proyecto asume puntos **sin generación distribuida**, donde
-`15.8.0` y `1.8.0` coinciden.
+**Por qué alcanza con `15.8.0` y no hacen falta `1.8.0` y `2.8.0` por separado.** El registro
+absoluto **suma** importación y exportación en lugar de netearlas, así que en un punto con
+generación distribuida un cliente que inyecta energía haría subir el contador igual que uno
+que consume. Eso acá no ocurre: **en el mercado modelado la distribuidora no compra energía a
+los usuarios**, de modo que no hay inyección remunerada y la exportación es nula o
+despreciable. `15.8.0` equivale entonces a energía consumida, y es el único registro que el
+sistema necesita leer.
+
+Vale la pena notar que esto es una propiedad **del marco regulatorio, no del equipamiento**.
+Si se introdujera un esquema de medición neta —que la distribuidora compre la energía
+inyectada—, el modelo dejaría de servir: habría que leer `1.8.0` y `2.8.0` por separado,
+facturar cada sentido con su tarifa, y la suposición de que un consumo negativo siempre es un
+reseteo de contador dejaría de valer. Queda anotado en "posibles mejoras".
 
 Los registros `1.8.1`, `1.8.2`… muestran que **existen** medidores capaces de acumular por
 franja tarifaria por sí mismos. Deliberadamente no dependemos de eso, y el porqué está en la
@@ -116,10 +123,10 @@ distinción entre tiempo de evento y tiempo de procesamiento deja de ser una sut
 
 | Supuesto | Por qué se adopta |
 |---|---|
-| Puntos **sin generación distribuida** | Permite tratar `15.8.0` como energía consumida |
+| **No hay compra de energía al usuario** en el mercado modelado | Sin inyección remunerada la exportación es nula, así que `15.8.0` equivale a energía consumida. Es un rasgo regulatorio, no del equipo |
 | **Ningún medidor** acumula por franja | Decisión 7: es incompatible con que las franjas sean configurables |
 | **No rige horario de verano** | Decisión 4: evita días con franjas de duración distinta |
-| Un consumo negativo **siempre** es un reseteo de contador, nunca una medición válida | No hay generación distribuida, así que el contador solo puede subir |
+| Un consumo negativo **siempre** es un reseteo de contador, nunca una medición válida | Se desprende del anterior: sin exportación, el contador solo puede subir |
 
 ## Nota sobre el origen de este conocimiento
 
