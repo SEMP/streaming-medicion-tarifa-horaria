@@ -97,6 +97,15 @@ uv run pytest    # corre las pruebas
 Cada integrante **commitea con su propia cuenta** en su área, escribe la sección del
 documento técnico correspondiente y la presenta en la demostración.
 
+## Planes de trabajo
+
+Un encargo por integrante en [`docs/planes/`](docs/planes/): qué construir, con qué contrato
+se conecta al resto y cómo se sabe que está listo. **No dicen el cómo** — las decisiones de
+implementación son de quien toma el plan, y son las que cada uno defiende.
+
+Las **tres interfaces** que permiten trabajar en paralelo están en
+[`docs/planes/README.md`](docs/planes/README.md).
+
 ## Decisiones de diseño
 
 Las decisiones tomadas y su justificación están en
