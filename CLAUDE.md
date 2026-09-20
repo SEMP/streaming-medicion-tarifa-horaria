@@ -10,9 +10,27 @@ tarifaria** a partir de curvas de carga que llegan desordenadas, duplicadas y co
 retraso. El contexto y el problema están en [`README.md`](README.md); el **porqué** de cada
 decisión, en [`docs/decisiones-de-diseno.md`](docs/decisiones-de-diseno.md).
 
+Si no venís del rubro eléctrico, leé primero
+[`docs/dominio-medicion.md`](docs/dominio-medicion.md): explica cómo funciona de verdad la
+lectura remota de medidores —códigos OBIS, contador acumulado, curva de carga, por qué los
+relojes no son confiables— que es de donde salen casi todas las decisiones.
+
 **Antes de proponer un diseño, leer ese documento.** Varias decisiones que parecen obvias ya
 se tomaron al revés por una razón — por ejemplo, la franja *no* es una ventana de Beam, y los
 bordes de franja *no* se prorratean.
+
+## Al empezar una sesión
+
+**Hacer `git pull` antes de tocar nada.** Somos tres trabajando en paralelo sobre el mismo
+repositorio: arrancar sobre una copia vieja genera conflictos que después hay que resolver a
+mano, y en el peor caso reimplementar algo que otro ya hizo.
+
+```bash
+git pull --ff-only
+```
+
+Si el pull no es *fast-forward*, hay trabajo divergente: resolverlo antes de seguir, no
+después.
 
 ## Reglas duras
 

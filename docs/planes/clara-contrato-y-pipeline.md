@@ -31,10 +31,17 @@ el de salida.
 esquema, si los eventos rechazados van a un tópico propio o a otro lado, la convención de
 nombres de tópicos.
 
-⚠️ **Abierto, y lo resolvés vos con Sergio:** si el medidor reporta el **contador acumulado**
-o el **consumo del intervalo** (decisión 10). Cambia el contrato y cambia el pipeline: con
-contador acumulado hay que restar la lectura anterior, lo que exige estado por clave y
-obliga a tratar los reseteos de contador.
+✅ **Resuelto el 20/09 — ya no te bloquea.** El medidor reporta el **contador acumulado**
+(registro OBIS `15.8.0`): cada lectura es el valor del contador, no el consumo. El consumo se
+obtiene restando la lectura anterior del mismo medidor. Ver la decisión 10 y
+[`../dominio-medicion.md`](../dominio-medicion.md).
+
+Para tu contrato eso significa que el campo es **`lectura_kwh`** (el valor del contador), no
+`energia_kwh`. Y para tu pipeline, que **antes de agregar hay una etapa de diferenciación**
+que convierte lecturas en consumos. Esa etapa es de Sergio —usa estado por medidor, el mismo
+mecanismo que la deduplicación— y está pensada como **etapa aislada con un interruptor de
+configuración**: si no está lista a tiempo, el simulador emite consumo directo y la etapa se
+saltea, sin que tengas que rehacer nada.
 
 ## Parte 2 — Pipeline de transformación
 

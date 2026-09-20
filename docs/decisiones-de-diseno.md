@@ -171,19 +171,39 @@ reintenta, los mismos intervalos llegan dos veces. La deduplicación usa estado 
 **temporizador de expiración**, acotado al mismo horizonte que la lateness permitida; no un
 conjunto que crece sin límite.
 
-## 10. Energía acumulada: hay que diferenciar
+## 10. El medidor entrega contador acumulado: el pipeline diferencia
 
-⚠️ **Abierto.** Si el medidor entrega el **contador acumulado** de energía —un valor que solo
-sube— el pipeline no recibe "consumo del intervalo" sino "lectura del contador", y el consumo
-se obtiene restando la lectura anterior del mismo medidor.
+**Decidido.** El medidor reporta el registro OBIS **`15.8.0`**, que es un **contador
+acumulado**: cada lectura es el valor del contador en ese instante, no el consumo del
+intervalo. El consumo se obtiene restando la lectura anterior del mismo medidor.
 
-Eso tiene tres consecuencias:
+```
+consumo(intervalo_n) = lectura(intervalo_n) − lectura(intervalo_n−1)
+```
 
-- Necesita **estado por clave** para recordar la última lectura.
-- **Un evento perdido rompe dos intervalos**, no uno: si falta la lectura de las 18:15, el
-  consumo de 18:00–18:15 y el de 18:15–18:30 quedan indeterminados.
-- **El contador se resetea** al cambiar o reprogramar un medidor, y una resta ingenua
-  produce un consumo negativo enorme que hay que detectar y mandar a cuarentena.
+Ver [`dominio-medicion.md`](dominio-medicion.md) para el contexto completo de OBIS y la curva
+de carga.
 
-La alternativa es que el simulador emita directamente el consumo del intervalo: más simple,
-pero pierde el tratamiento de esos tres casos. A decidir.
+**Por qué no se simplifica a "el evento trae el consumo del intervalo":** porque no es lo que
+entrega un medidor real, y el tratamiento de la diferencia es justamente donde está el
+trabajo. Simplificarlo dejaría el pipeline sin nada sustantivo que hacer entre leer y agregar.
+
+**Las tres consecuencias**, que son material de "límites conocidos":
+
+1. **Necesita estado por medidor** para recordar la última lectura. Se apoya en el mismo
+   mecanismo de estado con temporizador que ya usa la deduplicación (decisión 9).
+2. **Un evento perdido arruina dos intervalos, no uno.** Si falta la lectura de las 18:15, no
+   se puede calcular el consumo de 18:00–18:15 *ni* el de 18:15–18:30. ⚠️ **Abierto:** si esos
+   dos intervalos se marcan como indeterminados o si se imputa el consumo combinado al bloque
+   completo — correcto en total, pero puede caer sobre dos franjas distintas.
+3. **El contador se resetea** al cambiar o reprogramar un medidor, y la resta da un consumo
+   negativo enorme. Como se asume que no hay generación distribuida, **un consumo negativo
+   siempre es un reseteo y nunca una medición válida**: se detecta y va a cuarentena.
+
+### Salida de emergencia, declarada de antemano
+
+La diferenciación se implementa como una **etapa aislada y temprana** del pipeline, con un
+interruptor de configuración que la saltea. Si no está funcionando a tiempo, el simulador
+emite consumo por intervalo directamente y la etapa se desactiva. Está diseñada así a
+propósito: es la pieza que acopla el pipeline al trabajo de estado, y conviene poder
+desacoplarla sin rehacer nada.

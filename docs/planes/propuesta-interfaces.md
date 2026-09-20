@@ -65,9 +65,10 @@ El simulador los produce a propósito; la validación los manda a cuarentena.
 - **Si llegan dos eventos con el mismo `event_id` y distinto `energia_kwh`** —el medidor
   corrigió una lectura—: ¿gana el primero o el último? Con dedup estricto gana el primero y la
   corrección se pierde.
-- ⚠️ **Contador acumulado o consumo del intervalo** (decisión 10). La propuesta asume
-  **consumo del intervalo**. Con contador acumulado, `energia_kwh` pasa a ser `lectura_kwh` y
-  el pipeline tiene que restar la lectura anterior de cada medidor.
+- ✅ ~~Contador acumulado o consumo del intervalo~~ — **resuelto: contador acumulado**
+  (OBIS `15.8.0`). Los ejemplos de arriba dicen `energia_kwh`: **hay que cambiarlo a
+  `lectura_kwh`**, porque el valor es el del contador y no el consumo del intervalo. El
+  consumo lo calcula la etapa de diferenciación del pipeline.
 
 ---
 
