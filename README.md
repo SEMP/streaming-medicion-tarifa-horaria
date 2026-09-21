@@ -124,6 +124,14 @@ Las decisiones tomadas y su justificación están en
 [`docs/decisiones-de-diseno.md`](docs/decisiones-de-diseno.md). Se actualiza a medida que el
 equipo decide; lo que está abierto figura como tal.
 
+## Licencia
+
+[Apache License 2.0](LICENSE) — Sergio Morel, Clara Almirón y Daniel, 2026.
+
+Se eligió una licencia permisiva y con concesión expresa de patentes para que el trabajo
+pueda reutilizarse libremente, incluso en contextos corporativos, sin requerir permiso
+adicional de sus autores.
+
 ## Datos
 
 **Todos los datos de este repositorio son sintéticos**, generados por `simulador/`. El
