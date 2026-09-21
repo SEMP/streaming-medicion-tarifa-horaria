@@ -57,14 +57,20 @@ agrega unos 600 ms.
 1,59 y 1,70 s (±3%). **No hay degradación en hora punta**, así que el simulador no necesita
 término diurno y el error de atribución no empeora justo en la franja que más cuesta."""
 
-MAX_INTENTOS = 11
 INTENTOS_MEDIA = 1.51
-"""**Medido:** el tope es 11 intentos pero la media ponderada es 1,51 — la gran mayoría
-acierta al primero. Varía por modelo entre 1,07 y 3,97, y eso es costo de bus directo: el
-peor modelo ocupa ~4× lo que el mejor, por lectura.
+INTENTOS_MAX_OBSERVADO = 11
+"""**Medido:** la media ponderada de intentos por pedido es 1,51 — la gran mayoría acierta
+al primero. Varía por modelo entre 1,07 y 3,97, y eso es costo de bus directo: el peor
+modelo ocupa ~4× lo que el mejor, por lectura.
 
-Los reintentos ocurren **dentro del mismo pedido**: un pedido que falló ya agotó su
-presupuesto, no hay una segunda oportunidad programada después."""
+⚠️ **El presupuesto es TIEMPO, no un contador de intentos.** Lo que se configura es el
+límite por pedido (`TIMEOUT_SEGUNDOS`), y dentro de él se reintenta las veces que entren.
+Que el máximo observado sea 11 es simplemente cuántos ciclos caben en el presupuesto: **no
+es una constante ni un tope configurado**, y modelarlo como contador se alejaría de la
+realidad.
+
+Los reintentos ocurren **dentro del mismo pedido**: uno que falló ya agotó su presupuesto,
+no hay una segunda oportunidad programada después."""
 
 
 @dataclass(frozen=True)
