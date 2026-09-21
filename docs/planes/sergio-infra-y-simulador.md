@@ -16,10 +16,16 @@ infraestructura.
 
 ## Parte 2 — Simulador
 
-⚠️ **Se escribe de cero.** No se deriva de ningún simulador de proyectos laborales: este
-repositorio es público y aquel código no es nuestro. Además son programas con objetivos
-opuestos — aquel simula medidores para probar un sistema real y por lo tanto se comporta
-bien; este existe para **inyectar fallas a propósito**.
+⚠️ **Se escribe de cero, de forma independiente.** No deriva de ningún simulador de proyectos
+laborales. Hay tres razones y la tercera es la que más importa:
+
+1. Este repositorio es **público** y aquel código no es del equipo.
+2. Son programas con **objetivos opuestos**: aquel simula medidores para probar un sistema
+   real, y por lo tanto se comporta bien; este existe para **inyectar fallas a propósito**.
+   Partir del otro sería pelear contra un diseño pensado para lo contrario.
+3. **Habilita el camino de vuelta.** Si este simulador nace limpio, es obra del equipo bajo la
+   licencia que el equipo elija, y puede incorporarse después a un sistema de trabajo sin
+   ninguna pregunta pendiente. Si derivara del otro, esa vuelta quedaría enredada.
 
 Simula el **ciclo de pedidos** de un concentrador: para cada medidor, lecturas del contador en
 cada borde de franja —**con la redundancia configurada alrededor de cada borde**— más las
