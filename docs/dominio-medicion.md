@@ -255,9 +255,14 @@ de buffer. Para simular da igual — se modela como tasa por modelo, que es lo o
 
 ### Los reintentos: pocos, y no siempre sirven
 
-Tope de 11 intentos, pero **la media es 1,51**: la gran mayoría acierta al primero. Varía por
+**La media es 1,51 intentos por pedido**: la gran mayoría acierta al primero. Varía por
 modelo entre 1,07 y 3,97, y eso es costo de bus directo — el peor modelo ocupa unas 4 veces lo
 que el mejor, por lectura.
+
+⚠️ **El presupuesto es tiempo, no un contador de intentos.** Lo que se configura es el límite
+de tiempo por pedido, y dentro de él se reintenta las veces que entren. El máximo observado de
+11 intentos es simplemente cuántos ciclos caben en ese presupuesto: **no es un tope configurado
+ni una constante del sistema**, y modelarlo como contador se alejaría de la realidad.
 
 ⚠️ **Reintento y éxito están desacoplados.** No vale "más reintentos, peor modelo":
 
