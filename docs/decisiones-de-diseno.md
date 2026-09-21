@@ -76,6 +76,8 @@ que el concentrador recibe la respuesta hay latencia, y un pedido puede resolver
 |---|---|
 | Instante ausente o mal formado | Cuarentena: sin instante no hay franja posible |
 | Instante en el futuro respecto de la recepción | Cuarentena: indica un concentrador desincronizado |
+| **Trama incompleta**: falta el registro que interesa | Cuarentena: no aporta al cálculo |
+| **Trama truncada en medio de un número** | No se detecta por formato. Se ataca con el checksum de la trama y con la comparación contra la lectura anterior: un contador no baja ni salta un valor imposible |
 | **Desvío respecto del borde de franja** | ⚠️ **Abierto:** cuánto se tolera antes de considerar que la lectura no sirve para cerrar la franja |
 
 El último es el interesante, y reemplaza al viejo umbral de corrección de reloj. Tiene
@@ -148,9 +150,17 @@ queda alguno.
 **El costo.** Tres pedidos en cada uno de cuatro bordes son 12 por medidor por día, contra 96
 de la curva de carga completa: sigue siendo un octavo.
 
-⚠️ **Abierto, y es una restricción física:** si el concentrador puede volver a pedirle al mismo
-medidor en cuestión de minutos. Con enlaces lentos o rondas largas sobre muchos equipos, puede
-que no llegue. La separación entre pedidos redundantes hay que ajustarla a eso.
+⚠️ **La restricción física es real y no es uniforme.** Un pedido puede tardar segundos o
+muchos minutos según el modelo de medidor: algunos devuelven unos pocos registros y otros del
+orden de cientos de miles de datos, sobre un enlace con tiempos de ida y vuelta de segundos.
+Para los medidores livianos la redundancia en el borde es viable; para los pesados **no llega**,
+y ahí el consumo de la franja hay que obtenerlo interpolando entre las dos lecturas que la
+rodean, con el error acotado por la duración de la ronda.
+
+**Decisión de alcance:** esa heterogeneidad vive en el **simulador**, como perfiles de medidor,
+y **no en el pipeline**, que trata a todos igual —valida, diferencia, acota el error y manda a
+cuarentena lo que no puede resolver—. Meter clases de medidor en la lógica del pipeline sería
+complejidad que el enunciado explícitamente no premia.
 
 ### Prorratear: el problema es la magnitud, no el principio
 

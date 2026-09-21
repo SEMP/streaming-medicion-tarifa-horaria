@@ -34,7 +34,22 @@ Debe poder inyectar, de forma **configurable y determinista** (misma semilla, mi
   instantes de horas atrás;
 - **duplicados** por reintento de publicación;
 - **desorden**: los resultados salen en el orden en que responden los medidores;
-- **reseteos de contador**, que hacen que la resta dé negativo.
+- **reseteos de contador**, que hacen que la resta dé negativo;
+- **tramas incompletas**, incluido el caso feo: la que se corta en medio de un número y deja
+  un valor plausible pero equivocado.
+
+### Perfiles de medidor
+
+El parque no es homogéneo: hay modelos que responden unos pocos registros en segundos y otros
+que devuelven cientos de miles de datos sobre un enlace con segundos de latencia, tardando
+minutos y necesitando reintentos.
+
+Eso se modela como **perfiles configurables** —rápido, lento, inestable— cada uno con su
+tiempo de respuesta, su probabilidad de reintento y su probabilidad de trama incompleta. Es
+barato de escribir y da evidencia de demo mucho mejor que un parque uniforme.
+
+⚠️ **La heterogeneidad vive acá, no en el pipeline.** El pipeline trata a todos los medidores
+igual. Es una decisión de alcance deliberada.
 
 **Decisiones tuyas:** cómo se parametriza, si es un proceso continuo o por lotes, cómo se
 controla la velocidad de simulación.

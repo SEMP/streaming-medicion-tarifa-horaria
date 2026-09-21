@@ -148,6 +148,40 @@ contados en resto. El error es chico pero es **sistemático y económico**.
 sin inventar. Prorratear asumiría consumo uniforme, y justamente la razón de que exista la
 franja punta es que el consumo *no* es uniforme.
 
+### El enlace es malo y los medidores no son homogéneos
+
+Dos hechos del parque que condicionan cualquier agenda de pedidos:
+
+**Las respuestas varían enormemente de tamaño.** Algunos modelos devuelven unos pocos
+registros; otros, del orden de cientos de miles de datos. Sobre un enlace con tiempos de ida y
+vuelta de un par de segundos, eso significa que **un pedido puede tardar segundos o muchos
+minutos** según a quién se le pregunte. La duración de una ronda no es un número: es una
+distribución que depende de qué modelos le tocaron a ese concentrador.
+
+**Las tramas llegan incompletas con frecuencia**, y hacen falta reintentos. Una respuesta
+truncada es más peligrosa que una ausente:
+
+| Cómo se corta | Qué pasa |
+|---|---|
+| Falta el registro que interesa | Se detecta trivialmente: no está |
+| Se corta **en medio de un número** | `014380.81` truncado a `014380.8` es un valor plausible y **diez veces menor**. Ninguna validación de formato lo detecta |
+
+Dos defensas, y conviene usar las dos:
+
+1. El **checksum de la trama** (el BCC que cierra la respuesta), que el protocolo ya provee.
+2. **Comparar con la lectura anterior** del mismo medidor: un contador no puede bajar, ni
+   saltar un valor imposible en unos minutos. Es exactamente la misma comprobación que la
+   etapa de diferenciación necesita para detectar reseteos, así que **no cuesta nada extra**.
+
+### Dos reintentos distintos, que no producen lo mismo
+
+Conviene no confundirlos, porque solo uno genera duplicados:
+
+| Reintento | Qué produce | Quién lo maneja |
+|---|---|---|
+| **De comunicación** — se vuelve a pedir al medidor | Una lectura **nueva**, en un instante posterior. **No es un duplicado** | La lógica de franja, tolerando que la lectura no esté donde se la esperaba |
+| **De publicación** — se vuelve a publicar a Kafka | Un **duplicado real**: mismo instante, mismo valor | La deduplicación |
+
 ## Sobre el reloj: lo pone quien pregunta
 
 **El readout no trae timestamp.** En el ejemplo de arriba, ninguna línea dice cuándo se hizo
