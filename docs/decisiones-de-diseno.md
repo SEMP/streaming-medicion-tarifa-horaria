@@ -48,7 +48,7 @@ existe porque alguien la pidió.
 | Falla | Qué produce |
 |---|---|
 | **El pedido se corre.** El de las 18:00 responde a las 18:07 | Siete minutos de punta se atribuyen a resto: error de facturación medible |
-| **El pedido falla.** No hay lectura en un borde | El consumo de las dos franjas adyacentes es **indistinguible**: queda un único número combinado |
+| **El pedido falla.** No hay lectura en un borde | El consumo de las dos franjas adyacentes es **indistinguible**: queda un único número combinado. La redundancia de la decisión 5 acota el daño |
 | **El concentrador pierde enlace** y publica sus resultados más tarde | Datos tardíos y fuera de orden, en ráfaga |
 | **Reintento de publicación** | Duplicados |
 
@@ -127,10 +127,47 @@ no estén cubiertos por la agenda se **rechaza**: no se prorratea en silencio.
 Los pedidos **intermedios** entre bordes son libres: dan resolución de curva de carga, sirven
 para análisis, y no afectan la facturación.
 
-**Por qué no prorratear** cuando falta un borde: prorratear asume consumo uniforme en el
-tramo, y los datos no respaldan ese supuesto — justamente en punta el consumo no es uniforme,
-que es la razón de que exista la franja. Queda disponible como opción configurable, nunca como
-comportamiento por defecto.
+### Redundancia en los bordes: acotar el daño, no reducir la probabilidad
+
+La agenda **repite el pedido alrededor de cada borde** —por ejemplo en 17:58, 18:00 y 18:02—
+en lugar de confiar en uno solo. La cantidad y la separación son configurables.
+
+**Lo que esto resuelve, y es lo importante: el pedido que falla.** Con un único pedido por
+borde, si ese falla se pierde la separación entre las dos franjas adyacentes por completo — un
+bloque de quince horas indistinguible. Con tres pedidos, si el del medio falla todavía se
+conoce el consumo entre 17:58 y 18:02, y la ambigüedad baja **de quince horas a cuatro
+minutos**.
+
+No reduce la probabilidad del fallo: **le pone un techo al daño**. Es una diferencia
+cualitativa, porque un error acotado se puede declarar y cuantificar, y uno no acotado no.
+
+**Lo que mejora sin resolver: el pedido que se corre.** Como cada lectura viene fechada por el
+concentrador, se elige la más cercana al borde y el error residual se achica. Pero siempre
+queda alguno.
+
+**El costo.** Tres pedidos en cada uno de cuatro bordes son 12 por medidor por día, contra 96
+de la curva de carga completa: sigue siendo un octavo.
+
+⚠️ **Abierto, y es una restricción física:** si el concentrador puede volver a pedirle al mismo
+medidor en cuestión de minutos. Con enlaces lentos o rondas largas sobre muchos equipos, puede
+que no llegue. La separación entre pedidos redundantes hay que ajustarla a eso.
+
+### Prorratear: el problema es la magnitud, no el principio
+
+La versión anterior de esta decisión rechazaba el prorrateo de plano. La posición honesta es
+más fina:
+
+| Situación | Qué supone interpolar | ¿Aceptable? |
+|---|---|---|
+| Hueco de 4 minutos entre dos lecturas redundantes | Consumo uniforme durante 4 minutos | **Sí**, con el margen declarado |
+| Falta el borde y hay que repartir una franja de 4 horas | Consumo uniforme durante 4 horas | **No**: en punta sabemos que no lo es, y es la razón de que la franja exista |
+
+Con redundancia en los bordes los huecos quedan acotados, así que la interpolación pasa a ser
+defendible **dentro de un límite explícito**. Por encima de ese límite, el valor se marca como
+indeterminado en lugar de inventarse.
+
+⚠️ **Abierto:** cuál es ese límite. Es la misma decisión que el desvío tolerado respecto del
+borde, vista desde el otro lado.
 
 ### Cuánta frecuencia hace falta
 

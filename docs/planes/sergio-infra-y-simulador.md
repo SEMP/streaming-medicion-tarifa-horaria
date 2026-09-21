@@ -21,9 +21,10 @@ repositorio es público y aquel código no es nuestro. Además son programas con
 opuestos — aquel simula medidores para probar un sistema real y por lo tanto se comporta
 bien; este existe para **inyectar fallas a propósito**.
 
-Simula el **ciclo de pedidos** de un concentrador: para cada medidor, una lectura del contador
-en cada borde de franja (más las intermedias que se configuren), y las publica al tópico de
-entrada conformándose al contrato de Clara.
+Simula el **ciclo de pedidos** de un concentrador: para cada medidor, lecturas del contador en
+cada borde de franja —**con la redundancia configurada alrededor de cada borde**— más las
+intermedias que se pidan, y las publica al tópico de entrada conformándose al contrato de
+Clara.
 
 Debe poder inyectar, de forma **configurable y determinista** (misma semilla, mismos fallos):
 

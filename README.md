@@ -37,6 +37,13 @@ Nada de eso es un detalle de implementación: **si una medición se asigna a la 
 equivocada, al cliente se le factura mal.** Por eso el sistema procesa por *tiempo de evento*
 y no por tiempo de llegada.
 
+### El proyecto no solo procesa: también dice cómo recolectar
+
+Como el consumo de una franja sale de restar dos lecturas, **la configuración tarifaria
+determina la agenda de pedidos**: hay que preguntar en cada borde, y conviene repetir el
+pedido alrededor de cada uno para que un fallo aislado no arruine la franja entera. Esa
+recomendación operativa es parte del resultado del trabajo, no un detalle de implementación.
+
 ## Arquitectura
 
 ```
