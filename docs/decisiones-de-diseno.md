@@ -304,3 +304,60 @@ interruptor de configuración que la saltea. Si no está funcionando a tiempo, e
 emite consumo por intervalo directamente y la etapa se desactiva. Está diseñada así a
 propósito: es la pieza que acopla el pipeline al trabajo de estado, y conviene poder
 desacoplarla sin rehacer nada.
+
+---
+
+# Posibles mejoras
+
+Lo que este diseño **no** hace, con su razón. No entra en el alcance del trabajo; se documenta
+porque conocer el camino que se descartó es parte de justificar el que se tomó.
+
+## Un dispositivo de lectura por medidor
+
+La limitación de fondo de este diseño es el **bus compartido**: los medidores de una cabina se
+leen en secuencia, la ronda dura decenas de minutos, y de ahí sale todo el error de
+atribución que el pipeline tiene que acotar e informar.
+
+Un dispositivo de lectura **dedicado a cada medidor** elimina esa limitación de raíz. Al no
+compartir bus con nadie, puede consultar en los bordes exactos de cada franja, o incluso
+acumular los parciales por franja localmente y exponerlos ya separados.
+
+**Lo que eso ahorraría está cuantificado en este mismo trabajo:**
+
+| Tamaño de cabina | Error de atribución hoy | Con dispositivo dedicado |
+|---|---|---|
+| 30–49 | 8,3% | ~0 |
+| 50–99 | **15,6%** | ~0 |
+| 100–199 | 31,2% | ~0 |
+
+Ese es el argumento económico de la inversión, y es un resultado del pipeline: sin medir el
+error actual no se puede justificar el gasto de eliminarlo.
+
+### Si se hace, conviene exponerlo en códigos OBIS propios
+
+Un dispositivo que calcula los parciales por franja **no debería publicarlos en los registros
+tarifarios estándar** (`1.8.1`, `1.8.2`…), sino en códigos propios. Tres razones:
+
+1. **Auditabilidad.** Con registros estándar es imposible saber después si la separación por
+   franja la hizo el medidor o el dispositivo. Con códigos propios, la procedencia del dato es
+   explícita.
+2. **Reconciliación, que es la más valiosa.** Permite leer las dos cosas —el total acumulado
+   del medidor y los parciales del dispositivo— y **verificar que sumen**. Un dispositivo que
+   se desincroniza o pierde un intervalo se detecta solo, porque su suma deja de coincidir con
+   el total. Esa validación se pierde por completo si los valores son indistinguibles.
+3. **El despliegue sería mixto.** Durante la transición convivirían medidores con dispositivo y
+   sin él, y el pipeline necesita saber cuál es cuál para decidir si tiene que diferenciar o si
+   los parciales ya vienen dados.
+
+### Y arrastra un requisito
+
+El dispositivo hereda el problema de la decisión 7: si acumula por franja, un cambio en el
+calendario tarifario obliga a reconfigurarlos todos. Con configuración remota eso es viable —
+sin ella, el esquema vuelve a ser incompatible con franjas configurables, que es justamente la
+razón por la que hoy la atribución se hace aguas abajo.
+
+## Medición neta
+
+Si se introdujera compra de energía al usuario, `15.8.0` dejaría de equivaler a consumo: habría
+que leer `1.8.0` y `2.8.0` por separado, facturar cada sentido con su tarifa, y la regla de que
+un consumo negativo siempre es un reseteo de contador dejaría de valer. Ver la decisión 10.
