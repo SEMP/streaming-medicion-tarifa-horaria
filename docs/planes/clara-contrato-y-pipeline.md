@@ -50,6 +50,24 @@ configurado), armar la cadena:
 
 1. **Validar** contra el contrato. Lo inválido **no se descarta en silencio**: va a una salida
    lateral y queda contado. Incluye los timestamps que Daniel marca como inválidos.
+
+   > ⚠️ **LA TRAMPA MÁS IMPORTANTE DE TODO EL PROYECTO, y cae justo en tu parte.**
+   >
+   > El campo `calidad` de la lectura puede venir en **`checksum_no_verificado`**, y eso
+   > **NO significa que el dato esté corrupto**. Un fabricante que es el 55% del parque
+   > calcula el checksum distinto de lo que el concentrador espera, así que casi el 100% de
+   > sus lecturas sale marcada — con el valor **completo y correcto**.
+   >
+   > Medido en un despliegue real: esa marca aparece en ~50% de las lecturas. **Un pipeline
+   > que descarte por bandera de calidad tiraría la mitad de las lecturas buenas**, y
+   > además leería como problema de red lo que es un desajuste entre dos implementaciones
+   > del mismo estándar.
+   >
+   > Lo que sí es corrupción es **`truncada`**: la trama se cortó, y si se cortó en medio de
+   > un número el valor quedó plausible pero equivocado. Esa hay que descartarla.
+   >
+   > O sea: **`calidad` no es un booleano de "sirve / no sirve"**. Hay que tratar cada valor
+   > por separado, y la decisión de qué hacer con cada uno va documentada en tu sección.
 2. **Asignar la franja** llamando a la función de Daniel.
 3. **Agregar** por clave `(medidor, fecha_local, franja)` con `CombinePerKey`, en ventana
    diaria (decisión 6).

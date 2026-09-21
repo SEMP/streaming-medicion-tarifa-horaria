@@ -18,89 +18,123 @@ from .consumo import ContadorMedidor
 
 # --------------------------------------------------------------------------- tiempos
 #
-# Los números de esta sección salen de 13 capturas reales de comunicación (bytes con
-# estampa de tiempo, dos fabricantes). Lo que se midió es la **forma** de cada caso; las
-# **frecuencias** no, porque las capturas están elegidas como ejemplo de cada condición.
-# Está marcado abajo qué es medido y qué es nuestro.
+# Los números de esta sección salen de mediciones sobre un despliegue real: ~410.000
+# pedidos en 7 días sobre ~29.000 medidores, cruzados con un monitor de red independiente
+# (ping horario, 146.000 muestras). Está marcado qué es medido, qué es decisión de
+# implementación del concentrador observado, y qué es nuestro.
 
 TIMEOUT_SEGUNDOS = 120.0
-"""Tope por medidor. **Medido:** el máximo observado es 119,61 s, o sea que el tope
-configurado se alcanza tal cual."""
+"""Tope por medidor. **Medido:** el 9,5% de los pedidos termina exactamente acá — es un
+muro, no una cola."""
 
-LATENCIA_PRIMERA_RESPUESTA = (3.5, 4.7)
-"""Cuánto tarda una respuesta que sale al primer intento. **Medido**, y llamativamente
-angosto.
+PAUSA_ENTRE_MEDIDORES = 10.0
+"""Pausa fija que el concentrador deja entre un medidor y el siguiente.
 
-De esos segundos, unos 2,2 aparecen de forma consistente en los dos fabricantes, lo que
-indica que son **del enlace y no del medidor** — ver `Cabina.latencia_enlace`."""
+⚠️ **Es una decisión de diseño del concentrador observado, no una propiedad del protocolo
+ni de los medidores.** Otro concentrador daría otra ronda. Pesa mucho: sumada a los ~19,8 s
+de media por lectura da unos **30 s por medidor**, que es lo que fija la duración de la
+ronda."""
 
-LATENCIA_ENLACE_TIPICA = 2.2
-"""Porción de la primera respuesta que corresponde al **enlace y no al medidor**.
+DURACION_EXITO_PRIMER_INTENTO = (5.0, 10.0)
+"""**Medido:** el grueso de las lecturas exitosas cae acá, y es el 85,5% del total.
 
-**Medido:** aparece consistente en los dos fabricantes, lo que indica que es del enlace. Se
-usa como punto de referencia: el rango de `LATENCIA_PRIMERA_RESPUESTA` ya lo incluye, así
-que una cabina con enlace peor desplaza ese rango hacia arriba en lugar de sumarse encima."""
+Una estimación previa de ~3,5 s resultó ser **la mitad de lo real**: provenía de unas pocas
+capturas sesgadas al caso limpio."""
 
-ESCALERA_HUECO_LARGO = (14.0, 26.0)
-ESCALERA_HUECO_FIJO = 10.00
-ESCALERA_MAX_INTENTOS = 10
-ESCALERA_MIN_INTENTO_CON_EXITO = 3
-"""A partir de qué intento puede salir una respuesta dentro de la escalera.
+DURACION_EXITO_CON_REINTENTOS = (30.0, 45.0)
+"""**Medido:** las lecturas que salen recién después de reintentar aterrizan acá (3,8%).
 
-⚠️ **Inferido, no medido.** Las capturas muestran que la distribución es bimodal y que
-**no hay nada entre 4,7 s y 30 s**. Si un reintento pudiera salir en el segundo intento, el
-total caería alrededor de los 20 s y esa zona no estaría vacía. Con el éxito recién posible
-en el tercero —dos huecos más la retransmisión— el mínimo de la escalera queda por encima de
-los 30 s, que es lo observado.
+La distribución de duraciones es **trimodal** —éxito rápido, éxito con reintentos, y muro
+del timeout— con valles reales entre las modas (1,2% combinado)."""
 
-Es una inferencia sobre el mecanismo a partir de la forma de la distribución. A confirmar
-con quien tenga las capturas: alcanza con saber cuál fue la **duración mínima** de un pedido
-que sí respondió por escalera."""
-"""La escalera de reintentos. **Medido:** no es un tiempo sorteado sino un patrón
-determinista — un hueco largo alternando con uno fijo de 10,00 s con precisión de
-centésimas—, con tope de 10 intentos, y cada reintento reenvía el pedido completo desde
-cero. Sin backoff ni jitter."""
+LATENCIA_ENLACE_P50 = 1.665
+"""**Medido:** RTT mediano del enlace. p90 2,29 s, p99 3,66 s, 92,9% alcanzable.
 
-# Consecuencia aritmética de lo anterior: un par de huecos consume ~30 s, así que la
-# escalera llega a los 120 s alrededor del octavo intento. El tope de intentos y el de
-# tiempo se alcanzan casi juntos, lo que concuerda con el máximo medido de 119,61 s.
+El enlace explica ~74% de la latencia hasta la primera respuesta (p50 2,26 s); el equipo
+agrega unos 600 ms.
+
+⚠️ **Es estacionario a lo largo del día.** Medido en las 24 horas sobre 30 días: p50 entre
+1,59 y 1,70 s (±3%). **No hay degradación en hora punta**, así que el simulador no necesita
+término diurno y el error de atribución no empeora justo en la franja que más cuesta."""
+
+MAX_INTENTOS = 11
+INTENTOS_MEDIA = 1.51
+"""**Medido:** el tope es 11 intentos pero la media ponderada es 1,51 — la gran mayoría
+acierta al primero. Varía por modelo entre 1,07 y 3,97, y eso es costo de bus directo: el
+peor modelo ocupa ~4× lo que el mejor, por lectura.
+
+Los reintentos ocurren **dentro del mismo pedido**: un pedido que falló ya agotó su
+presupuesto, no hay una segunda oportunidad programada después."""
 
 
 @dataclass(frozen=True)
-class PerfilMedidor:
-    """Cómo se comporta un modelo de medidor al ser consultado.
+class ModeloMedidor:
+    """Un modelo de equipo. La correlación por modelo es el eje más interesante del parque.
 
-    ⚠️ **La distribución de tiempos es bimodal, no un continuo.** En las capturas no hay
-    nada entre 4,7 s y 30 s: o el medidor contesta al primer intento en unos 4 segundos, o
-    cae en la escalera de reintentos y consume entre 30 y 120 s. No existe el "medidor
-    lento" que responde en 20 s.
+    **Medido:** con el mismo enlace y la misma configuración, las tasas de entrega por
+    modelo van de **65% a 94%**. Y como los modelos están repartidos por todo el parque,
+    esa correlación es **espacialmente dispersa**: ninguna partición por ubicación la aísla.
+    Para un pipeline particionado por cabina, ese patrón es invisible.
 
-    Eso cambia cuál es la variable que importa: **la duración de una ronda la fija la tasa
-    de fallas, no la velocidad media.** Un parque de medidores veloces con mal enlace tarda
-    mucho más que uno de medidores mediocres con buen enlace.
+    ⚠️ Se desconoce *por qué* unos modelos fallan más (se descartaron red, configuración y
+    truncamiento de buffer). Para un simulador da igual: se modela como tasa por modelo,
+    que es lo observado.
     """
 
     nombre: str
-    prob_escalera: float
-    """Probabilidad de que el pedido no salga al primer intento y caiga en la escalera.
+    prob_fallo_enlace_sano: float
+    """Probabilidad de que el pedido no salga, **sobre un enlace que funciona**.
 
-    ⚠️ **Este número es nuestro, no medido.** Las capturas muestran la forma de cada caso
-    pero no permiten estimar con qué frecuencia ocurre cada uno. Es el parámetro más
-    influyente del simulador y el primero que habría que calibrar con datos de operación.
-    """
+    Este es el "fondo disperso" que un modelo basado solo en caídas de cabina no tiene:
+    **el 52% de las lecturas fallidas ocurre sobre enlaces que pinguean perfecto.**"""
+    prob_exito_reintento: float
+    """Probabilidad de que un reintento rescate la lectura.
+
+    ⚠️ **Reintento y éxito están desacoplados.** No vale "más reintentos = peor modelo": hay
+    un modelo que hace 3,97 intentos y entrega 89,5%, y otro que hace 3,12 y entrega 65,5%.
+    Para unos modelos reintentar funciona y para otros es tiempo tirado — asumir que el
+    reintento siempre rescata la lectura es falso para una parte del parque."""
+    marca_checksum: bool
+    """Si el equipo marca sus lecturas con checksum incorrecto **sin que haya corrupción**.
+
+    ⚠️ **Es la trampa más peligrosa del dominio.** Un fabricante que es el 55% del parque
+    calcula el checksum distinto de lo que el concentrador espera, así que prácticamente
+    **el 100% de sus lecturas sale marcada** — y el dato se extrae completo y correcto.
+
+    En el reparto crudo de resultados eso aparece como "~50% de lecturas con checksum
+    incorrecto", y leerlo como corrupción se equivoca **por un factor de cinco**. Un
+    pipeline que descarte por bandera de calidad **tiraría la mitad de las lecturas
+    buenas**."""
     prob_trama_incompleta: float
-    """Probabilidad de que la respuesta llegue truncada. También nuestro."""
+    """Truncamiento real, que sí es corrupción. Nuestro, no medido."""
 
 
-PERFILES = {
-    "confiable": PerfilMedidor("confiable", prob_escalera=0.03, prob_trama_incompleta=0.005),
-    "intermitente": PerfilMedidor("intermitente", prob_escalera=0.20, prob_trama_incompleta=0.02),
-    "problematico": PerfilMedidor("problematico", prob_escalera=0.55, prob_trama_incompleta=0.08),
+MODELOS = {
+    # Este es el fabricante mayoritario que marca checksum sin corromper nada.
+    "modelo-a": ModeloMedidor("modelo-a", 0.035, 0.60, True, 0.004),
+    "modelo-b": ModeloMedidor("modelo-b", 0.069, 0.55, False, 0.006),
+    "modelo-c": ModeloMedidor("modelo-c", 0.138, 0.20, False, 0.010),
+    # El peor entregador: reintenta mucho y le sirve poco. Es el caso que muestra que
+    # reintento y exito estan desacoplados.
+    "modelo-d": ModeloMedidor("modelo-d", 0.400, 0.10, False, 0.020),
 }
-"""Tres perfiles que se distinguen por su **tasa de fallas**, no por su velocidad — que es
-lo que la medición mostró que importa."""
+"""Tasas calibradas para que la tasa global de fallas del parque quede cerca del **9,2%
+medido**, con el ~52% de esas fallas cayendo sobre enlaces sanos.
 
-MEZCLA_PERFILES = {"confiable": 0.55, "intermitente": 0.35, "problematico": 0.10}
+⚠️ El reparto **entre** modelos es nuestro: lo medido es que las tasas de entrega por modelo
+van de 65% a 94%, no cuánto pesa cada modelo en el parque."""
+
+MEZCLA_MODELOS = {"modelo-a": 0.55, "modelo-b": 0.25, "modelo-c": 0.13, "modelo-d": 0.07}
+"""Reparto de modelos en el parque. **Disperso a propósito**: se sortea por medidor y no por
+cabina, porque la correlación por modelo no respeta la ubicación."""
+
+PROPORCION_CABINAS_MUERTAS = 0.05
+"""**Medido y validado:** 41 equipos muertos arrastran 1.203 medidores, ~29 cada uno — que es
+el tamaño de cabina típico. La caída de cabina es real y **persistente**, no momentánea, y
+explica el 38% de las fallas.
+
+⚠️ Pero es **menos de la mitad** del problema: el 52% de las fallas ocurre sobre enlaces
+sanos. Hacen falta los dos componentes."""
 
 TRAMOS_CABINA = [
     ((1, 9), 0.08),
@@ -125,7 +159,7 @@ class Medidor:
     posicion_en_bus: int
     """Orden en que lo alcanza la ronda. Determina su desvío sistemático respecto del borde
     de franja: el medidor k de N se lee siempre alrededor de la misma fracción de la ronda."""
-    perfil: PerfilMedidor
+    modelo: ModeloMedidor
     contador: ContadorMedidor
 
 
@@ -144,13 +178,15 @@ class Cabina:
     latencia_enlace: float
     """Segundos de latencia que **comparten todos los medidores de la cabina**.
 
-    Los ~2,2 s hasta la primera respuesta aparecen igual en los dos fabricantes medidos, lo
-    que indica que son del enlace y no del equipo. Modelarlo por cabina y no por medidor
-    importa: significa que las latencias **están correlacionadas** y no se promedian. Una
-    cabina con mal enlace es lenta entera, no "algunos medidores lentos"."""
-    factor_fallas: float
-    """Multiplicador sobre `prob_escalera` de cada medidor, por la calidad del enlace de
-    esta cabina. Por el mismo motivo: si el enlace es malo, falla todo lo que cuelga de él."""
+    El enlace explica ~74% de la latencia hasta la primera respuesta. Modelarlo por cabina y
+    no por medidor importa: las latencias **están correlacionadas** y no se promedian."""
+    enlace_muerto: bool
+    """Si el enlace de esta cabina está caído.
+
+    ⚠️ **Es binario a propósito, no una degradación gradual.** Medido: la disponibilidad por
+    equipo es **bimodal** —el 90% está ≥90% alcanzable, el 4,7% está muerto, y el medio está
+    casi vacío—, y el RTT **no** correlaciona con la disponibilidad. **No existe la población
+    "enlace lento degradado".** Un enlace está arriba y rápido, o está caído."""
 
     def __len__(self) -> int:
         return len(self.medidores)
@@ -224,7 +260,7 @@ def generar_parque(
                     medidor_id=medidor_id,
                     cabina_id=cabina_id,
                     posicion_en_bus=k,
-                    perfil=PERFILES[_elegir(rng_medidor, MEZCLA_PERFILES)],
+                    modelo=MODELOS[_elegir(rng_medidor, MEZCLA_MODELOS)],
                     contador=ContadorMedidor.crear(
                         medidor_id,
                         inicio,
@@ -241,8 +277,8 @@ def generar_parque(
                 cabina_id=cabina_id,
                 medidores=tuple(medidores),
                 prob_caida=prob_caida_cabina,
-                latencia_enlace=round(rng.uniform(1.8, 2.6), 2),
-                factor_fallas=round(rng.choice([0.5, 1.0, 1.0, 1.0, 2.5]), 2),
+                latencia_enlace=round(rng.uniform(1.4, 2.3), 2),
+                enlace_muerto=rng.random() < PROPORCION_CABINAS_MUERTAS,
             )
         )
 

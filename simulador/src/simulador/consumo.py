@@ -12,9 +12,9 @@ no es plana.
 from __future__ import annotations
 
 import math
-from bisect import bisect_right
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
+from functools import lru_cache
 
 PASO_MINUTOS = 1
 """Resolución con la que se integra la curva. Un minuto es suficiente: la grilla de
@@ -43,6 +43,27 @@ def perfil_demanda_kw(minuto_del_dia: int, escala: float = 1.0) -> float:
     return (base + manana + tarde + noche) * escala
 
 
+@lru_cache(maxsize=8)
+def _curva_acumulada(inicio: datetime, dias: int, variacion_diaria: float) -> tuple[float, ...]:
+    """Integral de la curva de demanda con escala 1, cacheada.
+
+    La escala multiplica toda la expresión de `perfil_demanda_kw`, así que la integral de un
+    medidor es **exactamente** la de escala 1 multiplicada por su escala. Eso permite
+    integrar una sola vez para todo el parque en lugar de una vez por medidor: con decenas
+    de miles de medidores, la diferencia es de minutos a milisegundos.
+    """
+    pasos = (dias * MINUTOS_DIA) // PASO_MINUTOS
+    acumulado = [0.0]
+    total = 0.0
+    for paso in range(pasos):
+        momento = inicio + timedelta(minutes=paso * PASO_MINUTOS)
+        minuto_local = momento.hour * 60 + momento.minute
+        factor_dia = 1.0 + variacion_diaria * math.sin(paso / MINUTOS_DIA)
+        total += perfil_demanda_kw(minuto_local, factor_dia) * (PASO_MINUTOS / 60)
+        acumulado.append(total)
+    return tuple(acumulado)
+
+
 @dataclass(frozen=True)
 class ContadorMedidor:
     """El contador acumulado de un medidor, consultable en cualquier instante.
@@ -59,7 +80,9 @@ class ContadorMedidor:
     escala: float
     """Factor de consumo del medidor: distingue una casa chica de una grande."""
     _acumulado: tuple[float, ...]
-    """kWh acumulados desde `inicio`, uno por cada paso de PASO_MINUTOS."""
+    """kWh acumulados desde `inicio` **con escala 1**, uno por paso de PASO_MINUTOS.
+
+    Es compartido entre todos los medidores del parque: `leer` lo multiplica por `escala`."""
 
     @classmethod
     def crear(
@@ -80,23 +103,12 @@ class ContadorMedidor:
         if inicio.tzinfo is None:
             raise ValueError("`inicio` debe ser timezone-aware: la franja depende de la hora local")
 
-        pasos = (dias * MINUTOS_DIA) // PASO_MINUTOS
-        acumulado: list[float] = [0.0]
-        total = 0.0
-        for paso in range(pasos):
-            momento = inicio + timedelta(minutes=paso * PASO_MINUTOS)
-            minuto_local = momento.hour * 60 + momento.minute
-            factor_dia = 1.0 + variacion_diaria * math.sin(paso / MINUTOS_DIA)
-            kw = perfil_demanda_kw(minuto_local, escala * factor_dia)
-            total += kw * (PASO_MINUTOS / 60)  # kW × h = kWh
-            acumulado.append(total)
-
         return cls(
             medidor_id=medidor_id,
             inicio=inicio,
             valor_inicial_kwh=valor_inicial_kwh,
             escala=escala,
-            _acumulado=tuple(acumulado),
+            _acumulado=_curva_acumulada(inicio, dias, variacion_diaria),
         )
 
     def leer(self, instante: datetime) -> float:
@@ -112,11 +124,11 @@ class ContadorMedidor:
         paso = minutos / PASO_MINUTOS
         i = int(paso)
         if i >= len(self._acumulado) - 1:
-            return round(self.valor_inicial_kwh + self._acumulado[-1], 3)
+            return round(self.valor_inicial_kwh + self._acumulado[-1] * self.escala, 3)
 
         fraccion = paso - i
         interpolado = self._acumulado[i] + fraccion * (self._acumulado[i + 1] - self._acumulado[i])
-        return round(self.valor_inicial_kwh + interpolado, 3)
+        return round(self.valor_inicial_kwh + interpolado * self.escala, 3)
 
     def consumo_entre(self, desde: datetime, hasta: datetime) -> float:
         """Consumo real en kWh entre dos instantes. Es la **verdad de referencia**.

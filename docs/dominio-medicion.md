@@ -207,46 +207,119 @@ del pipeline.
 
 Dos hechos del parque que condicionan cualquier agenda de pedidos:
 
-**El tiempo de un pedido es bimodal, no un continuo.** Mediciones sobre comunicación real
-—capturas de bytes con estampa de tiempo, de dos fabricantes— muestran que **no hay nada entre
-los 4,7 y los 30 segundos**: o el medidor responde al primer intento en unos 4 s, o el pedido
-cae en una escalera de reintentos y consume entre 30 y 120 s. **No existe el "medidor lento"**
-que responde en veinte segundos.
+**El tiempo de un pedido es trimodal.** Medido sobre ~410.000 pedidos en 7 días:
 
-Eso cambia cuál es la variable que importa: **la duración de una ronda la fija la tasa de
-fallas, no la velocidad media.** Un parque de medidores veloces con mal enlace tarda mucho más
-que uno de equipos mediocres con buen enlace, porque los reintentos ocupan el bus y retrasan a
-todos los que vienen detrás.
+| Resultado | Duración | Frecuencia |
+|---|---|---|
+| Éxito al primer intento | 5–10 s | **85,5%** |
+| Éxito tras reintentar | 30–45 s | 3,8% |
+| Muro del tope de tiempo | 120 s | **9,5%** |
 
-**La escalera de reintentos es determinista.** No es un tiempo sorteado: un hueco largo
-—del orden de 15 a 25 s— alternando con uno fijo de 10 s con precisión de centésimas, con tope
-de intentos, y cada reintento reenviando el pedido completo desde cero. Sin *backoff* ni
-*jitter*. Como un par de huecos consume unos 30 s, la escalera llega al tope de dos minutos
-alrededor del octavo intento: el tope de intentos y el de tiempo se alcanzan casi juntos.
+Los valles entre las modas son reales (1,2% combinado): la forma es discreta, no una campana.
 
-**La latencia inicial es del enlace, no del medidor.** Los ~2,2 s hasta la primera respuesta
-aparecen consistentes en los dos fabricantes medidos. Eso importa para el modelo: significa
-que dentro de una cabina las latencias **están correlacionadas y no se promedian**. Una cabina
-con mal enlace es lenta entera; modelarlo por medidor daría una duración de ronda optimista.
+**Eso cambia cuál es la variable que importa: la duración de una ronda la fija la tasa de
+fallas, no la velocidad media.** Casi todo responde en segundos; lo que consume el bus es el
+9,5% que agota el tope de dos minutos. Un parque de equipos veloces con mal enlace tarda mucho
+más que uno de equipos mediocres con buen enlace.
 
-⚠️ **Lo que las mediciones no dan son las frecuencias.** Muestran la forma de cada caso, no con
-qué probabilidad ocurre. La tasa de fallas es el parámetro más influyente del modelo y el
-primero que habría que calibrar con datos de operación.
+### La falla tiene tres estructuras, no una
 
-**Las tramas llegan incompletas con frecuencia**, y hacen falta reintentos. Una respuesta
-truncada es más peligrosa que una ausente:
+Cruzando cada pedido con la alcanzabilidad de red de su enlace:
 
-| Cómo se corta | Qué pasa |
-|---|---|
-| Falta el registro que interesa | Se detecta trivialmente: no está |
-| Se corta **en medio de un número** | `014380.81` truncado a `014380.8` es un valor plausible y **diez veces menor**. Ninguna validación de formato lo detecta |
+| Clase de enlace | % de medidores | Entrega dato | % de las fallas |
+|---|---|---|---|
+| Caído | 4,1% | 16,9% | 38% |
+| Intermitente | 4,4% | 80,3% | 10% |
+| **Sano** | 91,5% | 94,8% | **52%** |
 
-Dos defensas, y conviene usar las dos:
+**La caída de cabina es real y persistente:** 41 equipos muertos arrastran 1.203 medidores,
+unos 29 cada uno, que es el tamaño de cabina típico. Confirma que el fallo correlacionado por
+cabina existe y no es momentáneo.
 
-1. El **checksum de la trama** (el BCC que cierra la respuesta), que el protocolo ya provee.
-2. **Comparar con la lectura anterior** del mismo medidor: un contador no puede bajar, ni
-   saltar un valor imposible en unos minutos. Es exactamente la misma comprobación que la
-   etapa de diferenciación necesita para detectar reseteos, así que **no cuesta nada extra**.
+⚠️ **Pero es menos de la mitad del problema.** El **52% de las lecturas fallidas ocurre sobre
+enlaces que pinguean perfecto.** Un modelo que solo contemple la caída de cabina le falta la
+mitad de la realidad: hace falta también un **fondo disperso** sobre equipos sanos.
+
+### Y un tercer eje: la correlación por modelo de equipo
+
+Con el mismo enlace y la misma configuración, **las tasas de entrega por modelo van de 65% a
+94%**. Como los modelos están repartidos por todo el parque, esa correlación es
+**espacialmente dispersa**: ninguna partición por ubicación la aísla.
+
+Para un pipeline particionado por cabina, **ese patrón es invisible**. Es probablemente el
+hallazgo más interesante del dominio para un trabajo de streaming: hay una estructura real en
+los datos que la clave de particionamiento elegida no puede ver.
+
+*(No se sabe por qué esos modelos fallan más: se descartaron red, configuración y truncamiento
+de buffer. Para simular da igual — se modela como tasa por modelo, que es lo observado.)*
+
+### Los reintentos: pocos, y no siempre sirven
+
+Tope de 11 intentos, pero **la media es 1,51**: la gran mayoría acierta al primero. Varía por
+modelo entre 1,07 y 3,97, y eso es costo de bus directo — el peor modelo ocupa unas 4 veces lo
+que el mejor, por lectura.
+
+⚠️ **Reintento y éxito están desacoplados.** No vale "más reintentos, peor modelo":
+
+- un modelo hace 3,97 intentos y entrega 89,5%;
+- otro hace 3,12 y entrega 65,5%;
+- y el mejor entregador de todos está **por encima** de la media de intentos.
+
+Para unos modelos reintentar funciona y para otros es tiempo tirado. **Asumir que el reintento
+eventualmente rescata la lectura es falso para una parte del parque.**
+
+Dato estructural: los reintentos ocurren **dentro del mismo pedido**. Un pedido que falló ya
+agotó su presupuesto — no hay una segunda oportunidad programada después.
+
+### La latencia es del enlace, y es plana a lo largo del día
+
+RTT de red: p50 **1.665 ms**, p90 2.290, p99 3.661, 92,9% alcanzable. Latencia hasta la
+primera respuesta del medidor: p50 2.260 ms. O sea que **el enlace explica ~74%** y el equipo
+agrega unos 600 ms. Por eso se modela **por cabina**: las latencias están correlacionadas y no
+se promedian.
+
+✅ **No hay degradación en hora punta.** Medido en las 24 horas sobre 30 días: p50 entre 1.592
+y 1.699 ms (±3%), alcanzabilidad entre 90,6% y 93,6%. Es buena noticia para este proyecto: la
+ronda no depende de la hora, así que **el error de atribución no empeora justo en la franja que
+más cuesta**, y el simulador no necesita término diurno.
+
+Dos cosas más, contraintuitivas:
+
+- **La cola larga no es de la red.** El p99 del ping es 3,7 s, pero el p99 de la primera
+  respuesta detrás del gateway RS-485 es **23 s**. Los atascos son del gateway o del medidor.
+- **Un enlace está arriba y rápido, o está caído.** La disponibilidad por equipo es bimodal
+  —el 90% está ≥90% alcanzable, el 4,7% está muerto, el medio casi vacío— y el RTT **no**
+  correlaciona con la disponibilidad. **No existe la población "enlace lento degradado".**
+
+### ⚠️ La bandera de calidad que no significa corrupción
+
+Es la trampa más peligrosa del dominio, y la más fácil de leer al revés.
+
+En el reparto crudo de resultados, la categoría más grande —**~50% de las lecturas**— es una
+marca de **checksum incorrecto**. Leerlo como corrupción es equivocarse **por un factor de
+cinco**: la tasa real de fallas es 9,2%.
+
+Lo que pasa es que un fabricante que es el 55% del parque **calcula el checksum distinto de lo
+que el concentrador espera**. El dato se extrae completo y correcto, pero sale marcado.
+Prácticamente el 100% de las lecturas de ese fabricante lleva la marca, y la aritmética cierra
+al decimal.
+
+**Las consecuencias para el pipeline son grandes:**
+
+1. Un pipeline que **descarte por bandera de calidad tiraría la mitad de las lecturas buenas**.
+2. La bandera es **sistemática y correlacionada por fabricante**, no aleatoria: no se puede
+   tratar como ruido.
+3. Describir eso como "problema de la red" sería atribuirle a la infraestructura un desajuste
+   entre dos implementaciones del mismo estándar.
+
+Por eso el contrato distingue valores de `calidad` en lugar de tener un booleano: hay una marca
+que **no implica pérdida de dato** y otra, el truncamiento, que sí.
+
+### Tamaño de las tramas
+
+Del orden de **100–200 bytes** para un medidor monofásico, y hasta **~500** para un trifásico
+con tensiones, corrientes y factor de potencia por fase. Un readout trae típicamente **entre 5
+y 13 registros OBIS**, no decenas.
 
 ### Dos reintentos distintos, que no producen lo mismo
 

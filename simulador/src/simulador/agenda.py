@@ -19,12 +19,11 @@ from datetime import datetime, timedelta
 from .evento import OBIS_ENERGIA_ABSOLUTA, Lectura, Registro
 from .fallas import ConfigFallas, truncar_valor
 from .parque import (
-    ESCALERA_HUECO_FIJO,
-    ESCALERA_HUECO_LARGO,
-    ESCALERA_MAX_INTENTOS,
-    ESCALERA_MIN_INTENTO_CON_EXITO,
-    LATENCIA_ENLACE_TIPICA,
-    LATENCIA_PRIMERA_RESPUESTA,
+    DURACION_EXITO_CON_REINTENTOS,
+    DURACION_EXITO_PRIMER_INTENTO,
+    LATENCIA_ENLACE_P50,
+    MAX_INTENTOS,
+    PAUSA_ENTRE_MEDIDORES,
     Cabina,
     Medidor,
     Parque,
@@ -41,6 +40,9 @@ class ConfigAgenda:
 
     **Medido:** el máximo observado en capturas reales es 119,61 s, o sea que este tope se
     alcanza tal cual."""
+    pausa_entre_medidores: float = PAUSA_ENTRE_MEDIDORES
+    """Pausa fija entre un medidor y el siguiente. **Es un parámetro del concentrador
+    observado, no una constante del protocolo** — otro concentrador daría otra ronda."""
     cadencia_minutos: float | None = None
     """Cada cuánto **arranca** una ronda nueva.
 
@@ -61,54 +63,59 @@ def _tiempo_de_pedido(
     timeout: float,
     *,
     equipos_perfectos: bool = False,
-) -> tuple[float, bool, bool]:
-    """Simula un pedido completo, con su escalera de reintentos, sobre el bus.
+) -> tuple[float, bool, str]:
+    """Simula un pedido completo, con sus reintentos, sobre el bus.
 
-    Devuelve `(segundos consumidos, hubo respuesta, la trama llegó truncada)`.
+    Devuelve `(segundos consumidos, hubo respuesta, marca de calidad)`.
 
-    El modelo es **bimodal**, que es lo que muestran las capturas reales: o la respuesta
-    sale al primer intento en unos 4 segundos, o el pedido cae en la escalera y consume
-    decenas de segundos hasta el tope. No hay un medio.
+    La duración es **trimodal**, que es lo que muestran las mediciones:
 
-    La escalera es **determinista**: un hueco largo alternando con uno fijo de 10 s, con
-    tope de intentos, y cada reintento reenvía el pedido completo. Sin backoff ni jitter.
+    | Resultado | Duración | Frecuencia medida |
+    |---|---|---|
+    | Éxito al primer intento | 5–10 s | 85,5% |
+    | Éxito tras reintentar | 30–45 s | 3,8% |
+    | Muro del timeout | 120 s | 9,5% |
 
-    Los reintentos **ocupan el bus**: un medidor problemático no solo falla, además retrasa
-    a todos los que vienen detrás en la misma cabina. De ahí que la duración de la ronda la
-    fije la tasa de fallas y no la velocidad media.
+    Los reintentos ocurren **dentro del mismo pedido** y ocupan el bus: un medidor
+    problemático no solo falla, además retrasa a todos los que vienen detrás. De ahí que la
+    duración de la ronda la fije la tasa de fallas y no la velocidad media.
     """
-    # El rango medido ya incluye la latencia del enlace típica, así que no se suma:
-    # se desplaza según cuánto se aparta el enlace de esta cabina de ese valor típico.
-    # Una cabina con enlace bueno queda por debajo del rango y una con enlace malo, arriba.
-    primera = rng.uniform(*LATENCIA_PRIMERA_RESPUESTA) + (
-        cabina.latencia_enlace - LATENCIA_ENLACE_TIPICA
-    )
+    modelo = medidor.modelo
+    desvio_enlace = cabina.latencia_enlace - LATENCIA_ENLACE_P50
+
+    def marca(*, permitir_truncamiento: bool = True) -> str:
+        """La calidad que el concentrador le pone a la lectura."""
+        if permitir_truncamiento and rng.random() < modelo.prob_trama_incompleta:
+            return "truncada"  # corrupcion real: el valor no sirve
+        if modelo.marca_checksum:
+            # El equipo calcula el checksum distinto de lo que el concentrador espera.
+            # El dato esta completo y correcto: NO es corrupcion.
+            return "checksum_no_verificado"
+        return "ok"
+
+    exito_directo = rng.uniform(*DURACION_EXITO_PRIMER_INTENTO) + desvio_enlace
 
     if equipos_perfectos:
-        return min(primera, timeout), True, False
+        # La marca de checksum SOBREVIVE al modo sin fallas, y eso es deliberado: no es una
+        # falla. Es una caracteristica permanente de ese fabricante, y el pipeline la va a
+        # ver siempre. Suprimirla acá escondería justamente la trampa que hay que probar.
+        return min(exito_directo, timeout), True, marca(permitir_truncamiento=False)
 
-    prob = min(1.0, medidor.perfil.prob_escalera * cabina.factor_fallas)
-    if rng.random() >= prob:
-        return primera, True, rng.random() < medidor.perfil.prob_trama_incompleta
+    # Un enlace caido no entrega casi nada, y es persistente: no es un fallo momentaneo.
+    prob_fallo = 0.831 if cabina.enlace_muerto else modelo.prob_fallo_enlace_sano
 
-    # Escalera: el primer intento ya se gastó y no respondió.
-    gastado = primera
-    for intento in range(2, ESCALERA_MAX_INTENTOS + 1):
-        # Los huecos alternan: largo, fijo, largo, fijo…
-        hueco = (
-            rng.uniform(*ESCALERA_HUECO_LARGO) if intento % 2 == 0 else ESCALERA_HUECO_FIJO
-        )
-        if gastado + hueco >= timeout:
-            return timeout, False, False
-        gastado += hueco
+    if rng.random() >= prob_fallo:
+        return min(exito_directo, timeout), True, marca()
 
-        # Cada reintento reenvía el pedido completo, así que una respuesta exitosa cuesta
-        # además su propio tiempo de transmisión.
-        if intento >= ESCALERA_MIN_INTENTO_CON_EXITO and rng.random() >= prob:
-            respuesta = min(gastado + primera, timeout)
-            return respuesta, True, rng.random() < medidor.perfil.prob_trama_incompleta
+    # El pedido no salio al primer intento. Reintenta DENTRO del mismo pedido, y si el
+    # reintento funciona la lectura aterriza en la segunda moda.
+    if rng.random() < modelo.prob_exito_reintento:
+        recuperado = rng.uniform(*DURACION_EXITO_CON_REINTENTOS) + desvio_enlace
+        return min(recuperado, timeout), True, marca()
 
-    return min(gastado, timeout), False, False
+    # Reintentar no sirvio: se consume el presupuesto completo. Esta es la tercera moda, y
+    # es la que ocupa el bus sin entregar nada.
+    return timeout, False, "sin_respuesta"
 
 
 def _recorrer_cabina(
@@ -128,15 +135,17 @@ def _recorrer_cabina(
     if not fallas.equipos_perfectos and rng.random() < cabina.prob_caida:
         # Una cabina caída igual consume tiempo: el concentrador espera el timeout de
         # cada medidor antes de darla por perdida.
-        duracion = len(cabina) * cfg.timeout_segundos
+        duracion = len(cabina) * (cfg.timeout_segundos + cfg.pausa_entre_medidores)
         return [], inicio_ronda + timedelta(seconds=duracion)
 
     for medidor in cabina.medidores:
-        segundos, respondio, truncada = _tiempo_de_pedido(
+        segundos, respondio, calidad = _tiempo_de_pedido(
             medidor, cabina, rng, cfg.timeout_segundos,
             equipos_perfectos=fallas.equipos_perfectos,
         )
-        momento = momento + timedelta(seconds=segundos)
+        # La pausa entre medidores es del concentrador, no del protocolo, pero pesa: sumada
+        # a la media por lectura da unos 30 s por medidor.
+        momento = momento + timedelta(seconds=segundos + cfg.pausa_entre_medidores)
         if momento > cfg.fin:
             break
         if not respondio:
@@ -146,7 +155,7 @@ def _recorrer_cabina(
 
         if rng.random() < fallas.prob_reseteo_contador:
             valor = round(valor * rng.uniform(0.0, 0.02), 3)  # el equipo se reprogramó
-        if truncada:
+        if calidad == "truncada":
             valor = truncar_valor(valor, rng)
 
         lecturas.append(
@@ -157,7 +166,7 @@ def _recorrer_cabina(
                 secuencia=medidor.posicion_en_bus,
                 instante_lectura=momento.replace(microsecond=0),
                 registros=(Registro(OBIS_ENERGIA_ABSOLUTA, valor, "kWh"),),
-                calidad="estimado" if truncada else "ok",
+                calidad=calidad,
                 publicado_at=momento,  # se corrige después, al publicar
             )
         )

@@ -144,35 +144,36 @@ los otros cincuenta.
 obtiene interpolando entre las dos lecturas que rodean el borde.**
 
 Cuánto cuesta *no* interpolar, es decir tomar la lectura más cercana al borde, sobre una franja
-punta de cuatro horas. La duración de la ronda **no la fija la velocidad de los medidores sino
-la tasa de fallas**, porque los reintentos ocupan el bus y retrasan a todos los que vienen
-detrás — así que el error depende de las dos cosas:
+punta de cuatro horas:
 
-| Tamaño de cabina | 3% de fallas | 10% | 25% | 50% |
-|---|---|---|---|---|
-| 10–19 | 1 min · 0,5% | 2 min · 0,7% | 3 min · 1,2% | 7 min · 2,9% |
-| 20–29 | 2 min · 0,9% | 3 min · 1,2% | 6 min · 2,3% | 12 min · 5,1% |
-| 30–49 | 3 min · 1,4% | 5 min · 2,0% | 9 min · 3,8% | 20 min · 8,3% |
-| **50–99** | **6 min · 2,7%** | **9 min · 3,8%** | **18 min · 7,3%** | **37 min · 15,2%** |
-| 100–199 | 13 min · 5,5% | 19 min · 7,9% | 35 min · 14,4% | 73 min · 30,5% |
+| Tamaño de cabina | Ronda | Error máximo de atribución |
+|---|---|---|
+| 10–19 | 6 min | 2,7% |
+| 20–29 | 10 min | 4,2% |
+| 30–49 | 16 min | 6,8% |
+| **50–99** | **30 min** | **12,5%** |
+| 100–199 | 61 min | 25,4% |
 
-⚠️ **La tasa de fallas no está calibrada.** Las mediciones disponibles de comunicación real
-muestran la *forma* de cada caso —o el medidor responde en unos 4 segundos, o cae en una
-escalera de reintentos que consume decenas de segundos— pero **no permiten estimar con qué
-frecuencia** ocurre cada uno. Es el parámetro más influyente del modelo y el primero que
-habría que medir en operación.
+Y ahí vive el grueso del parque. **Por eso la interpolación es obligatoria y no una
+optimización.**
 
-Eso convierte el resultado en algo más útil que un número suelto: el proyecto no dice "el
-error es tanto", dice **"el error es esta función de la calidad del enlace"** — y de paso deja
-claro qué habría que medir para fijarlo.
+### De dónde sale ese número, y qué parte es una decisión ajena
 
-Aun en el escenario optimista, con 3% de fallas, las cabinas grandes ya pierden varios puntos
-porcentuales. **Por eso la interpolación es obligatoria y no una optimización.**
+La ronda dura `medidores × segundos por medidor`, y los segundos por medidor tienen dos
+componentes muy distintos:
 
-> Sobre la viabilidad: incluso en el peor caso, con todos los medidores agotando el tope de dos
-> minutos, la cabina más grande completa casi cinco rondas diarias — suficiente para cubrir
-> cuatro bordes de franja. **Facturar por franja es físicamente posible en todo el parque.** Lo
-> que está en juego es la precisión, no la factibilidad.
+| Componente | Cuánto | Qué es |
+|---|---|---|
+| Media por lectura | ~19,8 s | Consecuencia de la distribución trimodal: casi todo responde en 5–10 s, pero el ~9,5% que agota el tope de dos minutos arrastra la media |
+| **Pausa entre medidores** | **~10 s** | ⚠️ **Decisión de diseño del concentrador observado**, no del protocolo ni de los equipos |
+
+Que un tercio del tiempo por medidor sea una pausa configurable importa: **otro concentrador
+daría otra ronda, y por lo tanto otro error de facturación.** Es el parámetro más barato de
+mejorar de todos los que aparecen en este análisis, y conviene decirlo.
+
+Y como la media la arrastra el 9,5% que falla y no la velocidad de los que responden, vale la
+conclusión de la decisión 2: **la ronda la fija la tasa de fallas.** Bajar la tasa de fallas
+del 9% al 3% comprime la ronda mucho más que acelerar a los medidores que ya andan bien.
 
 ### Cada resultado declara su propia incertidumbre
 

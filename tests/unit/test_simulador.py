@@ -249,47 +249,146 @@ def _tiempos_de_pedido(*, cabinas=20, semilla=5, repeticiones=3):
     ]
 
 
+def _resultados_de_pedido(*, cabinas=150, semilla=5, repeticiones=1):
+    """Muestra grande a propósito: con pocas cabinas, la caída de enlace —que es un evento
+    por cabina y no por medidor— es puro ruido, y las tasas globales no significan nada."""
+    import random
+
+    from simulador.agenda import _tiempo_de_pedido
+
+    parque = generar_parque(cabinas=cabinas, inicio=INICIO, dias=1, semilla=semilla)
+    rng = random.Random(semilla)
+    return [
+        (_tiempo_de_pedido(medidor, cabina, rng, 120.0), cabina, medidor)
+        for cabina in parque.cabinas
+        for medidor in cabina.medidores
+        for _ in range(repeticiones)
+    ]
+
+
 def test_ningun_pedido_supera_el_timeout():
-    """Medido: el máximo real observado es 119,61 s con un tope de 120."""
-    assert max(_tiempos_de_pedido()) <= 120.0
+    """Medido: el 9,5% de los pedidos termina exactamente en el tope. Es un muro."""
+    assert max(r[0][0] for r in _resultados_de_pedido()) <= 120.0
 
 
-def test_la_distribucion_de_tiempos_es_bimodal():
-    """Lo medido en capturas reales: o responde en unos 4 s, o cae en la escalera de
-    reintentos y consume decenas de segundos. **No hay nada en el medio**, y esa zona
-    vacía es lo que hace que la ronda dependa de la tasa de fallas y no de la velocidad."""
-    tiempos = _tiempos_de_pedido()
-    zona_vacia = [t for t in tiempos if 6.0 < t < 28.0]
-    assert not zona_vacia, f"{len(zona_vacia)} pedidos en la zona que la medición dice vacía"
+def test_la_distribucion_de_duraciones_es_trimodal():
+    """Medido: éxito rápido en 5–10 s (85,5%), éxito tras reintentar en 30–45 s (3,8%), y
+    muro del timeout (9,5%). Los valles entre modas son reales, no ruido de muestreo."""
+    tiempos = [r[0][0] for r in _resultados_de_pedido()]
 
-    rapidos = [t for t in tiempos if t <= 6.0]
-    lentos = [t for t in tiempos if t >= 28.0]
-    assert rapidos and lentos, "se esperaban los dos modos"
+    rapidos = [x for x in tiempos if x <= 12]
+    recuperados = [x for x in tiempos if 28 <= x <= 48]
+    muro = [x for x in tiempos if x >= 119]
+    assert rapidos and recuperados and muro, "se esperaban las tres modas"
+
+    valle_bajo = [x for x in tiempos if 13 < x < 27]
+    valle_alto = [x for x in tiempos if 50 < x < 118]
+    poblado = len(tiempos)
+    assert len(valle_bajo) / poblado < 0.03, "el valle entre la 1.ª y la 2.ª moda debería estar casi vacío"
+    assert len(valle_alto) / poblado < 0.03, "el valle entre la 2.ª y la 3.ª moda debería estar casi vacío"
+
+
+def test_la_tasa_global_de_fallas_se_parece_a_la_medida():
+    """Calibración contra el dato real: ~9,2% de los pedidos no entrega dato."""
+    resultados = _resultados_de_pedido(cabinas=250)
+    fallidos = sum(1 for (_, ok, _), _, _ in resultados if not ok)
+    tasa = fallidos / len(resultados)
+    assert 0.06 < tasa < 0.13, f"tasa de fallas {tasa:.1%}, se esperaba cerca del 9,2% medido"
+
+
+def test_la_mitad_de_las_fallas_cae_sobre_enlaces_sanos():
+    """El hallazgo que un modelo basado solo en caídas de cabina no tiene: **el 52% de las
+    lecturas fallidas ocurre sobre enlaces que pinguean perfecto**. Hace falta un fondo
+    disperso además del componente correlacionado."""
+    resultados = _resultados_de_pedido(cabinas=250)
+    fallidos = [(c, m) for (_, ok, _), c, m in resultados if not ok]
+    assert fallidos
+
+    sobre_enlace_sano = sum(1 for c, _ in fallidos if not c.enlace_muerto)
+    proporcion = sobre_enlace_sano / len(fallidos)
+    assert proporcion > 0.35, (
+        f"solo {proporcion:.0%} de las fallas cae sobre enlaces sanos; el modelo se estaría "
+        "apoyando demasiado en la caída de cabina"
+    )
+
+
+def test_la_marca_de_checksum_no_implica_corrupcion():
+    """La trampa más peligrosa del dominio.
+
+    Un fabricante mayoritario calcula el checksum distinto de lo que el concentrador
+    espera, así que casi todas sus lecturas salen marcadas — **y el dato está completo y
+    correcto**. Un pipeline que descarte por bandera de calidad tiraría la mitad de las
+    lecturas buenas.
+
+    Esta prueba fija las dos mitades: que la marca aparezca en una proporción grande, y que
+    NO se confunda con la trama truncada, que sí es corrupción.
+    """
+    eventos = _correr(fallas=SIN_FALLAS, cabinas=6)
+    calidades = [e.calidad for e in eventos]
+
+    marcados = sum(1 for c in calidades if c == "checksum_no_verificado")
+    assert marcados / len(calidades) > 0.30, (
+        "se esperaba que una proporción grande de lecturas venga marcada: es el 55% del parque"
+    )
+    assert "truncada" not in calidades, (
+        "la marca de checksum no debe mezclarse con el truncamiento, que sí es corrupción"
+    )
+
+
+def test_los_modelos_de_equipo_estan_dispersos_por_el_parque():
+    """La correlación por modelo es **espacialmente dispersa**: con el mismo enlace, las
+    tasas de entrega por modelo van de 65% a 94%. Como los modelos están repartidos por
+    todo el parque, ninguna partición por ubicación aísla ese patrón — para un pipeline
+    particionado por cabina es invisible."""
+    parque = generar_parque(cabinas=20, inicio=INICIO, dias=1, semilla=13)
+    grandes = [c for c in parque.cabinas if len(c) >= 10]
+    assert grandes
+
+    mezcladas = sum(1 for c in grandes if len({m.modelo.nombre for m in c.medidores}) > 1)
+    assert mezcladas / len(grandes) > 0.8, "los modelos deberían convivir dentro de una cabina"
+
+
+def test_el_enlace_esta_sano_o_muerto_pero_no_degradado():
+    """Medido: la disponibilidad por equipo es bimodal y el RTT no correlaciona con ella.
+    **No existe la población "enlace lento degradado"**, así que el estado es binario."""
+    parque = generar_parque(cabinas=60, inicio=INICIO, dias=1, semilla=17)
+    assert all(isinstance(c.enlace_muerto, bool) for c in parque.cabinas)
+
+    muertas = sum(1 for c in parque.cabinas if c.enlace_muerto)
+    assert 0 < muertas < len(parque.cabinas) // 3, "se esperaba una minoría de cabinas caídas"
 
 
 def test_la_ronda_la_fija_la_tasa_de_fallas_y_no_la_velocidad():
-    """La conclusión central que se desprende de la bimodalidad: subir la tasa de fallas
-    alarga la ronda mucho más que cualquier diferencia de velocidad, porque los reintentos
-    ocupan el bus y retrasan a todos los medidores que vienen detrás."""
+    """La conclusión central: subir la tasa de fallas alarga la ronda mucho más que
+    cualquier diferencia de velocidad, porque los reintentos ocupan el bus y retrasan a
+    todos los medidores que vienen detrás."""
     import random
 
     from simulador.agenda import _tiempo_de_pedido
     from simulador.consumo import ContadorMedidor
-    from simulador.parque import PERFILES, Cabina, Medidor
+    from simulador.parque import MODELOS, Cabina, Medidor
 
     contador = ContadorMedidor.crear("M", INICIO, dias=1, valor_inicial_kwh=0.0, escala=1.0)
 
-    def ronda(perfil):
-        medidores = tuple(Medidor(f"M{k}", "CAB", k, perfil, contador) for k in range(50))
-        cabina = Cabina("CAB", medidores, 0.0, latencia_enlace=2.2, factor_fallas=1.0)
+    def ronda(modelo):
+        medidores = tuple(Medidor(f"M{k}", "CAB", k, modelo, contador) for k in range(50))
+        cabina = Cabina("CAB", medidores, 0.0, latencia_enlace=1.665, enlace_muerto=False)
         rng = random.Random(7)
         return sum(_tiempo_de_pedido(m, cabina, rng, 120.0)[0] for m in medidores)
 
-    confiable = ronda(PERFILES["confiable"])
-    problematico = ronda(PERFILES["problematico"])
-    assert problematico > 4 * confiable
+    assert ronda(MODELOS["modelo-d"]) > 3 * ronda(MODELOS["modelo-a"])
 
 
+def test_reintento_y_exito_estan_desacoplados():
+    """No vale "más reintentos = peor modelo": hay un modelo que reintenta mucho y entrega
+    bien, y otro que reintenta bastante y entrega mal. Asumir que el reintento siempre
+    rescata la lectura es falso para una parte del parque."""
+    from simulador.parque import MODELOS
+
+    peor = MODELOS["modelo-d"]
+    assert peor.prob_exito_reintento < 0.25, (
+        "para el peor modelo, reintentar debería servir poco: es tiempo de bus tirado"
+    )
 def test_la_latencia_esta_correlacionada_dentro_de_la_cabina():
     """El enlace es compartido, así que su latencia NO es independiente por medidor: una
     cabina con mal enlace es lenta entera. Si se modelara por medidor, se promediaría y la

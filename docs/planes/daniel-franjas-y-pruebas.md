@@ -71,7 +71,10 @@ Son el respaldo de todo el proyecto y valen por sí mismas en la evaluación.
   - un evento **duplicado** y la evidencia de que no se cuenta dos veces;
   - un evento **tardío dentro de la lateness** y la evidencia de que corrige su ventana;
   - un evento **tardío fuera de la lateness** y la evidencia de qué se hace con él;
-  - eventos **fuera de orden** que igual caen en la ventana correcta.
+  - eventos **fuera de orden** que igual caen en la ventana correcta;
+  - una lectura con `calidad = "checksum_no_verificado"` que **sí** entra al agregado, y una
+    con `calidad = "truncada"` que **no**. Es la prueba que evita el error más caro del
+    proyecto: descartar por bandera de calidad tiraría la mitad de las lecturas buenas.
 
 Cada escenario tiene que dejar **evidencia legible**, no solo un test en verde: la entrega
 exige mostrar el comportamiento, y un `assert` que pasa no se lo muestra a nadie en un video.
