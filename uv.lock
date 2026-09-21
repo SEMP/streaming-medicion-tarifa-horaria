@@ -1839,7 +1839,7 @@ wheels = [
 [[package]]
 name = "streaming-medicion-tarifa-horaria"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "apache-beam", extra = ["gcp"] },
     { name = "confluent-kafka" },

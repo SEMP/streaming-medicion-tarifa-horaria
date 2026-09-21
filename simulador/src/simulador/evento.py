@@ -1,0 +1,73 @@
+"""Construcción del evento que se publica al tópico de lecturas crudas."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from dataclasses import dataclass
+from datetime import datetime
+
+SCHEMA_VERSION = 1
+OBIS_ENERGIA_ABSOLUTA = "15.8.0"
+
+
+def calcular_event_id(medidor_id: str, instante_lectura: str) -> str:
+    """Identidad estable y determinista de una lectura.
+
+    Que sea determinista es lo que hace **reconocible al duplicado**: si el concentrador
+    reintenta la publicación, el mismo hecho produce el mismo id. Con un identificador
+    aleatorio, un reintento parecería un hecho nuevo y no habría forma de deduplicar.
+    """
+    material = f"{medidor_id}|{instante_lectura}".encode()
+    return hashlib.sha256(material).hexdigest()[:16]
+
+
+@dataclass(frozen=True)
+class Registro:
+    obis: str
+    valor: float
+    unidad: str
+
+    def a_dict(self) -> dict:
+        return {"obis": self.obis, "valor": self.valor, "unidad": self.unidad}
+
+
+@dataclass(frozen=True)
+class Lectura:
+    """Una respuesta de un medidor, tal como la publica el concentrador."""
+
+    medidor_id: str
+    cabina_id: str
+    lote_id: str
+    secuencia: int
+    instante_lectura: datetime
+    """Tiempo de evento. Lo pone el **concentrador** al recibir la respuesta: el readout no
+    trae timestamp propio."""
+    registros: tuple[Registro, ...]
+    calidad: str
+    publicado_at: datetime
+    """Cuándo entró al tópico. Contra `instante_lectura` da el retraso de publicación."""
+
+    def a_dict(self) -> dict:
+        instante = self.instante_lectura.isoformat(timespec="seconds")
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "event_id": calcular_event_id(self.medidor_id, instante),
+            "medidor_id": self.medidor_id,
+            "cabina_id": self.cabina_id,
+            "lote_id": self.lote_id,
+            "secuencia": self.secuencia,
+            "instante_lectura": instante,
+            "registros": [r.a_dict() for r in self.registros],
+            "calidad": self.calidad,
+            "publicado_at": self.publicado_at.isoformat(timespec="milliseconds"),
+        }
+
+    def a_json(self) -> str:
+        return json.dumps(self.a_dict(), ensure_ascii=False)
+
+    @property
+    def clave(self) -> str:
+        """Clave de particionamiento: todas las lecturas de un medidor a la misma partición,
+        para que su orden se preserve y el diferenciado pueda restar consecutivas."""
+        return self.medidor_id
