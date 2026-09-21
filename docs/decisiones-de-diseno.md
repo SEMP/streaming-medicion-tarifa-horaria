@@ -144,18 +144,30 @@ los otros cincuenta.
 obtiene interpolando entre las dos lecturas que rodean el borde.**
 
 Cuánto cuesta *no* interpolar, es decir tomar la lectura más cercana al borde, sobre una franja
-punta de cuatro horas:
+punta de cuatro horas. La duración de la ronda **no la fija la velocidad de los medidores sino
+la tasa de fallas**, porque los reintentos ocupan el bus y retrasan a todos los que vienen
+detrás — así que el error depende de las dos cosas:
 
-| Tamaño de cabina | Ronda | Error máximo de atribución |
-|---|---|---|
-| 10–19 | 8 min | 3,1% |
-| 20–29 | 12 min | 5,2% |
-| 30–49 | 20 min | 8,3% |
-| **50–99** | **38 min** | **15,6%** |
-| 100–199 | 75 min | 31,2% |
+| Tamaño de cabina | 3% de fallas | 10% | 25% | 50% |
+|---|---|---|---|---|
+| 10–19 | 1 min · 0,5% | 2 min · 0,7% | 3 min · 1,2% | 7 min · 2,9% |
+| 20–29 | 2 min · 0,9% | 3 min · 1,2% | 6 min · 2,3% | 12 min · 5,1% |
+| 30–49 | 3 min · 1,4% | 5 min · 2,0% | 9 min · 3,8% | 20 min · 8,3% |
+| **50–99** | **6 min · 2,7%** | **9 min · 3,8%** | **18 min · 7,3%** | **37 min · 15,2%** |
+| 100–199 | 13 min · 5,5% | 19 min · 7,9% | 35 min · 14,4% | 73 min · 30,5% |
 
-Y ahí vive el grueso del parque. **Por eso la interpolación es obligatoria y no una
-optimización.**
+⚠️ **La tasa de fallas no está calibrada.** Las mediciones disponibles de comunicación real
+muestran la *forma* de cada caso —o el medidor responde en unos 4 segundos, o cae en una
+escalera de reintentos que consume decenas de segundos— pero **no permiten estimar con qué
+frecuencia** ocurre cada uno. Es el parámetro más influyente del modelo y el primero que
+habría que medir en operación.
+
+Eso convierte el resultado en algo más útil que un número suelto: el proyecto no dice "el
+error es tanto", dice **"el error es esta función de la calidad del enlace"** — y de paso deja
+claro qué habría que medir para fijarlo.
+
+Aun en el escenario optimista, con 3% de fallas, las cabinas grandes ya pierden varios puntos
+porcentuales. **Por eso la interpolación es obligatoria y no una optimización.**
 
 > Sobre la viabilidad: incluso en el peor caso, con todos los medidores agotando el tope de dos
 > minutos, la cabina más grande completa casi cinco rondas diarias — suficiente para cubrir
@@ -355,9 +367,13 @@ cambios**, procesa ambas. La diferencia de error entre una y otra queda **medida
 
 | Tamaño de cabina | Error de atribución hoy | Con dispositivo dedicado |
 |---|---|---|
-| 30–49 | 8,3% | ~0 |
-| 50–99 | **15,6%** | ~0 |
-| 100–199 | 31,2% | ~0 |
+| 30–49 | 1,4% – 8,3% | ~0 |
+| 50–99 | **2,7% – 15,2%** | ~0 |
+| 100–199 | 5,5% – 30,5% | ~0 |
+
+El rango va del escenario con 3% de fallas al de 50%. Un dispositivo dedicado elimina las dos
+causas a la vez: no comparte bus, así que ni la cantidad de medidores ni la tasa de fallas de
+los vecinos lo afectan.
 
 Ese es el argumento económico de la inversión, y es un resultado del pipeline: sin medir el
 error actual no se puede justificar el gasto de eliminarlo.

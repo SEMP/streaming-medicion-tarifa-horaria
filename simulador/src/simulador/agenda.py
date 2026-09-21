@@ -18,7 +18,17 @@ from datetime import datetime, timedelta
 
 from .evento import OBIS_ENERGIA_ABSOLUTA, Lectura, Registro
 from .fallas import ConfigFallas, truncar_valor
-from .parque import Cabina, Medidor, Parque
+from .parque import (
+    ESCALERA_HUECO_FIJO,
+    ESCALERA_HUECO_LARGO,
+    ESCALERA_MAX_INTENTOS,
+    ESCALERA_MIN_INTENTO_CON_EXITO,
+    LATENCIA_ENLACE_TIPICA,
+    LATENCIA_PRIMERA_RESPUESTA,
+    Cabina,
+    Medidor,
+    Parque,
+)
 
 
 @dataclass(frozen=True)
@@ -27,7 +37,10 @@ class ConfigAgenda:
     fin: datetime
     timeout_segundos: float = 120.0
     """Tope por medidor, configurable como en el sistema real. Dentro de ese presupuesto se
-    hacen reintentos; agotado, se pasa al siguiente."""
+    hacen reintentos; agotado, se pasa al siguiente.
+
+    **Medido:** el máximo observado en capturas reales es 119,61 s, o sea que este tope se
+    alcanza tal cual."""
     cadencia_minutos: float | None = None
     """Cada cuánto **arranca** una ronda nueva.
 
@@ -42,36 +55,60 @@ class ConfigAgenda:
 
 
 def _tiempo_de_pedido(
-    medidor: Medidor, rng: random.Random, timeout: float, *, equipos_perfectos: bool = False
+    medidor: Medidor,
+    cabina: Cabina,
+    rng: random.Random,
+    timeout: float,
+    *,
+    equipos_perfectos: bool = False,
 ) -> tuple[float, bool, bool]:
-    """Simula un pedido completo, con sus reintentos, sobre el bus.
+    """Simula un pedido completo, con su escalera de reintentos, sobre el bus.
 
     Devuelve `(segundos consumidos, hubo respuesta, la trama llegó truncada)`.
 
-    Los reintentos **consumen tiempo del bus**: ese es el punto. Un medidor problemático no
-    solo falla, además retrasa a todos los que vienen detrás en la misma cabina.
+    El modelo es **bimodal**, que es lo que muestran las capturas reales: o la respuesta
+    sale al primer intento en unos 4 segundos, o el pedido cae en la escalera y consume
+    decenas de segundos hasta el tope. No hay un medio.
+
+    La escalera es **determinista**: un hueco largo alternando con uno fijo de 10 s, con
+    tope de intentos, y cada reintento reenvía el pedido completo. Sin backoff ni jitter.
+
+    Los reintentos **ocupan el bus**: un medidor problemático no solo falla, además retrasa
+    a todos los que vienen detrás en la misma cabina. De ahí que la duración de la ronda la
+    fije la tasa de fallas y no la velocidad media.
     """
-    perfil = medidor.perfil
-    gastado = 0.0
+    # El rango medido ya incluye la latencia del enlace típica, así que no se suma:
+    # se desplaza según cuánto se aparta el enlace de esta cabina de ese valor típico.
+    # Una cabina con enlace bueno queda por debajo del rango y una con enlace malo, arriba.
+    primera = rng.uniform(*LATENCIA_PRIMERA_RESPUESTA) + (
+        cabina.latencia_enlace - LATENCIA_ENLACE_TIPICA
+    )
 
     if equipos_perfectos:
-        lo, hi = perfil.segundos_respuesta
-        return min(rng.uniform(lo, hi), timeout), True, False
+        return min(primera, timeout), True, False
 
-    while gastado < timeout:
-        lo, hi = perfil.segundos_respuesta
-        intento = rng.uniform(lo, hi)
-        gastado += intento
+    prob = min(1.0, medidor.perfil.prob_escalera * cabina.factor_fallas)
+    if rng.random() >= prob:
+        return primera, True, rng.random() < medidor.perfil.prob_trama_incompleta
 
-        if gastado >= timeout:
+    # Escalera: el primer intento ya se gastó y no respondió.
+    gastado = primera
+    for intento in range(2, ESCALERA_MAX_INTENTOS + 1):
+        # Los huecos alternan: largo, fijo, largo, fijo…
+        hueco = (
+            rng.uniform(*ESCALERA_HUECO_LARGO) if intento % 2 == 0 else ESCALERA_HUECO_FIJO
+        )
+        if gastado + hueco >= timeout:
             return timeout, False, False
-        if rng.random() < perfil.prob_fallo_total:
-            return min(timeout, gastado), False, False
-        if rng.random() < perfil.prob_reintento:
-            continue  # el intento se perdió: se reintenta y el bus sigue ocupado
-        return gastado, True, rng.random() < perfil.prob_trama_incompleta
+        gastado += hueco
 
-    return timeout, False, False
+        # Cada reintento reenvía el pedido completo, así que una respuesta exitosa cuesta
+        # además su propio tiempo de transmisión.
+        if intento >= ESCALERA_MIN_INTENTO_CON_EXITO and rng.random() >= prob:
+            respuesta = min(gastado + primera, timeout)
+            return respuesta, True, rng.random() < medidor.perfil.prob_trama_incompleta
+
+    return min(gastado, timeout), False, False
 
 
 def _recorrer_cabina(
@@ -89,14 +126,15 @@ def _recorrer_cabina(
     # El enlace de la cabina es compartido: si cae, se pierden TODOS sus medidores a la vez.
     # No es un fallo disperso, es correlacionado, y hay que demostrarlo.
     if not fallas.equipos_perfectos and rng.random() < cabina.prob_caida:
-        duracion = sum(
-            sum(m.perfil.segundos_respuesta) / 2 for m in cabina.medidores
-        )
+        # Una cabina caída igual consume tiempo: el concentrador espera el timeout de
+        # cada medidor antes de darla por perdida.
+        duracion = len(cabina) * cfg.timeout_segundos
         return [], inicio_ronda + timedelta(seconds=duracion)
 
     for medidor in cabina.medidores:
         segundos, respondio, truncada = _tiempo_de_pedido(
-            medidor, rng, cfg.timeout_segundos, equipos_perfectos=fallas.equipos_perfectos
+            medidor, cabina, rng, cfg.timeout_segundos,
+            equipos_perfectos=fallas.equipos_perfectos,
         )
         momento = momento + timedelta(seconds=segundos)
         if momento > cfg.fin:

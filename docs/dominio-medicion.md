@@ -207,11 +207,31 @@ del pipeline.
 
 Dos hechos del parque que condicionan cualquier agenda de pedidos:
 
-**Las respuestas varían enormemente de tamaño.** Algunos modelos devuelven unos pocos
-registros; otros, del orden de cientos de miles de datos. Sobre un enlace con tiempos de ida y
-vuelta de un par de segundos, eso significa que **un pedido puede tardar segundos o muchos
-minutos** según a quién se le pregunte. La duración de una ronda no es un número: es una
-distribución que depende de qué modelos le tocaron a ese concentrador.
+**El tiempo de un pedido es bimodal, no un continuo.** Mediciones sobre comunicación real
+—capturas de bytes con estampa de tiempo, de dos fabricantes— muestran que **no hay nada entre
+los 4,7 y los 30 segundos**: o el medidor responde al primer intento en unos 4 s, o el pedido
+cae en una escalera de reintentos y consume entre 30 y 120 s. **No existe el "medidor lento"**
+que responde en veinte segundos.
+
+Eso cambia cuál es la variable que importa: **la duración de una ronda la fija la tasa de
+fallas, no la velocidad media.** Un parque de medidores veloces con mal enlace tarda mucho más
+que uno de equipos mediocres con buen enlace, porque los reintentos ocupan el bus y retrasan a
+todos los que vienen detrás.
+
+**La escalera de reintentos es determinista.** No es un tiempo sorteado: un hueco largo
+—del orden de 15 a 25 s— alternando con uno fijo de 10 s con precisión de centésimas, con tope
+de intentos, y cada reintento reenviando el pedido completo desde cero. Sin *backoff* ni
+*jitter*. Como un par de huecos consume unos 30 s, la escalera llega al tope de dos minutos
+alrededor del octavo intento: el tope de intentos y el de tiempo se alcanzan casi juntos.
+
+**La latencia inicial es del enlace, no del medidor.** Los ~2,2 s hasta la primera respuesta
+aparecen consistentes en los dos fabricantes medidos. Eso importa para el modelo: significa
+que dentro de una cabina las latencias **están correlacionadas y no se promedian**. Una cabina
+con mal enlace es lenta entera; modelarlo por medidor daría una duración de ronda optimista.
+
+⚠️ **Lo que las mediciones no dan son las frecuencias.** Muestran la forma de cada caso, no con
+qué probabilidad ocurre. La tasa de fallas es el parámetro más influyente del modelo y el
+primero que habría que calibrar con datos de operación.
 
 **Las tramas llegan incompletas con frecuencia**, y hacen falta reintentos. Una respuesta
 truncada es más peligrosa que una ausente:

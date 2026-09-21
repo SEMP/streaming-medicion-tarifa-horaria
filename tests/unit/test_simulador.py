@@ -226,3 +226,76 @@ def test_el_escenario_b_lee_mucho_mas_seguido_al_mismo_medidor():
         return max(cuenta.values())
 
     assert lecturas_por_medidor(b) > lecturas_por_medidor(a)
+
+
+# --------------------------------------------------------------- tiempos de comunicación
+#
+# Estas pruebas fijan la forma de la distribución de tiempos, que se tomó de capturas
+# reales de comunicación. Protegen que un cambio al modelo no la rompa sin que se note.
+
+
+def _tiempos_de_pedido(*, cabinas=20, semilla=5, repeticiones=3):
+    import random
+
+    from simulador.agenda import _tiempo_de_pedido
+
+    parque = generar_parque(cabinas=cabinas, inicio=INICIO, dias=1, semilla=semilla)
+    rng = random.Random(semilla)
+    return [
+        _tiempo_de_pedido(medidor, cabina, rng, 120.0)[0]
+        for cabina in parque.cabinas
+        for medidor in cabina.medidores
+        for _ in range(repeticiones)
+    ]
+
+
+def test_ningun_pedido_supera_el_timeout():
+    """Medido: el máximo real observado es 119,61 s con un tope de 120."""
+    assert max(_tiempos_de_pedido()) <= 120.0
+
+
+def test_la_distribucion_de_tiempos_es_bimodal():
+    """Lo medido en capturas reales: o responde en unos 4 s, o cae en la escalera de
+    reintentos y consume decenas de segundos. **No hay nada en el medio**, y esa zona
+    vacía es lo que hace que la ronda dependa de la tasa de fallas y no de la velocidad."""
+    tiempos = _tiempos_de_pedido()
+    zona_vacia = [t for t in tiempos if 6.0 < t < 28.0]
+    assert not zona_vacia, f"{len(zona_vacia)} pedidos en la zona que la medición dice vacía"
+
+    rapidos = [t for t in tiempos if t <= 6.0]
+    lentos = [t for t in tiempos if t >= 28.0]
+    assert rapidos and lentos, "se esperaban los dos modos"
+
+
+def test_la_ronda_la_fija_la_tasa_de_fallas_y_no_la_velocidad():
+    """La conclusión central que se desprende de la bimodalidad: subir la tasa de fallas
+    alarga la ronda mucho más que cualquier diferencia de velocidad, porque los reintentos
+    ocupan el bus y retrasan a todos los medidores que vienen detrás."""
+    import random
+
+    from simulador.agenda import _tiempo_de_pedido
+    from simulador.consumo import ContadorMedidor
+    from simulador.parque import PERFILES, Cabina, Medidor
+
+    contador = ContadorMedidor.crear("M", INICIO, dias=1, valor_inicial_kwh=0.0, escala=1.0)
+
+    def ronda(perfil):
+        medidores = tuple(Medidor(f"M{k}", "CAB", k, perfil, contador) for k in range(50))
+        cabina = Cabina("CAB", medidores, 0.0, latencia_enlace=2.2, factor_fallas=1.0)
+        rng = random.Random(7)
+        return sum(_tiempo_de_pedido(m, cabina, rng, 120.0)[0] for m in medidores)
+
+    confiable = ronda(PERFILES["confiable"])
+    problematico = ronda(PERFILES["problematico"])
+    assert problematico > 4 * confiable
+
+
+def test_la_latencia_esta_correlacionada_dentro_de_la_cabina():
+    """El enlace es compartido, así que su latencia NO es independiente por medidor: una
+    cabina con mal enlace es lenta entera. Si se modelara por medidor, se promediaría y la
+    duración de la ronda saldría optimista."""
+    parque = generar_parque(cabinas=40, inicio=INICIO, dias=1, semilla=11)
+    latencias = {c.cabina_id: c.latencia_enlace for c in parque.cabinas}
+    assert len(set(latencias.values())) > 1, "las cabinas deberían diferir entre sí"
+    for cabina in parque.cabinas:
+        assert cabina.latencia_enlace == latencias[cabina.cabina_id]

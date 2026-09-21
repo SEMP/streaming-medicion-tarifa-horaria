@@ -40,7 +40,8 @@ fallos. Sin eso, una prueba del pipeline que falla no se puede repetir.
 | Falla | De dónde sale en la realidad |
 |---|---|
 | **Pedido que se corre** | El bus está ocupado con los otros medidores de la cabina |
-| **Pedido que falla** | Se agota el tope por medidor tras varios reintentos |
+| **Escalera de reintentos** | Determinista: hueco largo alternando con uno fijo de 10 s, hasta el tope |
+| **Pedido que falla** | Se agota el tope de dos minutos tras recorrer la escalera |
 | **Cabina caída** | El enlace es compartido: caen **todos** sus medidores a la vez |
 | **Trama incompleta** | Enlace inestable; incluye el corte **en medio de un número** |
 | **Reseteo de contador** | Cambio o reprogramación del equipo: la resta da negativo |
@@ -53,25 +54,57 @@ línea de base limpia contra la cual medir el efecto de cada una por separado.
 
 ## Evidencia de una corrida
 
-Seis cabinas, un día, misma semilla:
+Ocho cabinas, un día. La **separación** es el tiempo entre dos lecturas consecutivas del mismo
+medidor, o sea la cota del error de atribución de ese medidor:
 
 ```
-                                eventos  medid   dupl  retro  tardías  separación
-línea de base (sin fallas)        26610    381      0      0        0     20,6 min
-escenario A (bus compartido)      26139    381    517    275     1159     20,9 min
-escenario B (dispositivo)          5396     60     97     48      236     16,0 min
+  cabina    medidores   separación   error máx. sobre una punta de 4 h
+  CAB-0000         18      3,9 min                              1,6%
+  CAB-0004         33      5,1 min                              2,1%
+  CAB-0003         48      8,8 min                              3,7%
+  CAB-0007         97     14,7 min                              6,1%
+  CAB-0002         85     23,0 min                              9,6%
 ```
 
-La línea de base en cero confirma que las fallas se inyectan y no se filtran de otro lado.
-La **separación** es el tiempo entre dos lecturas consecutivas del mismo medidor: con bus
-compartido son unos 21 minutos, y es la cota del error de atribución por franja.
+Que dos cabinas de tamaño parecido (85 y 97) den 23 y 14,7 minutos no es ruido: es la
+**calidad del enlace**, que se modela por cabina. Es justamente el efecto que se perdería si
+la latencia se sorteara por medidor.
+
+## El modelo de tiempos, y qué parte está medida
+
+Los tiempos salen de capturas de comunicación real (bytes con estampa de tiempo, dos
+fabricantes). Está separado qué es medido y qué es nuestro, porque no es lo mismo:
+
+| | |
+|---|---|
+| **Medido** · el tope de dos minutos se alcanza tal cual | máximo observado: 119,61 s |
+| **Medido** · la distribución es **bimodal** | o responde en 3,5–4,7 s, o cae en la escalera y consume 30–120 s. **Nada en el medio** |
+| **Medido** · la escalera es determinista | hueco largo (14–26 s) alternando con uno fijo de 10,00 s, tope de 10 intentos, cada reintento reenvía el pedido completo. Sin *backoff* ni *jitter* |
+| **Medido** · la latencia inicial es del enlace | ~2,2 s consistentes en los dos fabricantes → por eso se modela **por cabina** y no por medidor: las latencias están correlacionadas |
+| **Nuestro** · la tasa de fallas | Las capturas muestran la forma de cada caso, no su frecuencia. Es el parámetro más influyente y el primero a calibrar |
+| **Inferido** · un reintento no sale antes del tercer intento | Si saliera en el segundo, el total caería cerca de los 20 s y la zona vacía que se midió no estaría vacía |
+
+**La consecuencia es el resultado central del proyecto:** como la mayoría de los medidores
+responde en unos 4 segundos y solo las fallas cuestan decenas, **la duración de la ronda la
+fija la tasa de fallas y no la velocidad media**. Un parque de equipos veloces con mal enlace
+tarda mucho más que uno de equipos mediocres con buen enlace.
+
+```
+ronda de 50 medidores, según la tasa de fallas
+  3%  →   6 min        25%  →  18 min
+ 10%  →   9 min        50%  →  37 min
+```
+
+Y como el error de atribución por franja está acotado por la duración de la ronda, el error de
+facturación resulta ser una función de la **calidad del enlace**. Eso es accionable: mejorar el
+enlace reduce el error de facturación, y el simulador permite estimar cuánto.
 
 ## Cómo está armado
 
 | Módulo | Qué hace |
 |---|---|
 | `consumo.py` | Curva de demanda diaria y contador acumulado. La punta es ~5× el valle: si fuera plano, separar por franja no mostraría nada |
-| `parque.py` | Cabinas, tamaños, perfiles de medidor (`rapido`, `lento`, `inestable`) |
+| `parque.py` | Cabinas, tamaños, calidad de enlace y perfiles de medidor (`confiable`, `intermitente`, `problematico`) |
 | `agenda.py` | La ronda sobre el bus secuencial. Es el corazón: de acá sale el problema temporal |
 | `fallas.py` | Probabilidades y el truncado de tramas |
 | `evento.py` | El evento del contrato y el `event_id` determinista |

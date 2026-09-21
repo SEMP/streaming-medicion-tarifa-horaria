@@ -16,35 +16,91 @@ from datetime import datetime
 from .consumo import ContadorMedidor
 
 
+# --------------------------------------------------------------------------- tiempos
+#
+# Los números de esta sección salen de 13 capturas reales de comunicación (bytes con
+# estampa de tiempo, dos fabricantes). Lo que se midió es la **forma** de cada caso; las
+# **frecuencias** no, porque las capturas están elegidas como ejemplo de cada condición.
+# Está marcado abajo qué es medido y qué es nuestro.
+
+TIMEOUT_SEGUNDOS = 120.0
+"""Tope por medidor. **Medido:** el máximo observado es 119,61 s, o sea que el tope
+configurado se alcanza tal cual."""
+
+LATENCIA_PRIMERA_RESPUESTA = (3.5, 4.7)
+"""Cuánto tarda una respuesta que sale al primer intento. **Medido**, y llamativamente
+angosto.
+
+De esos segundos, unos 2,2 aparecen de forma consistente en los dos fabricantes, lo que
+indica que son **del enlace y no del medidor** — ver `Cabina.latencia_enlace`."""
+
+LATENCIA_ENLACE_TIPICA = 2.2
+"""Porción de la primera respuesta que corresponde al **enlace y no al medidor**.
+
+**Medido:** aparece consistente en los dos fabricantes, lo que indica que es del enlace. Se
+usa como punto de referencia: el rango de `LATENCIA_PRIMERA_RESPUESTA` ya lo incluye, así
+que una cabina con enlace peor desplaza ese rango hacia arriba en lugar de sumarse encima."""
+
+ESCALERA_HUECO_LARGO = (14.0, 26.0)
+ESCALERA_HUECO_FIJO = 10.00
+ESCALERA_MAX_INTENTOS = 10
+ESCALERA_MIN_INTENTO_CON_EXITO = 3
+"""A partir de qué intento puede salir una respuesta dentro de la escalera.
+
+⚠️ **Inferido, no medido.** Las capturas muestran que la distribución es bimodal y que
+**no hay nada entre 4,7 s y 30 s**. Si un reintento pudiera salir en el segundo intento, el
+total caería alrededor de los 20 s y esa zona no estaría vacía. Con el éxito recién posible
+en el tercero —dos huecos más la retransmisión— el mínimo de la escalera queda por encima de
+los 30 s, que es lo observado.
+
+Es una inferencia sobre el mecanismo a partir de la forma de la distribución. A confirmar
+con quien tenga las capturas: alcanza con saber cuál fue la **duración mínima** de un pedido
+que sí respondió por escalera."""
+"""La escalera de reintentos. **Medido:** no es un tiempo sorteado sino un patrón
+determinista — un hueco largo alternando con uno fijo de 10,00 s con precisión de
+centésimas—, con tope de 10 intentos, y cada reintento reenvía el pedido completo desde
+cero. Sin backoff ni jitter."""
+
+# Consecuencia aritmética de lo anterior: un par de huecos consume ~30 s, así que la
+# escalera llega a los 120 s alrededor del octavo intento. El tope de intentos y el de
+# tiempo se alcanzan casi juntos, lo que concuerda con el máximo medido de 119,61 s.
+
+
 @dataclass(frozen=True)
 class PerfilMedidor:
     """Cómo se comporta un modelo de medidor al ser consultado.
 
-    El parque no es homogéneo: hay equipos que responden unos pocos registros en segundos y
-    otros que devuelven muchísimos datos sobre un enlace malo, tardando minutos y
-    necesitando reintentos.
+    ⚠️ **La distribución de tiempos es bimodal, no un continuo.** En las capturas no hay
+    nada entre 4,7 s y 30 s: o el medidor contesta al primer intento en unos 4 segundos, o
+    cae en la escalera de reintentos y consume entre 30 y 120 s. No existe el "medidor
+    lento" que responde en 20 s.
+
+    Eso cambia cuál es la variable que importa: **la duración de una ronda la fija la tasa
+    de fallas, no la velocidad media.** Un parque de medidores veloces con mal enlace tarda
+    mucho más que uno de medidores mediocres con buen enlace.
     """
 
     nombre: str
-    segundos_respuesta: tuple[float, float]
-    """Rango (mínimo, máximo) de lo que tarda una respuesta exitosa."""
-    prob_reintento: float
-    """Probabilidad de que un intento falle y haya que repetirlo dentro del timeout."""
+    prob_escalera: float
+    """Probabilidad de que el pedido no salga al primer intento y caiga en la escalera.
+
+    ⚠️ **Este número es nuestro, no medido.** Las capturas muestran la forma de cada caso
+    pero no permiten estimar con qué frecuencia ocurre cada uno. Es el parámetro más
+    influyente del simulador y el primero que habría que calibrar con datos de operación.
+    """
     prob_trama_incompleta: float
-    """Probabilidad de que la respuesta llegue truncada."""
-    prob_fallo_total: float
-    """Probabilidad de agotar el timeout sin obtener respuesta."""
+    """Probabilidad de que la respuesta llegue truncada. También nuestro."""
 
 
 PERFILES = {
-    "rapido": PerfilMedidor("rapido", (1.5, 4.0), 0.02, 0.005, 0.005),
-    "lento": PerfilMedidor("lento", (15.0, 45.0), 0.10, 0.02, 0.02),
-    "inestable": PerfilMedidor("inestable", (20.0, 110.0), 0.35, 0.08, 0.12),
+    "confiable": PerfilMedidor("confiable", prob_escalera=0.03, prob_trama_incompleta=0.005),
+    "intermitente": PerfilMedidor("intermitente", prob_escalera=0.20, prob_trama_incompleta=0.02),
+    "problematico": PerfilMedidor("problematico", prob_escalera=0.55, prob_trama_incompleta=0.08),
 }
-"""Tres perfiles representativos. `inestable` modela el equipo que devuelve muchos datos
-sobre un enlace con segundos de latencia: tarda, reintenta y a veces no llega."""
+"""Tres perfiles que se distinguen por su **tasa de fallas**, no por su velocidad — que es
+lo que la medición mostró que importa."""
 
-MEZCLA_PERFILES = {"rapido": 0.55, "lento": 0.35, "inestable": 0.10}
+MEZCLA_PERFILES = {"confiable": 0.55, "intermitente": 0.35, "problematico": 0.10}
 
 TRAMOS_CABINA = [
     ((1, 9), 0.08),
@@ -85,6 +141,16 @@ class Cabina:
     medidores: tuple[Medidor, ...]
     prob_caida: float
     """Probabilidad de que la cabina entera quede inalcanzable durante una ronda."""
+    latencia_enlace: float
+    """Segundos de latencia que **comparten todos los medidores de la cabina**.
+
+    Los ~2,2 s hasta la primera respuesta aparecen igual en los dos fabricantes medidos, lo
+    que indica que son del enlace y no del equipo. Modelarlo por cabina y no por medidor
+    importa: significa que las latencias **están correlacionadas** y no se promedian. Una
+    cabina con mal enlace es lenta entera, no "algunos medidores lentos"."""
+    factor_fallas: float
+    """Multiplicador sobre `prob_escalera` de cada medidor, por la calidad del enlace de
+    esta cabina. Por el mismo motivo: si el enlace es malo, falla todo lo que cuelga de él."""
 
     def __len__(self) -> int:
         return len(self.medidores)
@@ -169,8 +235,15 @@ def generar_parque(
                     ),
                 )
             )
+        # La calidad del enlace es propiedad de la cabina y afecta a todos sus medidores.
         resultado.append(
-            Cabina(cabina_id=cabina_id, medidores=tuple(medidores), prob_caida=prob_caida_cabina)
+            Cabina(
+                cabina_id=cabina_id,
+                medidores=tuple(medidores),
+                prob_caida=prob_caida_cabina,
+                latencia_enlace=round(rng.uniform(1.8, 2.6), 2),
+                factor_fallas=round(rng.choice([0.5, 1.0, 1.0, 1.0, 2.5]), 2),
+            )
         )
 
     return Parque(cabinas=tuple(resultado))

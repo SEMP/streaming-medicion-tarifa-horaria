@@ -72,8 +72,8 @@ cambia es *cuándo* caen las lecturas. Mismo diferenciado, misma atribución de 
 código.
 
 **Para qué sirve.** Se corre el mismo pipeline contra los dos escenarios y **se mide la
-diferencia con la propia herramienta**: el error de atribución que hoy estimamos en hasta 15,6%
-para las cabinas grandes pasa a ser un número medido, no proyectado. Ese es el argumento
+diferencia con la propia herramienta**: el error de atribución —que hoy depende de una tasa de
+fallas sin calibrar— pasa a ser un número medido para cada escenario, no proyectado. Ese es el argumento
 económico del proyecto de dispositivos dedicados, obtenido en lugar de supuesto.
 
 Y es buen material de demostración: *misma arquitectura de procesamiento, dos arquitecturas de
