@@ -126,17 +126,10 @@ equipo decide; lo que está abierto figura como tal.
 
 ## Licencia
 
-[Apache License 2.0](LICENSE) — Sergio Morel, Clara Almirón y Daniel, 2026.
+[MIT](LICENSE) — Sergio Morel, Clara Almirón y Daniel Ramírez, 2026.
 
 Es una licencia permisiva: las obras derivadas **no** están obligadas a usar la misma
-licencia y pueden ser cerradas. Se eligió por sobre MIT por la concesión expresa de
-patentes, que es lo que suele revisarse antes de incorporar código externo a un sistema
-corporativo.
-
-El archivo [`NOTICE`](NOTICE) se mantiene deliberadamente **mínimo**: Apache-2.0 obliga a
-reproducir su contenido en cualquier obra derivada, así que todo lo que se agregue ahí se
-convierte en una obligación permanente aguas abajo. El contexto del proyecto va en este
-README, que no arrastra esa obligación.
+licencia y pueden ser cerradas. La única condición es conservar el aviso de copyright.
 
 ### Contexto académico
 

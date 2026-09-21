@@ -3,7 +3,7 @@ name = "streaming-medicion-tarifa-horaria"
 version = "0.1.0"
 description = "Pipeline de streaming con Kafka y Beam que agrega consumo eléctrico por franja horaria"
 readme = "README.md"
-license = "Apache-2.0"
+license = "MIT"
 # Fijado por el job server de Beam del stack (apache/beam_flink1.19_job_server:2.74.0):
 # apache-beam 2.74.0 y el intérprete que esa versión soporta.
 requires-python = ">=3.12,<3.13"
