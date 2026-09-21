@@ -148,6 +148,45 @@ contados en resto. El error es chico pero es **sistemático y económico**.
 sin inventar. Prorratear asumiría consumo uniforme, y justamente la razón de que exista la
 franja punta es que el consumo *no* es uniforme.
 
+### Las cabinas y el bus compartido
+
+Los medidores no cuelgan de la red uno por uno: están agrupados en **cabinas**, y dentro de
+cada cabina se comunican por un **bus RS-485**. Un bus RS-485 es compartido —solo un
+dispositivo habla a la vez—, así que **los medidores de una cabina se leen en secuencia**, uno
+después del otro. Cabinas distintas sí se consultan en paralelo.
+
+Cada medidor tiene un **tiempo máximo configurable** para responder (del orden de dos
+minutos), dentro del cual se hacen reintentos. Agotado ese tope, se pasa al siguiente.
+
+De ahí sale el número que gobierna todo el diseño temporal:
+
+```
+duración de una ronda ≈ medidores de la cabina × tiempo por medidor
+```
+
+Y las cabinas son grandes. En un parque típico, **la mayoría de los medidores está en cabinas
+de 30 a 100 equipos**, con una cola de cabinas de más de cien. Con un tiempo por medidor de
+apenas medio minuto, una cabina de 50 a 99 tarda cerca de **40 minutos** en completar una
+ronda.
+
+**Consecuencia directa: no se puede leer a todos los medidores en el borde de una franja.**
+El bus está ocupado con los demás. Un medidor cualquiera va a tener su lectura en algún punto
+de la ronda, no donde uno quisiera.
+
+Lo bueno es que **el desvío es sistemático, no aleatorio**: como la cabina se recorre en
+orden, el medidor que ocupa la posición *k* de *N* se lee siempre alrededor de la misma
+fracción de la ronda. Es predecible, y por lo tanto compensable.
+
+### Los fallos están correlacionados
+
+El bus y el enlace de la cabina son **compartidos**. Si la cabina se cae, **se caen todos sus
+medidores a la vez**, para el mismo borde. No se pierde la franja de un cliente: se pierde la
+de una cabina entera, que pueden ser decenas o cientos.
+
+Por eso el `cabina_id` viaja en el evento aunque la clave de particionamiento sea el medidor:
+sin él no se puede diagnosticar ni explicar una pérdida masiva, ni distinguirla de un problema
+del pipeline.
+
 ### El enlace es malo y los medidores no son homogéneos
 
 Dos hechos del parque que condicionan cualquier agenda de pedidos:

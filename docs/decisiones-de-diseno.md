@@ -129,38 +129,47 @@ no estén cubiertos por la agenda se **rechaza**: no se prorratea en silencio.
 Los pedidos **intermedios** entre bordes son libres: dan resolución de curva de carga, sirven
 para análisis, y no afectan la facturación.
 
-### Redundancia en los bordes: acotar el daño, no reducir la probabilidad
+### Rondas continuas e interpolación, no pedidos en el borde
 
-La agenda **repite el pedido alrededor de cada borde** —por ejemplo en 17:58, 18:00 y 18:02—
-en lugar de confiar en uno solo. La cantidad y la separación son configurables.
+**Decidido el 20/09, con los números del parque a la vista, y revierte la idea anterior de
+repetir pedidos alrededor de cada borde.**
 
-**Lo que esto resuelve, y es lo importante: el pedido que falla.** Con un único pedido por
-borde, si ese falla se pierde la separación entre las dos franjas adyacentes por completo — un
-bloque de quince horas indistinguible. Con tres pedidos, si el del medio falla todavía se
-conoce el consumo entre 17:58 y 18:02, y la ambigüedad baja **de quince horas a cuatro
-minutos**.
+Como los medidores de una cabina comparten un bus RS-485 y se leen en secuencia, la ronda dura
+`medidores × tiempo por medidor`. Con la mayoría de los medidores en cabinas de 30 a 100 y un
+tiempo por medidor de medio minuto, eso da rondas de **20 a 40 minutos**. El bus no está libre
+para volver a preguntarle al mismo medidor tres veces alrededor de las 18:00: está ocupado con
+los otros cincuenta.
 
-No reduce la probabilidad del fallo: **le pone un techo al daño**. Es una diferencia
-cualitativa, porque un error acotado se puede declarar y cuantificar, y uno no acotado no.
+**Entonces no se pide en el borde. Se pide en rondas continuas, y el consumo de cada franja se
+obtiene interpolando entre las dos lecturas que rodean el borde.**
 
-**Lo que mejora sin resolver: el pedido que se corre.** Como cada lectura viene fechada por el
-concentrador, se elige la más cercana al borde y el error residual se achica. Pero siempre
-queda alguno.
+Cuánto cuesta *no* interpolar, es decir tomar la lectura más cercana al borde, sobre una franja
+punta de cuatro horas:
 
-**El costo.** Tres pedidos en cada uno de cuatro bordes son 12 por medidor por día, contra 96
-de la curva de carga completa: sigue siendo un octavo.
+| Tamaño de cabina | Ronda | Error máximo de atribución |
+|---|---|---|
+| 10–19 | 8 min | 3,1% |
+| 20–29 | 12 min | 5,2% |
+| 30–49 | 20 min | 8,3% |
+| **50–99** | **38 min** | **15,6%** |
+| 100–199 | 75 min | 31,2% |
 
-⚠️ **La restricción física es real y no es uniforme.** Un pedido puede tardar segundos o
-muchos minutos según el modelo de medidor: algunos devuelven unos pocos registros y otros del
-orden de cientos de miles de datos, sobre un enlace con tiempos de ida y vuelta de segundos.
-Para los medidores livianos la redundancia en el borde es viable; para los pesados **no llega**,
-y ahí el consumo de la franja hay que obtenerlo interpolando entre las dos lecturas que la
-rodean, con el error acotado por la duración de la ronda.
+Y ahí vive el grueso del parque. **Por eso la interpolación es obligatoria y no una
+optimización.**
 
-**Decisión de alcance:** esa heterogeneidad vive en el **simulador**, como perfiles de medidor,
-y **no en el pipeline**, que trata a todos igual —valida, diferencia, acota el error y manda a
-cuarentena lo que no puede resolver—. Meter clases de medidor en la lógica del pipeline sería
-complejidad que el enunciado explícitamente no premia.
+> Sobre la viabilidad: incluso en el peor caso, con todos los medidores agotando el tope de dos
+> minutos, la cabina más grande completa casi cinco rondas diarias — suficiente para cubrir
+> cuatro bordes de franja. **Facturar por franja es físicamente posible en todo el parque.** Lo
+> que está en juego es la precisión, no la factibilidad.
+
+### Cada resultado declara su propia incertidumbre
+
+Como la ronda dura distinto en cada cabina, **el error de atribución es distinto para cada
+medidor y es calculable**: lo acota la separación entre las dos lecturas que rodean el borde.
+
+Ese número viaja **en el registro de salida**. El tablero lo muestra, y la facturación decide
+si lo acepta. Es más honesto y más útil que declarar un límite global en un párrafo del
+documento: acá cada valor dice cuánto se puede confiar en él.
 
 ### Prorratear: el problema es la magnitud, no el principio
 
