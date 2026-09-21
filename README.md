@@ -128,9 +128,20 @@ equipo decide; lo que está abierto figura como tal.
 
 [Apache License 2.0](LICENSE) — Sergio Morel, Clara Almirón y Daniel, 2026.
 
-Se eligió una licencia permisiva y con concesión expresa de patentes para que el trabajo
-pueda reutilizarse libremente, incluso en contextos corporativos, sin requerir permiso
-adicional de sus autores.
+Es una licencia permisiva: las obras derivadas **no** están obligadas a usar la misma
+licencia y pueden ser cerradas. Se eligió por sobre MIT por la concesión expresa de
+patentes, que es lo que suele revisarse antes de incorporar código externo a un sistema
+corporativo.
+
+El archivo [`NOTICE`](NOTICE) se mantiene deliberadamente **mínimo**: Apache-2.0 obliga a
+reproducir su contenido en cualquier obra derivada, así que todo lo que se agregue ahí se
+convierte en una obligación permanente aguas abajo. El contexto del proyecto va en este
+README, que no arrastra esa obligación.
+
+### Contexto académico
+
+Trabajo práctico integrador de la materia *Streaming de datos y sus aplicaciones*, Maestría
+en Inteligencia Artificial, Facultad Politécnica — Universidad Nacional de Asunción.
 
 ## Datos
 

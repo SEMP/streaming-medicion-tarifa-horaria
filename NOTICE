@@ -1,12 +1,2 @@
 Consumo eléctrico por franja horaria, en streaming
 Copyright 2026 Sergio Morel, Clara Almirón y Daniel <APELLIDO>
-
-Trabajo práctico integrador de la materia "Streaming de datos y sus aplicaciones",
-Maestría en Inteligencia Artificial, Facultad Politécnica — Universidad Nacional
-de Asunción.
-
-Licenciado bajo la Apache License, Version 2.0. Ver el archivo LICENSE.
-
-Todos los datos que este proyecto procesa son sintéticos, generados por el
-simulador incluido en el repositorio. El proyecto no contiene ni procesa datos
-de ninguna distribuidora eléctrica ni de ningún sistema en producción.
