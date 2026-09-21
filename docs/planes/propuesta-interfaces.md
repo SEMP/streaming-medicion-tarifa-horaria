@@ -132,9 +132,13 @@ intervalo que cruce dos franjas**, y atribuir por el inicio es exacto en lugar d
   corrección se pierde.
 - **Qué registros son obligatorios**, y qué hacer con una lectura que no trae `15.8.0`: ¿es
   inválida, o es válida pero no aporta al cálculo?
-- ✅ ~~De dónde sale la unidad~~ — **resuelto:** la manda el medidor en el propio dato
-  (`15.8.0(014380.81*kWh)`). Se guarda tal como llegó. Validarla contra el código es
-  **opcional**: sirve para detectar un equipo mal configurado, no para saber la unidad.
+- ✅ ~~De dónde sale la unidad~~ — **resuelto:** la manda el medidor en el propio dato. Se
+  guarda tal como llegó. Validarla contra el código es **opcional**: sirve para detectar un
+  equipo mal configurado, no para saber la unidad. Ojo que en la trama el `*` es un
+  separador de campos **genérico** y su cantidad y orden varían entre fabricantes
+  —`(0003.0844*kW)` contra `(005.180*26-05-06*kW)`—, lo que refuerza tener la unidad en un
+  campo propio del contrato en lugar de implícita en una posición. Ver
+  [`../dominio-medicion.md`](../dominio-medicion.md).
 - Si el registro necesita un **instante propio** opcional. Algunos lo traen —la demanda máxima
   informa cuándo ocurrió el máximo—, y aunque `15.8.0` no lo use, admitirlo en el contrato
   cuesta un campo opcional y evita un cambio de esquema después.

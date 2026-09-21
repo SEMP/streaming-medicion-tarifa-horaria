@@ -68,10 +68,26 @@ Un readout en modo ASCII (IEC 62056-21) devuelve una lista de registros. Esquem�
 
 Tres cosas que se leen de ahí y que condicionan el modelo:
 
-**La unidad viaja en el dato**, después del `*`. No hay que inferirla de una tabla de
-códigos: el medidor la informa. Por eso el contrato la guarda tal como llegó, y validarla
-contra el código es opcional — sirve para detectar un equipo mal configurado, no para saber
-en qué unidad está el valor.
+**La unidad viaja en el dato**, no hay que inferirla de una tabla de códigos: el medidor la
+informa. Por eso el contrato la guarda tal como llegó, y validarla contra el código es
+opcional — sirve para detectar un equipo mal configurado, no para saber en qué unidad está
+el valor.
+
+⚠️ **Pero el `*` no es un separador de valor y unidad: es un separador de campos genérico**,
+y la cantidad y el orden de los campos **varía entre fabricantes**:
+
+```
+1.6.0(0003.0844*kW)(26-05-08 23:00:00)      valor · unidad, y el instante en un grupo aparte
+15.6.0(005.180*26-05-06*kW)                 valor · fecha · unidad, todo en el mismo grupo
+```
+
+Partir por `*` y tomar el segundo campo como unidad funciona con el primer equipo y
+**devuelve una fecha como unidad** con el segundo. Cualquier parser tiene que interpretar los
+campos por su contenido —o por el modelo del equipo— y no por su posición.
+
+Este proyecto no parsea tramas: el productor emite JSON con la unidad en un campo propio.
+Eso es justamente lo que vuelve el problema inexistente aguas abajo, y es un argumento a
+favor de que el contrato la lleve explícita en lugar de dejarla implícita en una posición.
 
 **Los registros no son todos de la misma naturaleza.** Conviven acumulados (`15.8.0`,
 `3.8.0`), un máximo con su propio instante de ocurrencia (`1.6.0`) y un valor instantáneo
