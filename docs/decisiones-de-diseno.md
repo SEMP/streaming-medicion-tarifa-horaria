@@ -305,6 +305,31 @@ emite consumo por intervalo directamente y la etapa se desactiva. Está diseñad
 propósito: es la pieza que acopla el pipeline al trabajo de estado, y conviene poder
 desacoplarla sin rehacer nada.
 
+## 11. Licencia: MIT
+
+**Decidido el 20/09.** El proyecto se publica bajo [MIT](../LICENSE), con los tres integrantes
+como titulares.
+
+**Por qué una licencia permisiva y no copyleft.** Uno de los destinos previstos del simulador
+es incorporarlo a un sistema de trabajo. Con GPL o AGPL eso obligaría a liberar ese sistema
+entero; con MPL, los archivos modificados. Ninguna de las dos sirve para ese objetivo. Las
+permisivas —MIT, Apache-2.0— permiten que una obra derivada sea cerrada.
+
+**Por qué MIT y no Apache-2.0.** Se evaluaron las dos y en un primer momento se eligió
+Apache-2.0, por su **concesión expresa de derechos de patente** (§3), que suele ser lo que una
+revisión legal corporativa verifica antes de incorporar código externo. MIT no dice nada al
+respecto: se suele interpretar que hay una licencia implícita, pero no está escrito.
+
+Se optó finalmente por **MIT por simplicidad**: su única obligación es conservar el aviso de
+copyright, mientras que Apache-2.0 agrega marcar los archivos modificados (§4b) y reproducir el
+archivo `NOTICE` en las obras derivadas (§4d).
+
+**Lo que se resigna, dicho explícitamente:** la concesión expresa de patentes. Si alguna vez una
+revisión legal pregunta por ella, la respuesta será que MIT no la contempla.
+
+**Sin sentido alguno en cualquiera de las dos:** ninguna obliga a que las obras derivadas usen
+la misma licencia.
+
 ---
 
 # Posibles mejoras
