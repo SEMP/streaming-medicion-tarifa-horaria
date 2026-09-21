@@ -57,6 +57,36 @@ barato de escribir y da evidencia de demo mucho mejor que un parque uniforme.
 ⚠️ **La heterogeneidad vive acá, no en el pipeline.** El pipeline trata a todos los medidores
 igual. Es una decisión de alcance deliberada.
 
+### Escenario B: un dispositivo de lectura por medidor
+
+Además del escenario actual —cabinas con bus RS-485 compartido y ronda secuencial— el
+simulador genera un **segundo escenario** en el que cada medidor tiene su propio dispositivo de
+comunicación y por lo tanto **se consulta en los bordes exactos de cada franja**, sin esperar
+al bus.
+
+En el simulador es **el caso fácil**: equivale a cabinas de tamaño uno, sin contención. Lo
+difícil de modelar es el escenario actual, que hay que escribir igual.
+
+**El pipeline no se toca.** El dispositivo sigue reportando el contador `15.8.0`; lo único que
+cambia es *cuándo* caen las lecturas. Mismo diferenciado, misma atribución de franja, mismo
+código.
+
+**Para qué sirve.** Se corre el mismo pipeline contra los dos escenarios y **se mide la
+diferencia con la propia herramienta**: el error de atribución que hoy estimamos en hasta 15,6%
+para las cabinas grandes pasa a ser un número medido, no proyectado. Ese es el argumento
+económico del proyecto de dispositivos dedicados, obtenido en lugar de supuesto.
+
+Y es buen material de demostración: *misma arquitectura de procesamiento, dos arquitecturas de
+recolección, esta es la diferencia*. Se cuenta en dos minutos.
+
+⚠️ **Lo que NO se hace:** el dispositivo también podría acumular los parciales por franja y
+entregarlos ya separados en códigos OBIS propios. Eso exigiría un camino distinto en el
+pipeline —saltear el diferenciado, reconciliar contra el total— y es trabajo real sobre la
+pieza que más pesa. Queda en posibles mejoras.
+
+Es importante la distinción: el escenario B **es una entrada distinta, no una funcionalidad
+nueva**. Por eso entra en el alcance sin comprometer el núcleo.
+
 **Decisiones tuyas:** cómo se parametriza, si es un proceso continuo o por lotes, cómo se
 controla la velocidad de simulación.
 

@@ -322,7 +322,11 @@ Un dispositivo de lectura **dedicado a cada medidor** elimina esa limitación de
 compartir bus con nadie, puede consultar en los bordes exactos de cada franja, o incluso
 acumular los parciales por franja localmente y exponerlos ya separados.
 
-**Lo que eso ahorraría está cuantificado en este mismo trabajo:**
+**Este trabajo incluye una prueba de concepto de ese escenario.** El simulador genera las dos
+arquitecturas de recolección —bus compartido y dispositivo dedicado— y el **mismo pipeline, sin
+cambios**, procesa ambas. La diferencia de error entre una y otra queda **medida**, no estimada.
+
+**Lo que eso ahorraría, según la estimación previa:**
 
 | Tamaño de cabina | Error de atribución hoy | Con dispositivo dedicado |
 |---|---|---|
