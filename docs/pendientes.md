@@ -22,7 +22,7 @@ la última vez que hiciste `git pull`.
 |---|---|---|---|---|
 | **P1** | Umbral de desvío tolerado respecto del borde de franja, y su gemelo: el límite de separación por encima del cual no se interpola | Daniel, con Clara | Marcar `indeterminado`; **facturar** | [decisiones §3](decisiones-de-diseno.md) y [§5](decisiones-de-diseno.md) |
 | **P2** | Qué se hace con los dos intervalos que quedan indeterminados cuando falta una lectura: marcarlos, o imputar el consumo combinado al bloque | Clara y Sergio | La agregación | [decisiones §10](decisiones-de-diseno.md) |
-| **P3** | Confirmar **4 particiones** contra lo que cree el `docker-compose` | Sergio | Nada hoy; rompe el orden por clave si no coinciden | [contratos §1.2](contratos.md) |
+| ~~**P3**~~ | ~~Confirmar 4 particiones contra el `docker-compose`~~ · ✅ **coinciden** | Sergio | — | [infra](../infra/README.md) |
 | **P4** | La «regla 1 — alineación a la grilla» de `config/franjas.example.toml` quedó sin efecto con la decisión 5. Reescribirla como «la agenda cubre todos los bordes» | Daniel | Confunde a quien lea la config | [contratos §3](contratos.md) |
 | **P5** | Cómo se representa `CalendarioTarifario` en memoria, y si conviene precomputar una tabla | Daniel | Nadie | [planes/daniel](planes/daniel-franjas-y-pruebas.md) |
 | **P6** | Si `fecha_y_franja` valida también el timestamp, o si eso es una función aparte que corre antes | Daniel | Clara: cambia el orden de las etapas del pipeline | [planes/propuesta-interfaces §2](planes/propuesta-interfaces.md) |
@@ -37,8 +37,9 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 
 | Quién | Qué | Por qué importa |
 |---|---|---|
-| Sergio | Agregar `naturaleza` a `Registro.a_dict()` en `simulador/src/simulador/evento.py` | El contrato la exige como obligatoria y hoy el simulador no la emite |
-| Sergio | `infra/` sigue vacío | El pipeline se construye y se prueba sin Kafka, pero **la evidencia end-to-end y el criterio 6 (15 %) no**. Es el riesgo del cronograma |
+| ~~Sergio~~ | ~~`naturaleza` en `Registro.a_dict()`~~ · ✅ hecho, más `instante` opcional y los headers de Kafka | — |
+| ~~Sergio~~ | ~~`infra/` vacío~~ · ✅ **stack levantado y verificado end-to-end** | — |
+| Sergio | Reescribir la regla 1 de `config/franjas.example.toml` (era P4, de Daniel) | Si se reparten el trabajo de Daniel, alguien tiene que tomarla |
 | Daniel | Puede empezar las pruebas | El contrato de salida ya está cerrado: [contratos §2](contratos.md) |
 | Clara | Esqueleto del pipeline con fuente conmutable (`jsonl` \| `kafka`) | No depende de `infra/`: se construye contra `datos/*.jsonl` |
 | Los tres | Documento técnico, diagrama y **video** | Nadie empezó. El video conviene grabarlo antes del último día |
@@ -49,6 +50,9 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 22/09 | `e31d58e` | **El simulador no era determinista entre procesos**: las semillas se derivaban con `hash()` de cadenas, que Python aleatoriza por ejecución. Corregido con SHA-256 y dos pruebas. Las cifras de `calidad` de [contratos](contratos.md) se remidieron: `checksum_no_verificado` es **66 %**, no 48 % |
+| 22/09 | `e31d58e` | El simulador emite `naturaleza` y `instante` por registro, y el publicador manda los tres headers de Kafka. Cierra los huecos entre el contrato y lo que se producía |
+| 22/09 | `40065a2` | **Infraestructura lista y verificada**: Kafka + Flink + job server, con `KafkaIO` andando. La prueba de humo recorre simulador → Kafka → Beam → Kafka. Ver [infra](../infra/README.md) |
 | 22/09 | — | **P10 cerrado: el diagrama es SVG escrito a mano**, con la convención de la Tarea 1 de Sergio. El detalle está en [README de docs](README.md) §4 |
 | 22/09 | `f060d8b` | **Los dos contratos quedaron cerrados.** Se resolvieron los 10 ítems que estaban abiertos: clave y particiones, nombres de tópicos y regla de versionado, cuarentena en tópico propio, qué gana ante un duplicado divergente, obligatoriedad de registros, `instante` opcional y `naturaleza` obligatoria; y del lado de la salida, la política temporal completa, el tablero leyendo el tópico directo y `compact,delete` |
 | 22/09 | `f060d8b` | **Tres correcciones al borrador de interfaces**, las tres por arrastre del modelo de perfil de carga: los valores de `calidad` son los del readout (`ok`, `checksum_no_verificado`, `truncada`); `intervalos_esperados` se reemplaza por `cobertura_pct` porque sin grilla no existe un número de intervalos esperados; y la justificación por alineación a la grilla ya no rige |

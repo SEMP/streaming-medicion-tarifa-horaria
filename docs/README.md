@@ -44,7 +44,7 @@ El enunciado pide cinco cosas. Ninguna se escribe de cero: se **arman** con lo q
 | Entregable | Estado | De dónde sale |
 |---|---|---|
 | Enlace al repositorio | ✅ | — |
-| [`../README.md`](../README.md) reproducible | 🚧 falta «Cómo levantarlo» | Sergio, cuando exista `infra/` |
+| [`../README.md`](../README.md) reproducible | ✅ «Cómo levantarlo», con y sin Docker · detalle en [`infra/`](../infra/README.md) | Sergio |
 | **Documento técnico** | ⬜ | Ver la tabla de abajo |
 | **Diagrama de arquitectura** | ⬜ | `docs/diagramas/`, en SVG escrito a mano — ver §4 |
 | **Evidencia de pruebas y ejecución** | ⬜ | Salida de `pytest` y de la corrida end-to-end |

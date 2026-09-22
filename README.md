@@ -72,8 +72,9 @@ datos/        Datos de ejemplo generados por el simulador (no versionados).
 
 ## Estado
 
-🚧 **En construcción.** Este commit es el esqueleto del proyecto: estructura, dependencias y
-las decisiones de diseño ya tomadas. Todavía no hay nada ejecutable.
+🚧 **En construcción**, pero ya corre de punta a punta: el simulador produce lecturas, el
+stack de Kafka + Flink las procesa y salen por el tópico de destino. Lo que falta son las
+transformaciones del dominio — el pipeline hoy hace *passthrough*.
 
 | Componente | Estado |
 |---|---|
@@ -83,7 +84,7 @@ las decisiones de diseño ya tomadas. Todavía no hay nada ejecutable.
 | **Infraestructura** | ✅ [`infra/`](infra/) · Kafka + Flink + job server, con `KafkaIO` andando |
 | Configuración de franjas | 🚧 ejemplo en `config/`; falta el cargador y su validación |
 | Pipeline | 🚧 esqueleto cableado; faltan las transformaciones del dominio |
-| Pruebas | 🚧 31 del simulador; faltan las del pipeline |
+| Pruebas | 🚧 34 del simulador; faltan las del pipeline |
 | Documento técnico | ⬜ |
 
 ## Cómo levantarlo
