@@ -44,6 +44,7 @@ El enunciado pide cinco cosas. Ninguna se escribe de cero: se **arman** con lo q
 | Entregable | Estado | De dónde sale |
 |---|---|---|
 | Enlace al repositorio | ✅ | — |
+| [`tecnico/documento.md`](tecnico/documento.md) | 🚧 esqueleto con dueño por sección · se compila con `./tecnico/armar-pdf.sh` | los tres |
 | [`../README.md`](../README.md) reproducible | ✅ «Cómo levantarlo», con y sin Docker · detalle en [`infra/`](../infra/README.md) | Sergio |
 | **Documento técnico** | ⬜ | Ver la tabla de abajo |
 | **Diagrama de arquitectura** | ⬜ | `docs/diagramas/`, en SVG escrito a mano — ver §4 |
