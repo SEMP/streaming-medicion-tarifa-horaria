@@ -16,8 +16,15 @@ uv run simulador --escenario B --salida datos/dispositivo.jsonl
 uv run simulador --help
 ```
 
-Escribe **JSONL**, una lectura por línea. La publicación a Kafka se agrega cuando exista la
-infraestructura: que funcione sin ella es deliberado, para que nadie quede bloqueado.
+Por defecto escribe **JSONL**, una lectura por línea. Con `--a-kafka` publica al tópico de
+lecturas, con la clave en `medidor_id` y los headers del contrato:
+
+```bash
+uv run simulador --a-kafka --cabinas 8            # requiere el stack de infra/ levantado
+```
+
+Que **siga funcionando sin Kafka es deliberado**: permite desarrollar y probar contra un
+archivo, sin esperar a que la infraestructura esté arriba.
 
 ## Los dos escenarios
 
@@ -108,6 +115,7 @@ enlace reduce el error de facturación, y el simulador permite estimar cuánto.
 | `agenda.py` | La ronda sobre el bus secuencial. Es el corazón: de acá sale el problema temporal |
 | `fallas.py` | Probabilidades y el truncado de tramas |
 | `evento.py` | El evento del contrato y el `event_id` determinista |
+| `publicador.py` | Publicación a Kafka: clave por medidor y los headers del contrato |
 | `cli.py` | Línea de comandos |
 
 `ContadorMedidor.consumo_entre()` da el **consumo real**, que el pipeline no ve. Es la
