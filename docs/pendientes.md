@@ -29,6 +29,7 @@ la última vez que hiciste `git pull`.
 | **P7** | **Runner**: la propuesta es Flink con el stack de la clase 7 para la demo end-to-end, y `DirectRunner` con `TestStream` para las pruebas | Los tres | Clara: cómo escribe el pipeline | — |
 | **P8** | Confirmación de Daniel sobre su parte del reparto: no estuvo en la reunión del 20/09 | Daniel | Planificación | [planes/README](planes/README.md) |
 | **P9** | Cuarto integrante, si se suma alguien | Los tres | Nada | — |
+| **P10** | Formato del **diagrama de arquitectura**: Mermaid renderiza en GitHub y se diffea; un SVG exportado da más control pero no se revisa en un diff | Los tres | Es un entregable | [README de docs](README.md) §3 |
 
 **P1 y P2 son las que tienen consecuencia económica**: las dos deciden a qué franja se atribuye
 energía que se factura a precio distinto. Las demás son de coordinación.

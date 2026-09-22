@@ -10,6 +10,9 @@ tarifaria** a partir de curvas de carga que llegan desordenadas, duplicadas y co
 retraso. El contexto y el problema están en [`README.md`](README.md); el **porqué** de cada
 decisión, en [`docs/decisiones-de-diseno.md`](docs/decisiones-de-diseno.md).
 
+**El mapa de la documentación está en [`docs/README.md`](docs/README.md):** qué documento es
+cada uno, en cuál escribir cada cosa, y de dónde sale cada entregable.
+
 Si no venís del rubro eléctrico, leé primero
 [`docs/dominio-medicion.md`](docs/dominio-medicion.md): explica cómo funciona de verdad la
 lectura remota de medidores —códigos OBIS, contador acumulado, por qué solo hay modo readout
