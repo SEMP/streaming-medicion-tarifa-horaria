@@ -23,7 +23,19 @@ que produjo 8.094 lecturas:
 | Retraso de publicación | p50 1,7 s · p90 2,9 s · p99 2,9 h · **máx 3,97 h** |
 | Deltas negativos (reseteo o truncación) | 48 |
 | Separación entre lecturas del mismo medidor | p50 16 min · p90 29,7 min · **máx 249 min** |
-| Reparto de `calidad` | `ok` 51 % · `checksum_no_verificado` 48 % · `truncada` 0,7 % |
+| Reparto de `calidad` | `ok` 33 % · `checksum_no_verificado` 66 % · `truncada` 0,7 % |
+
+> ⚠️ **Cifras corregidas el 22/09.** La corrida original se hizo con el simulador afectado
+> por un defecto de determinismo (`hash()` de cadenas está aleatorizado por proceso en
+> Python), así que el reparto de `calidad` variaba entre ejecuciones. Corregido en
+> `parque.semilla_derivada`, con dos pruebas que lo cubren. El resto de las cifras se
+> reprodujo sin cambios.
+>
+> Que `checksum_no_verificado` supere el 55 % que le corresponde al fabricante mayoritario
+> **no es un error**: ese fabricante es además el más confiable, así que entrega
+> proporcionalmente más lecturas que los otros. La marca está sobrerrepresentada en los
+> datos que llegan, lo que refuerza el argumento del §1.5 — descartar por esa bandera
+> tiraría **dos tercios** de la muestra, no la mitad.
 
 ---
 

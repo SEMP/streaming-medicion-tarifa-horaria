@@ -46,6 +46,7 @@ def publicar(
             key=lectura.clave.encode(),
             value=lectura.a_json().encode(),
             timestamp=int(lectura.publicado_at.timestamp() * 1000),
+            headers=lectura.headers(),
             on_delivery=informar,
         )
         enviadas += 1

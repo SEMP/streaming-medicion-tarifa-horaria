@@ -26,6 +26,7 @@ from .parque import (
     Cabina,
     Medidor,
     Parque,
+    semilla_derivada,
 )
 
 
@@ -164,7 +165,7 @@ def _recorrer_cabina(
                 lote_id=lote_id,
                 secuencia=medidor.posicion_en_bus,
                 instante_lectura=momento.replace(microsecond=0),
-                registros=(Registro(OBIS_ENERGIA_ABSOLUTA, valor, "kWh"),),
+                registros=(Registro(OBIS_ENERGIA_ABSOLUTA, valor, "kWh", naturaleza="acumulado"),),
                 calidad=calidad,
                 publicado_at=momento,  # se corrige después, al publicar
             )
@@ -188,7 +189,7 @@ def generar(
     pendientes: list[tuple[datetime, Lectura]] = []
 
     for cabina in parque.cabinas:
-        rng = random.Random((semilla, cabina.cabina_id).__hash__() & 0xFFFFFFFF)
+        rng = random.Random(semilla_derivada(semilla, cabina.cabina_id))
         momento = cfg.inicio
         ronda = 0
 

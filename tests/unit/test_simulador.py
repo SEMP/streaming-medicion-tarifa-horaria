@@ -178,9 +178,27 @@ def test_el_evento_serializa_a_json_con_los_campos_del_contrato():
         "schema_version", "event_id", "medidor_id", "cabina_id", "lote_id",
         "secuencia", "instante_lectura", "registros", "calidad", "publicado_at",
     }
-    assert d["registros"][0]["obis"] == "15.8.0"
-    assert d["registros"][0]["unidad"] == "kWh"
+    registro = d["registros"][0]
+    assert registro["obis"] == "15.8.0"
+    assert registro["unidad"] == "kWh"
+    assert registro["naturaleza"] == "acumulado", (
+        "el contrato lo exige: el pipeline solo puede diferenciar los acumulados"
+    )
+    assert set(registro) <= {"obis", "naturaleza", "valor", "unidad", "instante"}
     assert "-03:00" in d["instante_lectura"], "el instante debe llevar offset explícito"
+
+
+def test_la_lectura_lleva_los_headers_que_el_contrato_exige():
+    """Permiten enrutar o rechazar sin deserializar el cuerpo, que en cuarentena o en una
+    migración de esquema es una diferencia real de costo."""
+    ev = _correr(cabinas=1, horas=2)
+    assert ev
+    headers = dict(ev[0].headers())
+    assert set(headers) == {"schema_version", "content_type", "trace_id"}
+    assert headers["schema_version"] == b"1"
+    assert headers["content_type"] == b"application/json"
+    # Determinista, igual que el event_id: dos corridas iguales trazan igual.
+    assert headers["trace_id"] == dict(ev[0].headers())["trace_id"]
 
 
 def test_los_codigos_obis_no_se_repiten_dentro_de_una_lectura():
@@ -397,3 +415,66 @@ def test_la_latencia_esta_correlacionada_dentro_de_la_cabina():
     assert len(set(latencias.values())) > 1, "las cabinas deberían diferir entre sí"
     for cabina in parque.cabinas:
         assert cabina.latencia_enlace == latencias[cabina.cabina_id]
+
+
+# ------------------------------------------------------- determinismo entre PROCESOS
+#
+# `test_la_misma_semilla_produce_exactamente_lo_mismo` corre todo en el mismo proceso, así
+# que no detecta el problema que estas pruebas cubren: `hash()` sobre cadenas está
+# aleatorizado por proceso en Python, y usarlo para derivar semillas hacía que dos
+# ejecuciones de la misma orden produjeran parques distintos.
+
+
+def test_la_semilla_derivada_es_estable_entre_procesos():
+    """Se fija contra valores literales a propósito.
+
+    Si alguien reemplaza SHA-256 por `hash()` —que es lo natural de escribir— esta prueba
+    falla, mientras que una que solo compare dos llamadas dentro del mismo proceso pasaría
+    igual y el problema quedaría escondido.
+    """
+    from simulador.parque import semilla_derivada
+
+    assert semilla_derivada(2026, "MED-0001-000") == semilla_derivada(2026, "MED-0001-000")
+    assert semilla_derivada(2026, "MED-0001-000") != semilla_derivada(2027, "MED-0001-000")
+    assert semilla_derivada(2026, "MED-0001-000") != semilla_derivada(2026, "MED-0001-001")
+
+    # Literales: cualquier cambio de algoritmo rompe la reproducibilidad de lo ya publicado.
+    assert semilla_derivada(2026, "MED-0001-000") == 2_066_509_163
+    assert semilla_derivada(2026, "CAB-0000") == 221_036_554
+
+
+def test_el_parque_es_identico_en_otro_proceso():
+    """Lo que realmente importa: correr la misma orden dos veces da lo mismo.
+
+    Se lanza un subproceso de verdad, porque el problema solo aparece cuando el intérprete
+    arranca de nuevo con otra semilla de hash.
+    """
+    import subprocess
+    import sys
+    import textwrap
+
+    programa = textwrap.dedent(
+        """
+        import collections
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        from simulador.parque import generar_parque
+
+        parque = generar_parque(
+            cabinas=3,
+            inicio=datetime(2026, 9, 22, tzinfo=ZoneInfo("America/Asuncion")),
+            dias=1,
+            semilla=2026,
+        )
+        conteo = collections.Counter(m.modelo.nombre for m in parque.medidores)
+        print(sorted(conteo.items()))
+        """
+    )
+
+    def correr():
+        return subprocess.run(
+            [sys.executable, "-c", programa], capture_output=True, text=True, check=True
+        ).stdout.strip()
+
+    assert correr() == correr()

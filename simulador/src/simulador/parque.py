@@ -9,6 +9,7 @@ Este módulo construye un parque sintético con esa estructura, de forma determi
 
 from __future__ import annotations
 
+import hashlib
 import random
 from dataclasses import dataclass
 from datetime import datetime
@@ -216,6 +217,24 @@ class Parque:
         )
 
 
+def semilla_derivada(semilla: int, etiqueta: str) -> int:
+    """Semilla estable para un identificador, derivada de la semilla global.
+
+    ⚠️ **No usar `hash()` acá.** Python aleatoriza el hash de las cadenas en cada proceso
+    (PYTHONHASHSEED), así que `hash((semilla, medidor_id))` da un valor distinto en cada
+    ejecución — y con él, un parque distinto. El determinismo es la promesa central del
+    simulador: sin él, una prueba que falla no se puede repetir y dos personas que corren la
+    misma orden obtienen resultados distintos.
+
+    SHA-256 es estable entre procesos, entre versiones de Python y entre máquinas.
+
+    Derivarla del identificador y no de un contador tiene además una propiedad útil: agregar
+    o quitar un medidor **no perturba a los demás**.
+    """
+    material = f"{semilla}|{etiqueta}".encode()
+    return int.from_bytes(hashlib.sha256(material).digest()[:4], "big")
+
+
 def _elegir(rng: random.Random, opciones: dict[str, float] | list[tuple[object, float]]):
     items = list(opciones.items()) if isinstance(opciones, dict) else opciones
     total = sum(p for _, p in items)
@@ -258,7 +277,7 @@ def generar_parque(
         for k in range(n):
             medidor_id = f"MED-{i:04d}-{k:03d}"
             # Semilla derivada del identificador: agregar un medidor no perturba a los demás.
-            semilla_medidor = hash((semilla, medidor_id)) & 0xFFFFFFFF
+            semilla_medidor = semilla_derivada(semilla, medidor_id)
             rng_medidor = random.Random(semilla_medidor)
             medidores.append(
                 Medidor(
