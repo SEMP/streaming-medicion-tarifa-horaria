@@ -1,0 +1,176 @@
+name: medicion-tarifa-horaria
+
+# Los tópicos y la configuración viven acá, en un solo lugar, para que el simulador, el
+# pipeline y las herramientas de consola no puedan discrepar entre sí.
+x-entorno: &entorno
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  TOPICO_LECTURAS: medicion.lecturas.v1
+  TOPICO_CONSUMO: medicion.consumo-franja.v1
+  TOPICO_CUARENTENA: medicion.cuarentena.v1
+  BEAM_JOB_ENDPOINT: beam-job-server:8099
+  BEAM_PARALLELISM: "${BEAM_PARALLELISM:-2}"
+  CONFIG_FRANJAS: /app/config/franjas.example.toml
+  ZONA_HORARIA: America/Asuncion
+
+x-app: &app
+  build:
+    context: ..
+    dockerfile: infra/Dockerfile
+  environment: *entorno
+  volumes:
+    - ../simulador:/app/simulador
+    - ../pipeline:/app/pipeline
+    - ../config:/app/config
+    - ../datos:/app/datos
+
+services:
+  kafka:
+    image: apache/kafka:4.1.1
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: CONTROLLER://:9093,PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_NUM_PARTITIONS: 4
+      KAFKA_LOG_RETENTION_HOURS: 168
+      # El simulador comprime el tiempo: publica en segundos lecturas cuyo tiempo de
+      # evento abarca horas. Sin esto, el broker rechazaría por timestamp fuera de rango
+      # los eventos que llegan "del futuro" respecto de su propio reloj.
+      KAFKA_LOG_MESSAGE_TIMESTAMP_AFTER_MAX_MS: 86400000
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    mem_limit: 1200m
+
+  kafka-init:
+    image: apache/kafka:4.1.1
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-ec"]
+    command:
+      - |
+        # Las lecturas se particionan por medidor, así que su orden se preserva y la etapa
+        # de diferenciación puede restar lecturas consecutivas del mismo equipo.
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists \
+          --topic medicion.lecturas.v1 --partitions 4 --replication-factor 1
+        # La salida se clavea por medidor|fecha|franja, y el consumidor hace upsert: el
+        # último pane de una celda gana.
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists \
+          --topic medicion.consumo-franja.v1 --partitions 4 --replication-factor 1
+        # Nada se descarta en silencio: lo que no se puede procesar queda acá, contado.
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists \
+          --topic medicion.cuarentena.v1 --partitions 2 --replication-factor 1
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --describe
+
+  jobmanager:
+    platform: ${BEAM_PLATFORM:-linux/amd64}
+    build:
+      context: ..
+      dockerfile: infra/docker/flink/Dockerfile
+    command: jobmanager
+    ports:
+      - "8081:8081"
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: jobmanager
+        jobmanager.memory.process.size: 768m
+        parallelism.default: ${BEAM_PARALLELISM:-2}
+    volumes:
+      - beam-artifacts:/tmp/beam-artifact-staging
+    mem_limit: 900m
+
+  taskmanager:
+    platform: ${BEAM_PLATFORM:-linux/amd64}
+    build:
+      context: ..
+      dockerfile: infra/docker/flink/Dockerfile
+    command: taskmanager
+    depends_on:
+      - jobmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 1
+        taskmanager.memory.process.size: 1536m
+        taskmanager.memory.task.off-heap.size: 384m
+        taskmanager.memory.managed.fraction: 0.1
+        taskmanager.memory.network.min: 64m
+        taskmanager.memory.network.max: 64m
+        parallelism.default: ${BEAM_PARALLELISM:-2}
+        taskmanager.load-balance.mode: SLOTS
+    volumes:
+      - beam-artifacts:/tmp/beam-artifact-staging
+    deploy:
+      replicas: 2
+    mem_limit: 2800m
+
+  beam-job-server:
+    platform: ${BEAM_PLATFORM:-linux/amd64}
+    image: apache/beam_flink1.19_job_server:2.74.0
+    command:
+      - --flink-master=jobmanager:8081
+      - --job-host=beam-job-server
+      - --flink-conf-dir=/flink-conf
+    volumes:
+      - ./docker/flink:/flink-conf:ro
+      - beam-artifacts:/tmp/beam-artifact-staging
+    ports:
+      - "8099:8099"
+    depends_on:
+      - jobmanager
+      - taskmanager
+    mem_limit: 900m
+
+  # ---------------------------------------------------------------- perfiles opcionales
+
+  simulador:
+    <<: *app
+    profiles: ["demo"]
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    command:
+      - /app/.venv/bin/python
+      - -m
+      - simulador
+      - --cabinas=8
+      - --dias=1
+      - --a-kafka
+
+  pipeline:
+    <<: *app
+    profiles: ["demo"]
+    depends_on:
+      beam-job-server:
+        condition: service_started
+    command: ["/app/.venv/bin/python", "-m", "pipeline"]
+
+  humo:
+    <<: *app
+    profiles: ["humo"]
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      beam-job-server:
+        condition: service_started
+    command: ["/app/.venv/bin/python", "-m", "pipeline.humo"]
+    restart: "no"
+
+volumes:
+  kafka-data:
+  beam-artifacts:

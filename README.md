@@ -77,25 +77,40 @@ las decisiones de diseño ya tomadas. Todavía no hay nada ejecutable.
 
 | Componente | Estado |
 |---|---|
-| Decisiones de diseño | ✅ [`docs/decisiones-de-diseno.md`](docs/decisiones-de-diseno.md) |
-| Configuración de franjas | 🚧 ejemplo en `config/` |
-| Infraestructura | ⬜ |
-| Simulador | ⬜ |
-| Pipeline | ⬜ |
-| Pruebas | ⬜ |
+| Decisiones de diseño | ✅ [`docs/decisiones-de-diseno.md`](docs/decisiones-de-diseno.md) · 11 decisiones |
+| Dominio | ✅ [`docs/dominio-medicion.md`](docs/dominio-medicion.md) · calibrado con mediciones reales |
+| Simulador | ✅ [`simulador/`](simulador/) · dos escenarios, fallas deterministas |
+| **Infraestructura** | ✅ [`infra/`](infra/) · Kafka + Flink + job server, con `KafkaIO` andando |
+| Configuración de franjas | 🚧 ejemplo en `config/`; falta el cargador y su validación |
+| Pipeline | 🚧 esqueleto cableado; faltan las transformaciones del dominio |
+| Pruebas | 🚧 31 del simulador; faltan las del pipeline |
 | Documento técnico | ⬜ |
 
 ## Cómo levantarlo
 
-⬜ *Pendiente.* Cuando el stack esté armado, esta sección tiene que permitir que **alguien
-ajeno al equipo** levante el entorno, produzca eventos, ejecute el pipeline y vea la salida
-siguiendo únicamente estas instrucciones.
-
-El entorno de Python se maneja con [`uv`](https://docs.astral.sh/uv/):
+**Sin Docker**, para trabajar en la lógica sin esperar a nadie:
 
 ```bash
-uv sync          # crea .venv e instala dependencias
-uv run pytest    # corre las pruebas
+uv sync                                          # crea .venv e instala dependencias
+uv run pytest                                    # las pruebas
+uv run simulador --cabinas 8 --salida datos/lecturas.jsonl
+```
+
+**Con el stack completo** — Kafka, Flink y el job server de Beam:
+
+```bash
+docker compose -f infra/docker-compose.yml up -d          # levantar
+docker compose -f infra/docker-compose.yml --profile demo up   # simulador + pipeline
+docker compose -f infra/docker-compose.yml down -v         # bajar y limpiar
+```
+
+La interfaz de Flink queda en <http://localhost:8081> y Kafka en `localhost:29092`.
+Detalles y resolución de problemas en [`infra/README.md`](infra/README.md).
+
+**Prueba de humo**, que verifica el recorrido completo y devuelve código de salida:
+
+```bash
+docker compose -f infra/docker-compose.yml --profile humo run --rm -T humo
 ```
 
 ## Equipo y contribuciones

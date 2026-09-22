@@ -10,6 +10,9 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
   "apache-beam[gcp]==2.74.0",
   "confluent-kafka>=2.8,<3",
+  # Beam ejecuta `pip freeze` al enviar el trabajo, para registrar con qué dependencias se
+  # armó. Sin pip el envío igual funciona, pero avisa y se pierde esa trazabilidad.
+  "pip>=25,<27",
 ]
 
 [project.scripts]

@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
-
 from simulador.agenda import ConfigAgenda, generar
 from simulador.consumo import ContadorMedidor, perfil_demanda_kw
 from simulador.evento import calcular_event_id
@@ -42,7 +41,7 @@ def test_el_contador_nunca_decrece():
     que un consumo negativo solo puede ser un reseteo."""
     c = ContadorMedidor.crear("M", INICIO, dias=1, valor_inicial_kwh=1000.0, escala=1.0)
     valores = [c.leer(INICIO + timedelta(minutes=m)) for m in range(0, 1440, 7)]
-    assert all(b >= a for a, b in zip(valores, valores[1:]))
+    assert all(b >= a for a, b in zip(valores, valores[1:], strict=False))
 
 
 def test_el_contador_arranca_en_su_valor_inicial():
@@ -126,7 +125,7 @@ def test_sin_fallas_los_contadores_no_retroceden():
         )
     for lecturas in por_medidor.values():
         lecturas.sort()
-        assert all(b[1] >= a[1] for a, b in zip(lecturas, lecturas[1:]))
+        assert all(b[1] >= a[1] for a, b in zip(lecturas, lecturas[1:], strict=False))
 
 
 def test_con_fallas_aparecen_duplicados_y_retrocesos():
@@ -143,7 +142,7 @@ def test_con_fallas_aparecen_duplicados_y_retrocesos():
         )
     for lecturas in por_medidor.values():
         lecturas.sort()
-        retrocesos += sum(1 for a, b in zip(lecturas, lecturas[1:]) if b[1] < a[1])
+        retrocesos += sum(1 for a, b in zip(lecturas, lecturas[1:], strict=False) if b[1] < a[1])
     assert retrocesos > 0, "se esperaban reseteos o truncamientos"
 
 
@@ -284,8 +283,8 @@ def test_la_distribucion_de_duraciones_es_trimodal():
     valle_bajo = [x for x in tiempos if 13 < x < 27]
     valle_alto = [x for x in tiempos if 50 < x < 118]
     poblado = len(tiempos)
-    assert len(valle_bajo) / poblado < 0.03, "el valle entre la 1.ª y la 2.ª moda debería estar casi vacío"
-    assert len(valle_alto) / poblado < 0.03, "el valle entre la 2.ª y la 3.ª moda debería estar casi vacío"
+    assert len(valle_bajo) / poblado < 0.03, "el valle entre la 1.ª y la 2.ª moda no está vacío"
+    assert len(valle_alto) / poblado < 0.03, "el valle entre la 2.ª y la 3.ª moda no está vacío"
 
 
 def test_la_tasa_global_de_fallas_se_parece_a_la_medida():

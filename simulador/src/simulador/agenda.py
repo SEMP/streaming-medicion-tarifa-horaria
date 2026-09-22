@@ -187,7 +187,7 @@ def generar(
     """
     pendientes: list[tuple[datetime, Lectura]] = []
 
-    for indice, cabina in enumerate(parque.cabinas):
+    for cabina in parque.cabinas:
         rng = random.Random((semilla, cabina.cabina_id).__hash__() & 0xFFFFFFFF)
         momento = cfg.inicio
         ronda = 0
