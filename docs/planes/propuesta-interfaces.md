@@ -10,6 +10,11 @@
 
 ## 1. Contrato de evento de entrada — dueña: Clara
 
+> ✅ **SUPERADA el 22/09 por [`../contratos.md`](../contratos.md) §1** (commit `f060d8b`).
+> Los ítems de «lo que falta decidir» de esta sección **ya están resueltos**; lo que sigue se
+> conserva solo como registro del borrador. **No tomar decisiones de acá.**
+
+
 Tópico `medicion.lecturas.v1`, clave de particionamiento `medidor_id`.
 
 > ⚠️ **Corregido el 20/09** tras cerrar la decisión 10. La versión anterior daba por hecho
@@ -190,6 +195,10 @@ que hace que los intervalos cercanos a medianoche caigan en el día equivocado.
 ---
 
 ## 3. Contrato de salida — dueña: Clara
+
+> ✅ **SUPERADA el 22/09 por [`../contratos.md`](../contratos.md) §2** (commit `f060d8b`).
+> Mismo caso que la sección 1: se conserva como registro del borrador, no como fuente.
+
 
 Tópico `medicion.consumo-franja.v1`, clave **`medidor_id|fecha_local|franja`**.
 
