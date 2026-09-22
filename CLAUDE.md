@@ -10,6 +10,9 @@ tarifaria** a partir de curvas de carga que llegan desordenadas, duplicadas y co
 retraso. El contexto y el problema están en [`README.md`](README.md); el **porqué** de cada
 decisión, en [`docs/decisiones-de-diseno.md`](docs/decisiones-de-diseno.md).
 
+**El mapa de la documentación está en [`docs/README.md`](docs/README.md):** qué documento es
+cada uno, en cuál escribir cada cosa, y de dónde sale cada entregable.
+
 Si no venís del rubro eléctrico, leé primero
 [`docs/dominio-medicion.md`](docs/dominio-medicion.md): explica cómo funciona de verdad la
 lectura remota de medidores —códigos OBIS, contador acumulado, por qué solo hay modo readout
@@ -33,6 +36,11 @@ git pull --ff-only
 Si el pull no es *fast-forward*, hay trabajo divergente: resolverlo antes de seguir, no
 después.
 
+**Después del pull, mirar [`docs/pendientes.md`](docs/pendientes.md).** Es el tablero
+compartido: qué falta decidir, quién lo decide, a quién bloquea, y la bitácora de lo que se
+decidió desde la última vez. Si hay filas nuevas, algo que dabas por sentado puede haber
+cambiado.
+
 ## Reglas duras
 
 1. **Todos los datos son sintéticos.** Los genera `simulador/`. No se incorporan datos reales
@@ -44,9 +52,9 @@ después.
 4. **Cada integrante commitea con su propia cuenta**, en su área. El historial es la
    evidencia de las contribuciones individuales, y la entrega lo exige explícitamente. No
    commitear trabajo de otro integrante bajo la propia firma.
-5. **No inventar.** Si algo no está definido —un umbral, un formato, una regla—, marcarlo
-   como `⚠️ ABIERTO` en `docs/decisiones-de-diseno.md` y preguntar. Hay tres decisiones
-   abiertas hoy.
+5. **No inventar.** Si algo no está definido —un umbral, un formato, una regla—, agregarlo
+   como fila en [`docs/pendientes.md`](docs/pendientes.md) §1 y preguntar, en lugar de
+   decidirlo en silencio.
 
 ## Stack, y por qué está fijado
 
@@ -103,5 +111,8 @@ merge. **Antes de tocar una carpeta que no es la propia, avisar al dueño.**
 ## Al terminar una sesión
 
 - No dejar contenedores Docker corriendo.
-- Si se tomó una decisión de diseño, registrarla en `docs/decisiones-de-diseno.md` con su
-  motivo. El documento técnico se arma de ahí.
+- Si se tomó una decisión de diseño, registrar el **motivo** en `docs/decisiones-de-diseno.md`
+  —o en `docs/contratos.md` si es de contrato— y dejar **una línea** en la bitácora de
+  `docs/pendientes.md`. El documento técnico se arma del primero; el segundo es lo que el
+  resto lee al empezar su sesión.
+- Si la decisión invalida algo escrito antes, corregirlo **en el mismo commit**.

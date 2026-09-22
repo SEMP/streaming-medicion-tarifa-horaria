@@ -133,6 +133,11 @@ implementación son de quien toma el plan, y son las que cada uno defiende.
 Las **tres interfaces** que permiten trabajar en paralelo están en
 [`docs/planes/README.md`](docs/planes/README.md).
 
+## Documentación
+
+El mapa está en [`docs/README.md`](docs/README.md): qué es cada documento, quién lo mantiene,
+en cuál escribir cada cosa y de dónde sale cada entregable.
+
 ## Decisiones de diseño
 
 Las decisiones tomadas y su justificación están en
