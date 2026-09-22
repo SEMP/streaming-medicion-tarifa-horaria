@@ -23,9 +23,9 @@ la última vez que hiciste `git pull`.
 | **P1** | Umbral de desvío tolerado respecto del borde de franja, y su gemelo: el límite de separación por encima del cual no se interpola | Daniel, con Clara | Marcar `indeterminado`; **facturar** | [decisiones §3](decisiones-de-diseno.md) y [§5](decisiones-de-diseno.md) |
 | **P2** | Qué se hace con los dos intervalos que quedan indeterminados cuando falta una lectura: marcarlos, o imputar el consumo combinado al bloque | Clara y Sergio | La agregación | [decisiones §10](decisiones-de-diseno.md) |
 | ~~**P3**~~ | ~~Confirmar 4 particiones contra el `docker-compose`~~ · ✅ **coinciden** | Sergio | — | [infra](../infra/README.md) |
-| **P4** | La «regla 1 — alineación a la grilla» de `config/franjas.example.toml` quedó sin efecto con la decisión 5. Reescribirla como «la agenda cubre todos los bordes» | Daniel | Confunde a quien lea la config | [contratos §3](contratos.md) |
-| **P5** | Cómo se representa `CalendarioTarifario` en memoria, y si conviene precomputar una tabla | Daniel | Nadie | [planes/daniel](planes/daniel-franjas-y-pruebas.md) |
-| **P6** | Si `fecha_y_franja` valida también el timestamp, o si eso es una función aparte que corre antes | Daniel | Clara: cambia el orden de las etapas del pipeline | [planes/propuesta-interfaces §2](planes/propuesta-interfaces.md) |
+| ~~**P4**~~ | ~~La «regla 1 — alineación a la grilla» quedó sin efecto~~ · ✅ reescrita: con readout no hay grilla, los intervalos **siempre** cruzan bordes | Sergio | — | [config](../config/franjas.example.toml) |
+| ~~**P5**~~ | ~~Cómo se representa `CalendarioTarifario`~~ · ✅ tabla de 1440 posiciones precomputada al cargar: construirla **es** la validación de cobertura | Sergio | — | `pipeline/franjas.py` |
+| ~~**P6**~~ | ~~Si `fecha_y_franja` valida el timestamp~~ · ✅ **no**: un naive es error de programación y levanta excepción. La validación de datos va aguas arriba | Sergio | — | `pipeline/franjas.py` |
 | **P7** | **Runner**: la propuesta es Flink con el stack de la clase 7 para la demo end-to-end, y `DirectRunner` con `TestStream` para las pruebas | Los tres | Clara: cómo escribe el pipeline | — |
 | **P8** | Confirmación de Daniel sobre su parte del reparto: no estuvo en la reunión del 20/09 | Daniel | Planificación | [planes/README](planes/README.md) |
 | **P9** | Cuarto integrante, si se suma alguien | Los tres | Nada | — |
@@ -40,7 +40,7 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 | ~~Sergio~~ | ~~`naturaleza` en `Registro.a_dict()`~~ · ✅ hecho, más `instante` opcional y los headers de Kafka | — |
 | ~~Sergio~~ | ~~`infra/` vacío~~ · ✅ **stack levantado y verificado end-to-end** | — |
 | Sergio | Reescribir la regla 1 de `config/franjas.example.toml` (era P4, de Daniel) | Si se reparten el trabajo de Daniel, alguien tiene que tomarla |
-| Daniel | Puede empezar las pruebas | El contrato de salida ya está cerrado: [contratos §2](contratos.md) |
+| ~~Daniel~~ | ~~Puede empezar las pruebas~~ · ✅ 23 pruebas de franjas, puras, sin infraestructura | — |
 | Clara | Esqueleto del pipeline con fuente conmutable (`jsonl` \| `kafka`) | No depende de `infra/`: se construye contra `datos/*.jsonl` |
 | Los tres | Documento técnico, diagrama y **video** | Nadie empezó. El video conviene grabarlo antes del último día |
 
@@ -50,6 +50,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 22/09 | — | **Franjas implementadas** (era de Daniel): `cargar_calendario` con validación de cobertura, y `fecha_y_franja`. Cierra P4, P5 y P6 |
 | 22/09 | `e31d58e` | **El simulador no era determinista entre procesos**: las semillas se derivaban con `hash()` de cadenas, que Python aleatoriza por ejecución. Corregido con SHA-256 y dos pruebas. Las cifras de `calidad` de [contratos](contratos.md) se remidieron: `checksum_no_verificado` es **66 %**, no 48 % |
 | 22/09 | `e31d58e` | El simulador emite `naturaleza` y `instante` por registro, y el publicador manda los tres headers de Kafka. Cierra los huecos entre el contrato y lo que se producía |
 | 22/09 | `40065a2` | **Infraestructura lista y verificada**: Kafka + Flink + job server, con `KafkaIO` andando. La prueba de humo recorre simulador → Kafka → Beam → Kafka. Ver [infra](../infra/README.md) |

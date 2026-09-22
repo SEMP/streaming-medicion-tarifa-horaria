@@ -7,10 +7,20 @@
 # fijo: el identificador sobrevive a un cambio de política horaria, el offset no.
 zona_horaria = "America/Asuncion"
 
-# Pedidos intermedios entre bordes de franja, en minutos. Los bordes SIEMPRE se piden;
-# esto agrega lecturas adicionales que dan resolución de curva de carga pero no hacen
-# falta para facturar. 0 = solo los bordes (lo mínimo viable).
-intervalo_minutos = 15
+# Cada cuánto se intenta consultar un medidor, en minutos. Es una ASPIRACIÓN, no una
+# garantía: los medidores de una cabina comparten un bus RS-485 y se leen en secuencia, así
+# que la separación real entre dos lecturas del mismo equipo la fija la duración de la ronda
+# —de 6 a 60 minutos según el tamaño de la cabina y su tasa de fallas—, no este número.
+cadencia_objetivo_minutos = 15
+
+# Separación máxima entre las dos lecturas que rodean un borde de franja para que todavía se
+# acepte interpolar. Por encima de esto el consumo se marca `indeterminado` en lugar de
+# inventarse.
+#
+# ⚠️ PENDIENTE P1: el valor de abajo es un marcador de posición, no una decisión tomada.
+# Tiene consecuencia económica en los dos sentidos: tolerar de más mete consumo de una franja
+# en otra, y tolerar de menos deja franjas sin cerrar y sin facturar.
+separacion_maxima_minutos = 45
 
 # Una franja puede tener varios rangos: "resto" cubre la mañana y la noche tardía.
 [[franjas]]
@@ -32,18 +42,33 @@ rangos = [{ desde = "18:00", hasta = "22:00" }]
 # Reglas que la validación debe hacer cumplir
 # ---------------------------------------------------------------------------
 #
-# 1. ALINEACIÓN A LA GRILLA
-#    Todo borde de franja debe ser múltiplo de `intervalo_minutos`:
-#
-#        (minutos desde medianoche del borde) % intervalo_minutos == 0
-#
-#    Así ningún intervalo de medición cruza un borde y la atribución es exacta por
-#    construcción. Con intervalo de 60 min, las franjas solo pueden empezar en hora en
-#    punto. Un calendario mal alineado se RECHAZA: no se prorratea en silencio.
-#
-# 2. COBERTURA EXACTA DEL DÍA
+# 1. COBERTURA EXACTA DEL DÍA
 #    Los rangos deben cubrir de 00:00 a 24:00 sin huecos y sin superposiciones. Un hueco
-#    dejaría energía sin franja; una superposición la facturaría dos veces.
+#    dejaría energía sin franja; una superposición la facturaría dos veces. Un calendario
+#    que no cierre se RECHAZA, con un mensaje que diga qué tramo falta o se pisa.
 #
-# 3. INTERVALO DIVISOR DEL DÍA
-#    1440 % intervalo_minutos == 0, para que la grilla cierre al cambiar de día.
+# 2. NOMBRES DE FRANJA ÚNICOS
+#    Cada nombre aparece una sola vez, con todos sus rangos juntos. Es lo que permite que la
+#    clave de salida `medidor|fecha|franja` identifique una celda sin ambigüedad.
+#
+# 3. RANGOS BIEN FORMADOS
+#    `desde` < `hasta`, en HH:MM, y `hasta = "24:00"` es válido como fin del día.
+#
+# ---------------------------------------------------------------------------
+# Lo que ESTA configuración ya NO exige, y por qué
+# ---------------------------------------------------------------------------
+#
+# Hasta el 20/09 había una regla de ALINEACIÓN A LA GRILLA: los bordes de franja debían ser
+# múltiplos del intervalo de medición, de modo que ninguna medición cruzara un borde y la
+# atribución fuera exacta por construcción.
+#
+# Esa regla suponía una grilla fija de medición, que es como funciona un medidor con perfil
+# de carga. Este parque solo expone modo readout: no hay grilla, hay rondas continuas sobre
+# un bus compartido, y la posición de cada lectura depende de cuántos medidores tiene la
+# cabina y de cuántos fallaron antes.
+#
+# O sea que los intervalos SÍ cruzan bordes, siempre, y no hay configuración que lo evite.
+# Por eso la interpolación dejó de ser una optimización y pasó a ser obligatoria, y por eso
+# cada resultado declara su propio error de atribución.
+#
+# Ver decisión 5 en docs/decisiones-de-diseno.md.
