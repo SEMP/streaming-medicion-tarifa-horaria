@@ -46,7 +46,7 @@ El enunciado pide cinco cosas. Ninguna se escribe de cero: se **arman** con lo q
 | Enlace al repositorio | ✅ | — |
 | [`../README.md`](../README.md) reproducible | 🚧 falta «Cómo levantarlo» | Sergio, cuando exista `infra/` |
 | **Documento técnico** | ⬜ | Ver la tabla de abajo |
-| **Diagrama de arquitectura** | ⬜ | `docs/diagramas/` — ⚠️ falta decidir el formato (`P10`) |
+| **Diagrama de arquitectura** | ⬜ | `docs/diagramas/`, en SVG escrito a mano — ver §4 |
 | **Evidencia de pruebas y ejecución** | ⬜ | Salida de `pytest` y de la corrida end-to-end |
 | **Video breve** | ⬜ | Cada uno presenta su parte |
 | Integrantes y contribuciones | ✅ en el README | El historial de git lo respalda |
@@ -82,6 +82,26 @@ política temporal; Daniel las franjas, la validación y las pruebas. El criteri
   clon y en una vista previa local.
 - **Citar el pendiente en el commit** cuando se cierra uno: `P3: fijar 4 particiones`.
 - Los **enunciados de la cátedra no se editan**. Son solo lectura.
+
+### El diagrama: SVG escrito a mano, en `docs/diagramas/`
+
+Es la convención que Sergio ya usó en la Tarea 1 (`documento/diagrama-arquitectura.svg`, 128
+líneas, sin metadata de ningún editor). Se eligió sobre Mermaid y sobre exportar desde una
+herramienta gráfica por tres razones:
+
+- **Se revisa en un diff.** Es XML plano: un cambio de caja o de flecha se ve en el
+  `git diff`, igual que el código. Un SVG exportado de Figma o draw.io son miles de líneas
+  generadas y el diff es ilegible.
+- **Control del trazado.** Mermaid renderiza solo en GitHub y sin build, que es su ventaja
+  real, pero decide él el acomodo. Para una arquitectura con carriles —fuente, Kafka, Beam,
+  salida— el acomodo *es* el mensaje.
+- **Sin dependencias ni binarios en el repo.**
+
+**Si hace falta un PNG para la entrega, se rinde del mismo SVG y con el mismo motor.** La
+Tarea 1 tuvo el problema opuesto y quedó documentado en su commit `ad27137`: el PNG se había
+generado aparte y salía en otra tipografía que el PDF, así que el mismo diagrama llegaba al
+corrector en dos versiones distintas. ⚠️ El renderizado usa **Typst**, que no es parte del
+stack del repo (Python + uv): quien arme el PNG tiene que tenerlo instalado.
 
 ## 5. Qué no va al repositorio
 

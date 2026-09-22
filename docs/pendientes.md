@@ -29,7 +29,6 @@ la última vez que hiciste `git pull`.
 | **P7** | **Runner**: la propuesta es Flink con el stack de la clase 7 para la demo end-to-end, y `DirectRunner` con `TestStream` para las pruebas | Los tres | Clara: cómo escribe el pipeline | — |
 | **P8** | Confirmación de Daniel sobre su parte del reparto: no estuvo en la reunión del 20/09 | Daniel | Planificación | [planes/README](planes/README.md) |
 | **P9** | Cuarto integrante, si se suma alguien | Los tres | Nada | — |
-| **P10** | Formato del **diagrama de arquitectura**: Mermaid renderiza en GitHub y se diffea; un SVG exportado da más control pero no se revisa en un diff | Los tres | Es un entregable | [README de docs](README.md) §3 |
 
 **P1 y P2 son las que tienen consecuencia económica**: las dos deciden a qué franja se atribuye
 energía que se factura a precio distinto. Las demás son de coordinación.
@@ -50,6 +49,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 22/09 | — | **P10 cerrado: el diagrama es SVG escrito a mano**, con la convención de la Tarea 1 de Sergio. El detalle está en [README de docs](README.md) §4 |
 | 22/09 | `f060d8b` | **Los dos contratos quedaron cerrados.** Se resolvieron los 10 ítems que estaban abiertos: clave y particiones, nombres de tópicos y regla de versionado, cuarentena en tópico propio, qué gana ante un duplicado divergente, obligatoriedad de registros, `instante` opcional y `naturaleza` obligatoria; y del lado de la salida, la política temporal completa, el tablero leyendo el tópico directo y `compact,delete` |
 | 22/09 | `f060d8b` | **Tres correcciones al borrador de interfaces**, las tres por arrastre del modelo de perfil de carga: los valores de `calidad` son los del readout (`ok`, `checksum_no_verificado`, `truncada`); `intervalos_esperados` se reemplaza por `cobertura_pct` porque sin grilla no existe un número de intervalos esperados; y la justificación por alineación a la grilla ya no rige |
 | 21/09 | `9df7c0e` `a81513e` | El modelo de tiempos del simulador se recalibró contra mediciones de comunicación real y contra un despliegue de 410.000 pedidos en 7 días |
