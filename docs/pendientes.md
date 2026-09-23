@@ -40,7 +40,7 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 | ~~Sergio~~ | ~~`naturaleza` en `Registro.a_dict()`~~ · ✅ hecho, más `instante` opcional y los headers de Kafka | — |
 | ~~Sergio~~ | ~~`infra/` vacío~~ · ✅ **stack levantado y verificado end-to-end** | — |
 | Sergio | Reescribir la regla 1 de `config/franjas.example.toml` (era P4, de Daniel) | Si se reparten el trabajo de Daniel, alguien tiene que tomarla |
-| ~~Daniel~~ | ~~Puede empezar las pruebas~~ · ✅ 23 pruebas de franjas, puras, sin infraestructura | — |
+| ~~Daniel~~ | ~~Puede empezar las pruebas~~ · ✅ 23 de franjas y **8 con `TestStream`**: duplicado, desorden, reseteo y el orden dedup→diferenciación | — |
 | Clara | Esqueleto del pipeline con fuente conmutable (`jsonl` \| `kafka`) | No depende de `infra/`: se construye contra `datos/*.jsonl` |
 | Los tres | **Documento técnico**: el esqueleto está en [`tecnico/`](tecnico/documento.md) con dueño por sección y `⚠️ PENDIENTE` donde falta. Se arma con `./docs/tecnico/armar-pdf.sh` | 9 secciones sin escribir. Varias son casi transcripción de lo ya documentado |
 | Sergio | Diagrama de arquitectura, SVG a mano, en `docs/diagramas/` | Lo necesita la sección 2 del documento |
@@ -52,6 +52,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 23/09 | — | **Deduplicación y diferenciación con estado**, y sus 8 pruebas con `TestStream`. La diferenciación guarda las lecturas en lugar de restar contra la última: una tardía que cae en el medio parte el intervalo y emite las dos mitades |
 | 22/09 | — | **Esqueleto del documento técnico** en `tecnico/`, con la cadena pandoc → Typst ya funcionando y las 8 secciones que pide el enunciado, cada una con dueño |
 | 22/09 | — | **Franjas implementadas** (era de Daniel): `cargar_calendario` con validación de cobertura, y `fecha_y_franja`. Cierra P4, P5 y P6 |
 | 22/09 | `e31d58e` | **El simulador no era determinista entre procesos**: las semillas se derivaban con `hash()` de cadenas, que Python aleatoriza por ejecución. Corregido con SHA-256 y dos pruebas. Las cifras de `calidad` de [contratos](contratos.md) se remidieron: `checksum_no_verificado` es **66 %**, no 48 % |

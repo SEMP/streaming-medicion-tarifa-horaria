@@ -34,6 +34,11 @@ dev = [
 [tool.pytest.ini_options]
 pythonpath = ["simulador/src", "pipeline/src"]
 testpaths = ["tests"]
+filterwarnings = [
+  # Beam llama TestPipeline y TestStream a clases que no son pruebas; pytest intenta
+  # recolectarlas y avisa. Es ruido de la librería, no un problema nuestro.
+  "ignore::pytest.PytestCollectionWarning",
+]
 
 [tool.ruff]
 line-length = 100
@@ -41,3 +46,9 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Beam EXIGE que StateParam y TimerParam vayan como valores por defecto de los parámetros:
+# es así como el runner descubre qué estado y qué temporizadores usa un DoFn. B008 marca eso
+# como error, pero acá no hay alternativa.
+"pipeline/src/pipeline/transformaciones.py" = ["B008"]
