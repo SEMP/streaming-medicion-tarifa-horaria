@@ -43,7 +43,9 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 | ~~Daniel~~ | ~~Puede empezar las pruebas~~ · ✅ 23 de franjas y **8 con `TestStream`**: duplicado, desorden, reseteo y el orden dedup→diferenciación | — |
 | Clara | Esqueleto del pipeline con fuente conmutable (`jsonl` \| `kafka`) | No depende de `infra/`: se construye contra `datos/*.jsonl` |
 | Los tres | **Documento técnico**: el esqueleto está en [`tecnico/`](tecnico/documento.md) con dueño por sección y `⚠️ PENDIENTE` donde falta. Se arma con `./docs/tecnico/armar-pdf.sh` | 9 secciones sin escribir. Varias son casi transcripción de lo ya documentado |
-| Sergio | Diagrama de arquitectura, SVG a mano, en `docs/diagramas/` | Lo necesita la sección 2 del documento |
+| ~~Sergio~~ | ~~Diagrama de arquitectura~~ · ✅ `docs/diagramas/arquitectura.svg`, incrustado en el documento en página apaisada | — |
+| Clara | **Secciones 3, 4 y 6** del documento técnico | Las 3 y 4 son casi transcripción de [`contratos.md`](contratos.md) |
+| Los tres | **Sección 8**: contribuciones de cada uno | `git shortlog -sn --no-merges` lo respalda |
 | Los tres | **Video** | Nadie empezó. Conviene grabarlo antes del último día |
 
 ## 3. Bitácora — qué se decidió y cuándo
@@ -52,6 +54,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 24/09 | — | **Diagrama de arquitectura** en SVG a mano, y **secciones 1, 2, 5 y 7 del documento técnico**. Quedan 5 pendientes de 9 |
 | 23/09 | — | **Deduplicación y diferenciación con estado**, y sus 8 pruebas con `TestStream`. La diferenciación guarda las lecturas en lugar de restar contra la última: una tardía que cae en el medio parte el intervalo y emite las dos mitades |
 | 22/09 | — | **Esqueleto del documento técnico** en `tecnico/`, con la cadena pandoc → Typst ya funcionando y las 8 secciones que pide el enunciado, cada una con dueño |
 | 22/09 | — | **Franjas implementadas** (era de Daniel): `cargar_calendario` con validación de cobertura, y `fecha_y_franja`. Cierra P4, P5 y P6 |

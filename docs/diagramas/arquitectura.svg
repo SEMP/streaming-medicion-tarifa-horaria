@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 650" width="1480" height="650" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/>
+    </marker>
+    <marker id="fl-rojo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/>
+    </marker>
+  </defs>
+
+  <rect width="1480" height="650" fill="#ffffff"/>
+
+  <text x="24" y="34" font-size="21" font-weight="700" fill="#1a202c">Consumo eléctrico por franja horaria — arquitectura</text>
+  <text x="24" y="58" font-size="13" fill="#4a5568">Proyecto integrador · Streaming de datos y sus aplicaciones · FPUNA. Flujo: concentrador → log crudo → pipeline → log derivado → consumidores.</text>
+
+  <!-- ============================================ FUENTE ============================================ -->
+  <text x="24" y="92" font-size="12" font-weight="700" fill="#6b46c1" letter-spacing="1">FUENTE</text>
+
+  <rect x="24" y="106" width="212" height="112" rx="6" fill="#faf5ff" stroke="#6b46c1" stroke-width="1.6"/>
+  <text x="130" y="128" font-size="13" font-weight="700" fill="#1a202c" text-anchor="middle">Concentrador</text>
+  <text x="130" y="146" font-size="10.5" fill="#4a5568" text-anchor="middle">pregunta; el medidor no</text>
+  <text x="130" y="161" font-size="10.5" fill="#4a5568" text-anchor="middle">transmite por su cuenta</text>
+  <text x="130" y="182" font-size="10" fill="#553c9a" text-anchor="middle">cabinas sobre bus RS-485</text>
+  <text x="130" y="197" font-size="10" fill="#553c9a" text-anchor="middle">lectura secuencial · tope 120 s</text>
+  <text x="130" y="211" font-size="10" fill="#553c9a" text-anchor="middle">ronda de 6 a 60 min</text>
+
+  <rect x="24" y="232" width="212" height="86" rx="6" fill="#faf5ff" stroke="#6b46c1" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="130" y="253" font-size="12" font-weight="700" fill="#1a202c" text-anchor="middle">Simulador</text>
+  <text x="130" y="271" font-size="10" fill="#4a5568" text-anchor="middle">datos sintéticos, deterministas</text>
+  <text x="130" y="287" font-size="10" fill="#4a5568" text-anchor="middle">inyecta las fallas a propósito</text>
+  <text x="130" y="305" font-size="10" font-style="italic" fill="#553c9a" text-anchor="middle">escenario A: bus · B: dispositivo</text>
+
+  <line x1="236" y1="162" x2="282" y2="162" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+
+  <!-- ============================================ KAFKA CRUDO ============================================ -->
+  <rect x="284" y="92" width="252" height="146" rx="8" fill="#fffdf5" stroke="#b7791f" stroke-width="1.8" stroke-dasharray="6 4"/>
+  <text x="298" y="86" font-size="12" font-weight="700" fill="#b7791f" letter-spacing="1">KAFKA — CAPA CRUDA</text>
+
+  <rect x="300" y="110" width="220" height="112" rx="5" fill="#fffbeb" stroke="#b7791f" stroke-width="1.4"/>
+  <text x="310" y="130" font-size="12" font-weight="700" fill="#1a202c">medicion.lecturas.v1</text>
+  <text x="310" y="148" font-size="10" fill="#744210">lecturas del contador 15.8.0</text>
+  <text x="310" y="168" font-size="10" fill="#4a5568">key: medidor_id · 4 particiones</text>
+  <text x="310" y="183" font-size="10" fill="#4a5568">retención 7 días · delete</text>
+  <text x="310" y="203" font-size="9.5" font-style="italic" fill="#744210">la clave preserva el orden por</text>
+  <text x="310" y="216" font-size="9.5" font-style="italic" fill="#744210">medidor: sin eso no se difiere</text>
+
+  <line x1="536" y1="162" x2="580" y2="162" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+
+  <!-- ============================================ PIPELINE ============================================ -->
+  <rect x="582" y="92" width="330" height="330" rx="8" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.8"/>
+  <text x="596" y="86" font-size="12" font-weight="700" fill="#2b6cb0" letter-spacing="1">PIPELINE — Apache Beam sobre Flink</text>
+
+  <rect x="598" y="106" width="298" height="34" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="1.2"/>
+  <text x="608" y="121" font-size="11" font-weight="700" fill="#1a202c">1 · Validar</text>
+  <text x="608" y="134" font-size="9.5" fill="#4a5568">contrato, instante, OBIS único · salida lateral</text>
+
+  <rect x="598" y="150" width="298" height="46" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="1.2"/>
+  <text x="608" y="165" font-size="11" font-weight="700" fill="#1a202c">2 · Deduplicar</text>
+  <text x="608" y="178" font-size="9.5" fill="#4a5568">estado por clave + timer · (medidor, instante)</text>
+  <text x="608" y="190" font-size="9.5" font-style="italic" fill="#c53030">va ANTES de diferenciar: si no, el duplicado emite 0</text>
+
+  <rect x="598" y="206" width="298" height="46" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="1.2"/>
+  <text x="608" y="221" font-size="11" font-weight="700" fill="#1a202c">3 · Diferenciar</text>
+  <text x="608" y="234" font-size="9.5" fill="#4a5568">consumo = lectura(n) − lectura(n−1)</text>
+  <text x="608" y="246" font-size="9.5" font-style="italic" fill="#2c5282">guarda lecturas: una tardía parte su intervalo</text>
+
+  <rect x="598" y="262" width="298" height="46" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="1.2"/>
+  <text x="608" y="277" font-size="11" font-weight="700" fill="#1a202c">4 · Atribuir franja</text>
+  <text x="608" y="290" font-size="9.5" fill="#4a5568">función pura del tiempo de evento + zona</text>
+  <text x="608" y="302" font-size="9.5" font-style="italic" fill="#2c5282">interpola cuando el intervalo cruza un borde</text>
+
+  <rect x="598" y="318" width="298" height="46" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="1.2"/>
+  <text x="608" y="333" font-size="11" font-weight="700" fill="#1a202c">5 · Agregar</text>
+  <text x="608" y="346" font-size="9.5" fill="#4a5568">CombinePerKey · ventana diaria local</text>
+  <text x="608" y="358" font-size="9.5" font-style="italic" fill="#2c5282">clave: medidor | fecha | franja</text>
+
+  <text x="598" y="384" font-size="9.5" fill="#2c5282">lateness 36 h · acumulativo · early por tiempo de proc. · un pane por tardío</text>
+  <text x="598" y="400" font-size="9.5" fill="#2c5282">KafkaIO corre el SDK Java en modo PROCESS dentro del TaskManager</text>
+  <text x="598" y="414" font-size="9.5" fill="#2c5282">checkpointing cada 30 s: el estado por medidor no puede perderse</text>
+
+  <line x1="912" y1="200" x2="956" y2="200" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+
+  <!-- ============================================ KAFKA DERIVADO ============================================ -->
+  <rect x="958" y="92" width="256" height="160" rx="8" fill="#fffdf5" stroke="#b7791f" stroke-width="1.8" stroke-dasharray="6 4"/>
+  <text x="972" y="86" font-size="12" font-weight="700" fill="#b7791f" letter-spacing="1">KAFKA — CAPA DERIVADA</text>
+
+  <rect x="974" y="110" width="224" height="126" rx="5" fill="#fffbeb" stroke="#b7791f" stroke-width="1.4"/>
+  <text x="984" y="130" font-size="11.5" font-weight="700" fill="#1a202c">medicion.consumo-franja.v1</text>
+  <text x="984" y="148" font-size="10" fill="#744210">energía por medidor y franja</text>
+  <text x="984" y="168" font-size="10" fill="#4a5568">key: medidor|fecha|franja</text>
+  <text x="984" y="183" font-size="10" fill="#4a5568">compact,delete · 90 días</text>
+  <text x="984" y="203" font-size="9.5" font-style="italic" fill="#744210">clave estable ⇒ el consumidor</text>
+  <text x="984" y="216" font-size="9.5" font-style="italic" fill="#744210">hace upsert y el último pane gana</text>
+  <text x="984" y="229" font-size="9.5" font-style="italic" fill="#744210">cada registro declara su error</text>
+
+  <line x1="1214" y1="150" x2="1258" y2="150" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+
+  <!-- ============================================ CONSUMIDORES ============================================ -->
+  <text x="1262" y="86" font-size="12" font-weight="700" fill="#276749" letter-spacing="1">CONSUMIDORES</text>
+
+  <rect x="1262" y="100" width="194" height="90" rx="6" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="1274" y="121" font-size="12" font-weight="700" fill="#1a202c">Tablero operativo</text>
+  <text x="1274" y="139" font-size="10" fill="#22543d">lee todos los panes</text>
+  <text x="1274" y="155" font-size="10" fill="#4a5568">el valor cambia mientras</text>
+  <text x="1274" y="169" font-size="10" fill="#4a5568">la ventana no converge</text>
+  <text x="1274" y="184" font-size="9.5" font-style="italic" fill="#22543d">usa es_provisional</text>
+
+  <rect x="1262" y="206" width="194" height="90" rx="6" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="1274" y="227" font-size="12" font-weight="700" fill="#1a202c">Facturación</text>
+  <text x="1274" y="245" font-size="10" fill="#22543d">lee una sola vez</text>
+  <text x="1274" y="261" font-size="10" fill="#4a5568">pasado ventana_fin + 36 h</text>
+  <text x="1274" y="277" font-size="10" fill="#4a5568">precio distinto por franja</text>
+  <text x="1274" y="291" font-size="9.5" font-style="italic" fill="#22543d">el corte es días después</text>
+
+  <!-- ============================================ CUARENTENA ============================================ -->
+  <line x1="747" y1="422" x2="747" y2="470" stroke="#c53030" stroke-width="1.6" marker-end="url(#fl-rojo)"/>
+  <text x="757" y="450" font-size="9.5" fill="#c53030">lo que no se puede procesar</text>
+
+  <rect x="582" y="472" width="392" height="106" rx="6" fill="#fff5f5" stroke="#c53030" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="596" y="493" font-size="11.5" font-weight="700" fill="#742a2a">medicion.cuarentena.v1 — nada se descarta en silencio</text>
+  <text x="596" y="512" font-size="9.5" fill="#4a5568">instante inválido, sin offset o futuro · OBIS repetido · sin 15.8.0</text>
+  <text x="596" y="526" font-size="9.5" fill="#4a5568">trama truncada · contador que retrocede (reseteo del equipo)</text>
+  <text x="596" y="546" font-size="9.5" font-weight="700" fill="#c53030">calidad = checksum_no_verificado NO va acá: el dato está completo</text>
+  <text x="596" y="560" font-size="9.5" fill="#742a2a">es el 66 % del tráfico: descartarlo tiraría dos tercios de la muestra</text>
+  <text x="596" y="573" font-size="9.5" fill="#4a5568">key: medidor_id · retención 30 días · el volumen es una señal operativa</text>
+
+  <!-- ============================================ NOTA: EL PROBLEMA DE FONDO ============================================ -->
+  <rect x="24" y="472" width="530" height="106" rx="6" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.2"/>
+  <text x="38" y="493" font-size="11.5" font-weight="700" fill="#1a202c">Por qué el tiempo de evento es dinero acá</text>
+  <text x="38" y="513" font-size="10" fill="#4a5568">La energía se factura a precio distinto según la franja, así que una lectura</text>
+  <text x="38" y="527" font-size="10" fill="#4a5568">atribuida a la franja equivocada se cobra mal.</text>
+  <text x="38" y="547" font-size="10" fill="#4a5568">Y como el bus es compartido, ninguna lectura cae justo en el borde: la ronda</text>
+  <text x="38" y="561" font-size="10" fill="#4a5568">dura de 6 a 60 min según el tamaño de la cabina y su tasa de fallas. Por eso</text>
+  <text x="38" y="575" font-size="10" font-weight="700" fill="#2c5282">la interpolación es obligatoria y cada resultado declara su propio error.</text>
+
+  <!-- ============================================ PIE ============================================ -->
+  <text x="24" y="614" font-size="10" fill="#718096">El medidor entrega un contador acumulado (OBIS 15.8.0): el consumo no viene en el dato, se obtiene restando dos lecturas. Todos los datos son sintéticos.</text>
+  <text x="24" y="630" font-size="10" fill="#718096">Escenario B — un dispositivo de lectura por medidor, sin bus compartido — corre el MISMO pipeline y permite medir cuánto error elimina esa arquitectura.</text>
+</svg>

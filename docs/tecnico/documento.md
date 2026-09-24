@@ -7,37 +7,91 @@ construyó y cuál es el resultado medible. Se escribe **último**, cuando los n
 
 # 1. El problema y para quién
 
-⚠️ PENDIENTE · *Sergio*
+Una distribuidora eléctrica necesita **facturar a precio diferenciado según la hora**: no
+cuesta lo mismo un kWh en hora punta que de madrugada. Para eso hace falta saber cuánta
+energía consumió cada cliente **en cada franja**, y ahí empiezan las dificultades.
 
-> Lo que pide el enunciado: **problema, usuarios del resultado, y qué métricas o decisiones
-> habilita.**
+## 1.1 Por qué el dato no está disponible
 
-Guion sugerido, con lo que ya está escrito y de dónde sacarlo:
+Los medidores de este parque **no transmiten por su cuenta ni guardan una serie histórica**:
+responden con el valor actual de sus contadores cuando se les pregunta. Tres hechos de esa
+recolección determinan todo lo demás:
 
-- La distribuidora necesita facturar a precio diferenciado según la hora. Para eso hace falta
-  saber cuánta energía consumió cada cliente **en cada franja** → `docs/dominio-medicion.md`.
-- Los medidores no transmiten por su cuenta ni guardan serie histórica: responden cuando se
-  les pregunta, y comparten un bus RS-485 dentro de cada cabina → decisión 2.
-- **El giro que hace interesante el caso:** el tiempo de evento no es una sutileza técnica,
-  es dinero. Una lectura atribuida a la franja equivocada se factura mal.
-- Usuarios del resultado: el **tablero operativo**, que lee todos los panes y muestra un valor
-  que cambia; y la **facturación**, que lee una vez pasado el horizonte de convergencia
-  → `contratos.md` §2.4.
+| Hecho | Consecuencia |
+|---|---|
+| El registro `15.8.0` es un **contador acumulado** | El consumo no viene en el dato: se obtiene **restando dos lecturas** |
+| Los medidores de una cabina comparten un **bus RS-485** y se leen en secuencia | Ninguna lectura cae justo en el borde de una franja; la ronda dura de 6 a 60 minutos |
+| El concentrador **pierde enlace** y publica después lo que juntó | Las lecturas llegan tardías, fuera de orden y en ráfagas |
+
+Hoy el sistema pide **una vez por día**, lo que alcanza para facturar el consumo diario y no
+para discriminar por franja. Habilitar la tarifa horaria exige pedir en cada borde, y ese es
+el cambio que este trabajo modela.
+
+## 1.2 El giro: el tiempo de evento es dinero
+
+En la mayoría de los pipelines, la distinción entre *tiempo de evento* y *tiempo de
+procesamiento* es una sutileza técnica. **Acá no.** Una lectura atribuida a la franja
+equivocada se factura a un precio equivocado, y el error no es aleatorio: se concentra en las
+cabinas grandes y de peor enlace, que son las que más tardan en completar una ronda.
+
+Eso convierte una decisión de diseño en un requisito de negocio, y es la razón de que toda la
+política temporal del sistema esté justificada y no simplemente elegida.
+
+## 1.3 Quién usa el resultado
+
+Dos consumidores del mismo tópico, con necesidades opuestas:
+
+| | **Tablero operativo** | **Facturación** |
+|---|---|---|
+| Qué lee | Todos los panes de cada celda | Un solo valor por celda |
+| Cuándo | Continuamente | Pasado `ventana_fin + 36 h` |
+| Qué tolera | Que el número cambie mientras la ventana no converge | Nada: necesita un valor estable |
+| Qué habilita | Ver la demanda por franja mientras el día transcurre | Emitir la factura con el precio correcto por franja |
+
+Esa diferencia es la que justifica el modo **acumulativo** con salida por *upsert*: cada pane
+es la revisión completa de la celda, así que el tablero puede mostrar el último y la
+facturación puede leer una sola vez sin reconstruir nada.
+
+## 1.4 Qué mide el sistema, además del consumo
+
+Un resultado que el trabajo produce y que no estaba en la consigna: **cada registro de salida
+declara su propio error de atribución**, derivado de la separación entre las dos lecturas que
+rodean el borde de la franja. El sistema no solo entrega un número, entrega cuánto se puede
+confiar en él — y eso permite cuantificar cuánto costaría, en dinero mal facturado, la
+arquitectura de recolección actual frente a una con un dispositivo por medidor.
 
 # 2. Arquitectura
 
-⚠️ PENDIENTE · *Sergio* — el diagrama; *Clara* — la descripción de los componentes
+![Arquitectura del sistema](../diagramas/arquitectura.svg)
 
-> Lo que pide el enunciado: **diagrama de arquitectura y descripción de cada componente.**
+El flujo es **concentrador → log crudo → pipeline → log derivado → consumidores**, con una
+salida lateral a cuarentena. Cada componente está donde está por una razón:
 
-El diagrama va en `docs/diagramas/` como **SVG escrito a mano**, con la convención que ya se
-usó en la Tarea 1: sin herramienta de por medio, para poder versionarlo y revisarlo en un
-diff. Se incrusta acá como vector.
+**El simulador** ocupa el lugar del concentrador. Genera datos sintéticos y deterministas, y
+existe para **inyectar fallas a propósito**: pedidos que se corren, cabinas que caen enteras,
+tramas truncadas, duplicados y ráfagas tardías. Un simulador que se porta bien no sirve para
+demostrar que el pipeline tolera lo que tiene que tolerar.
 
-Componentes a describir: simulador, Kafka (tres tópicos), el pipeline sobre Flink con el
-expansion service de KafkaIO, y los dos consumidores. La infraestructura está documentada en
-`infra/README.md` y no hace falta repetirla: acá va **por qué** cada pieza está, no cómo se
-levanta.
+**Kafka en dos capas.** El tópico crudo conserva las lecturas tal como llegaron, claveadas por
+medidor para que su orden se preserve — sin ese orden, la etapa de diferenciación no puede
+restar lecturas consecutivas. El tópico derivado lleva el resultado, claveado por la celda que
+identifica, de modo que recalcular reemplace en lugar de duplicar.
+
+**El pipeline sobre Beam y Flink** hace cinco cosas en orden, y **el orden no es
+intercambiable**: la deduplicación va antes de la diferenciación porque, si no, un duplicado
+se restaría contra sí mismo y produciría un consumo de cero que, con salida por *upsert*,
+pisaría el valor correcto.
+
+**La cuarentena** recibe todo lo que no se puede procesar, contado y con su motivo. Su volumen
+es una señal operativa: si sube en una zona, el problema es la cobertura de red y no el
+pipeline.
+
+## 2.1 El detalle que condiciona el despliegue
+
+`KafkaIO` **no es una librería Python**: es una transformación *cross-language* cuyas etapas
+de lectura y escritura ejecuta el SDK de **Java**. La imagen de Flink empaqueta los dos SDK y
+los corre en modo `PROCESS` dentro del TaskManager, lo que evita tener que darle al contenedor
+acceso al demonio de Docker. Está documentado en [`infra/README.md`](../../infra/README.md).
 
 # 3. Contrato de eventos y topología de Kafka
 
@@ -68,18 +122,69 @@ Lo que no puede faltar, porque son las decisiones que se defienden:
 
 # 5. Confiabilidad: duplicados, idempotencia y garantías
 
-⚠️ PENDIENTE · *Sergio*
+## 5.1 Dos reintentos que no producen lo mismo
 
-> Lo que pide el enunciado: **deduplicación, idempotencia y semántica de entrega, sin
-> sobreprometer exactly-once.**
+Es la distinción de la que depende no descartar datos buenos:
 
-- Dedup por `(medidor_id, instante_lectura)` con horizonte de 36 h, y **por qué va antes de la
-  diferenciación** → `contratos.md` §1.9. El diagrama de por qué el orden inverso rompe.
-- La salida idempotente: clave estable y *upsert*.
-- Los dos reintentos que no son lo mismo: el de comunicación produce una lectura nueva, solo
-  el de publicación produce un duplicado.
-- **Declarar la garantía por tramo y decir dónde termina.** Es explícitamente lo que el
-  enunciado premia: no afirmar exactly-once end-to-end sin demostrar su alcance.
+| Reintento | Qué produce | Quién lo maneja |
+|---|---|---|
+| **De comunicación** — se vuelve a pedir al medidor | Una lectura **nueva**, en un instante posterior. **No es un duplicado** | La lógica de franja, tolerando que la lectura no esté donde se la esperaba |
+| **De publicación** — se vuelve a publicar a Kafka | Un **duplicado real**: mismo instante, mismo valor | La deduplicación |
+
+Tratar el primero como duplicado descartaría una medición legítima.
+
+## 5.2 Deduplicación, y por qué va antes de diferenciar
+
+Clave: **`(medidor_id, instante_lectura)`**, que es exactamente lo que resume el `event_id`
+determinista. Horizonte: **36 horas**, el mismo que la lateness — si el estado expirara antes,
+un tardío legítimo volvería a parecer nuevo y se contaría dos veces.
+
+El orden respecto de la diferenciación **no es intercambiable**:
+
+```
+1.ª vez:   consumo = R₂ − R₁       ✔
+2.ª vez:   consumo = R₂ − R₂ = 0   ✘   y con upsert, ese 0 pisa el valor correcto
+```
+
+Hay una prueba con `TestStream` que fija este orden, de modo que nadie pueda invertirlo sin
+que la suite falle.
+
+## 5.3 La salida idempotente
+
+El pipeline **no puede evitar reintentar**: un timeout de escritura no dice si la escritura
+llegó. Por eso la idempotencia tiene que estar en la **forma de la salida** y no en no
+reintentar.
+
+La clave `medidor|fecha|franja` identifica la **celda del resultado**, no el intento de
+escritura. Todos los panes de una celda comparten clave, van a la misma partición, se leen en
+orden y **el último gana**. Recalcular una ventana reemplaza su valor en lugar de sumar otro,
+y eso es lo que hace que el replay converja al mismo resultado.
+
+## 5.4 Qué garantiza el sistema, y dónde termina
+
+Declarado por tramo, sin sobreprometer:
+
+| Tramo | Garantía | Por qué |
+|---|---|---|
+| Concentrador → Kafka | **Al menos una vez** | El productor reintenta ante un fallo de publicación; puede duplicar |
+| Dentro del pipeline | **Efectivamente una vez** dentro del horizonte de 36 h | Deduplicación con estado por clave, respaldada por el checkpointing de Flink |
+| Pipeline → salida | **Efectivamente una vez** en el efecto observable | El *upsert* por clave estable hace que reescribir sea inocuo |
+
+**No se afirma exactly-once de punta a punta**, y conviene decir por qué: fuera del horizonte
+de 36 horas la deduplicación no garantiza nada, porque el estado ya expiró. Un duplicado que
+llegara al tercer día se contaría de nuevo. Es una decisión consciente — mantener el estado
+indefinidamente no es una opción sobre una entrada no acotada — y el límite queda declarado en
+lugar de escondido.
+
+## 5.5 Un consumo negativo nunca es válido
+
+En el mercado modelado no hay compra de energía al usuario, así que el contador solo puede
+subir. Una resta negativa es un **reseteo del equipo** o una **trama truncada**, nunca una
+medición: va a cuarentena.
+
+Esa regla es además la segunda defensa contra el caso más peligroso del dominio — una trama
+cortada en medio de un número, que deja un valor plausible que ninguna validación de formato
+detecta.
 
 # 6. Pruebas y evidencia
 
@@ -96,21 +201,62 @@ Lo que no puede faltar, porque son las decisiones que se defienden:
 
 # 7. Límites, supuestos y posibles mejoras
 
-⚠️ PENDIENTE · *Sergio* — **casi todo ya está escrito** en `decisiones-de-diseno.md`
+## 7.1 Supuestos declarados
 
-> Lo que pide el enunciado: **límites conocidos, supuestos y posibles mejoras.**
+| Supuesto | En qué se apoya |
+|---|---|
+| **No hay compra de energía al usuario** | Es un rasgo del marco regulatorio modelado, no una simplificación nuestra. Sin inyección remunerada, `15.8.0` equivale a energía consumida |
+| **Un consumo negativo es siempre un reseteo** | Se desprende del anterior: sin exportación, el contador no baja |
+| **No rige horario de verano** | Evita días con franjas de duración distinta. Si volviera, la configuración tendría que contemplarlos |
+| **Ningún medidor acumula por franja** | No es una simplificación: es incompatible con que las franjas sean configurables, porque un cambio de calendario obligaría a reconfigurar el parque en campo |
 
-Es la sección que más barato se escribe y donde más se nota el trabajo hecho. Los supuestos
-declarados están en `dominio-medicion.md`; las mejoras, en la última sección de
-`decisiones-de-diseno.md`.
+## 7.2 Límites conocidos
 
-Vale la pena destacar tres:
+**La tasa de fallas no está calibrada.** Las mediciones disponibles muestran la *forma* de
+cada caso —la distribución de duraciones es trimodal, la escalera de reintentos es
+determinista— pero **no permiten estimar con qué frecuencia** ocurre cada uno. Es el parámetro
+más influyente del modelo, y el error de atribución que el sistema reporta depende de él.
 
-- La **tasa de fallas no está calibrada**: se midió la forma de cada caso, no su frecuencia.
-- La **correlación por modelo de equipo es invisible** para un pipeline particionado por
-  cabina. Es el límite más interesante que encontramos.
-- El **dispositivo dedicado por medidor**, cuya justificación económica sale de este mismo
-  trabajo.
+**La correlación por modelo de equipo es invisible para este pipeline.** Con el mismo enlace,
+las tasas de entrega por modelo van de 65 % a 94 %, y como los modelos están repartidos por
+todo el parque esa correlación es **espacialmente dispersa**: ninguna partición por ubicación
+la aísla. Un pipeline particionado por medidor o por cabina no puede verla. Es el límite más
+interesante que encontramos, porque hay una estructura real en los datos que la clave de
+particionamiento elegida no alcanza.
+
+**Un evento perdido arruina dos intervalos, no uno.** Si falta la lectura de las 18:15, no se
+puede calcular el consumo de 18:00–18:15 *ni* el de 18:15–18:30: el primero pierde su final y
+el segundo su inicio.
+
+**Un pane por evento tardío.** La ráfaga de una cabina que vuelve de una caída produce una
+escritura por lectura. En producción convendría agrupar los disparos tardíos, a costa de
+demorar la corrección unos minutos — algo que a la facturación no le cambia nada. Se eligió la
+versión por evento **para que la corrección sea visible en la demostración**.
+
+**Fuera de las 36 horas no hay deduplicación**, como se explica en §5.4.
+
+## 7.3 Posibles mejoras
+
+**Un dispositivo de lectura por medidor.** Elimina de raíz la limitación de fondo, que es el
+bus compartido. Y su justificación económica **sale de este mismo trabajo**: el error de
+atribución que el pipeline mide hoy es exactamente lo que esa inversión ahorraría. El
+simulador genera ese escenario y el **mismo pipeline, sin cambios**, lo procesa — así la
+comparación es una medición y no una estimación.
+
+Si se hace, conviene que el dispositivo exponga sus parciales en **códigos OBIS propios** y no
+en los registros tarifarios estándar: permite leer el total del medidor y los parciales del
+dispositivo y **verificar que sumen**, de modo que un dispositivo desincronizado se detecte
+solo.
+
+**Reducir la pausa entre medidores.** Un tercio del tiempo por medidor es una pausa fija que
+el concentrador aplica, y es una decisión de implementación, no del protocolo. Es el parámetro
+más barato de mejorar de todos los que aparecen en este análisis.
+
+**Medición neta.** Si se introdujera compra de energía al usuario, habría que leer `1.8.0` y
+`2.8.0` por separado y la regla del consumo negativo dejaría de valer.
+
+**Una materialización intermedia** para el tablero, si alguna vez hacen falta consultas
+ad-hoc o muchos lectores concurrentes.
 
 # 8. Integrantes y contribuciones
 
