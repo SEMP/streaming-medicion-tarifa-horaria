@@ -97,6 +97,17 @@ uv run pytest                                    # las pruebas
 uv run simulador --cabinas 8 --salida datos/lecturas.jsonl
 ```
 
+**La demostración**, que es la que hay que mirar primero. Narra los tres escenarios
+—lecturas normales, un duplicado y una lectura tardía— sobre un solo medidor, y muestra
+qué cambia en la tabla de salida después de cada uno. No necesita Docker:
+
+```bash
+uv run python -m pipeline.demostracion
+```
+
+Corre con `DirectRunner` y `TestStream`, así que el tiempo se controla y **la salida es
+idéntica en cualquier máquina**. Es lo que la vuelve evidencia y no anécdota.
+
 **Con el stack completo** — Kafka, Flink y el job server de Beam:
 
 ```bash

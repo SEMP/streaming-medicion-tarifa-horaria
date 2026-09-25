@@ -4,14 +4,14 @@ Todo lo de acá son **funciones puras**: no dependen de Kafka, de Beam ni de la
 infraestructura, y se prueban con `pytest` común. Es deliberado — permite trabajar en la
 lógica de franjas sin esperar a que nada esté levantado.
 
-La interfaz que consume el pipeline es [`fecha_y_franja`].
+Las interfaces que consume el pipeline son [`fecha_y_franja`] y [`repartir_por_franja`].
 """
 
 from __future__ import annotations
 
 import tomllib
 from dataclasses import dataclass
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -209,3 +209,69 @@ def borde_siguiente(momento: time, cal: CalendarioTarifario) -> int:
         if cal.franja_de_minuto(siguiente) != actual:
             return siguiente
     return MINUTOS_DIA
+
+
+@dataclass(frozen=True)
+class Parte:
+    """El trozo de un intervalo que cae dentro de una sola franja."""
+
+    fecha_local: date
+    franja: str
+    energia_kwh: float
+    minutos: float
+    interpolada: bool
+    """`True` si este trozo salió de repartir un intervalo que cruzaba un borde, y no de una
+    lectura que caiga justo ahí. Es la diferencia entre un dato medido y uno estimado, y el
+    consumidor tiene derecho a distinguirlos."""
+
+
+def repartir_por_franja(
+    desde: datetime, hasta: datetime, energia_kwh: float, cal: CalendarioTarifario
+) -> list[Parte]:
+    """Reparte la energía de un intervalo entre las franjas que toca.
+
+    **Por qué esto es obligatorio y no una optimización** (decisión 5): este parque solo
+    expone modo *readout*. No hay grilla fija de medición, hay rondas continuas sobre un bus
+    compartido, así que los intervalos cruzan bordes de franja **siempre** y no hay
+    configuración del calendario que lo evite.
+
+    **El supuesto que hace:** potencia constante durante el intervalo, así que la energía se
+    reparte en proporción al tiempo. Es la única hipótesis defendible sin más información —el
+    contador no dice qué pasó *dentro* del intervalo— y es también la fuente del error de
+    atribución que cada resultado declara. Cuanto más largo el intervalo, más se puede
+    equivocar.
+
+    Los trozos salen marcados con `interpolada`, que es `False` solo cuando el intervalo entra
+    entero en una franja. Un intervalo que no cruza ningún borde no se estima: se mide.
+    """
+    # El huso se verifica primero: comparar un naive con un aware no da False, levanta
+    # TypeError, y el mensaje de error resultante no diría cuál es el problema real.
+    if desde.tzinfo is None or hasta.tzinfo is None:
+        raise ValueError("los bordes del intervalo deben ser timezone-aware")
+    if hasta <= desde:
+        raise ValueError(f"intervalo vacío o invertido: {desde} → {hasta}")
+
+    total_segundos = (hasta - desde).total_seconds()
+    partes: list[Parte] = []
+    cursor = desde
+
+    while cursor < hasta:
+        local = cursor.astimezone(cal.zona)
+        fecha, franja = fecha_y_franja(cursor, cal)
+        medianoche = local.replace(hour=0, minute=0, second=0, microsecond=0)
+        fin_de_franja = medianoche + timedelta(minutes=borde_siguiente(local.time(), cal))
+        fin = min(fin_de_franja, hasta)
+
+        segundos = (fin - cursor).total_seconds()
+        partes.append(
+            Parte(
+                fecha_local=fecha,
+                franja=franja,
+                energia_kwh=energia_kwh * segundos / total_segundos,
+                minutos=segundos / 60,
+                interpolada=segundos < total_segundos,
+            )
+        )
+        cursor = fin
+
+    return partes

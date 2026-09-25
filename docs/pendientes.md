@@ -44,7 +44,8 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 | Clara | Esqueleto del pipeline con fuente conmutable (`jsonl` \| `kafka`) | No depende de `infra/`: se construye contra `datos/*.jsonl` |
 | Los tres | **Documento técnico**: el esqueleto está en [`tecnico/`](tecnico/documento.md) con dueño por sección y `⚠️ PENDIENTE` donde falta. Se arma con `./docs/tecnico/armar-pdf.sh` | 9 secciones sin escribir. Varias son casi transcripción de lo ya documentado |
 | ~~Sergio~~ | ~~Diagrama de arquitectura~~ · ✅ `docs/diagramas/arquitectura.svg`, incrustado en el documento en página apaisada | — |
-| Clara | **Secciones 3, 4 y 6** del documento técnico | Las 3 y 4 son casi transcripción de [`contratos.md`](contratos.md) |
+| Clara | **Secciones 3 y 4** del documento técnico | Casi transcripción de [`contratos.md`](contratos.md). La 6 ya está escrita |
+| ⚠️ Clara | **Aviso de colisión**: `pipeline.demostracion` arma la cadena completa —deduplicar, diferenciar, vigencia, franja, agregar— para producir la evidencia. Si estabas escribiendo eso mismo, hablémoslo antes de mergear | Pasa por el hueco `transformaciones` de `esqueleto.py`, no toca tus archivos |
 | Los tres | **Sección 8**: contribuciones de cada uno | `git shortlog -sn --no-merges` lo respalda |
 | Los tres | **Video** | Nadie empezó. Conviene grabarlo antes del último día |
 
@@ -54,6 +55,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 25/09 | — | **Demostración narrada** de los tres escenarios (`pipeline.demostracion`), **reparto de un intervalo entre franjas** (`repartir_por_franja`, era de Daniel) y **sección 6** del documento técnico. 76 pruebas |
 | 25/09 | — | **Una lectura tardía duplicaba el consumo de su intervalo.** El *upsert* no retiraba el intervalo superado. Corregido con `IntervalosVigentes` → [decisión 12](decisiones-de-diseno.md). ⚠️ **Clara: afecta cómo se arma la agregación** |
 | 24/09 | — | **Diagrama de arquitectura** en SVG a mano, y **secciones 1, 2, 5 y 7 del documento técnico**. Quedan 5 pendientes de 9 |
 | 23/09 | — | **Deduplicación y diferenciación con estado**, y sus 8 pruebas con `TestStream`. La diferenciación guarda las lecturas en lugar de restar contra la última: una tardía que cae en el medio parte el intervalo y emite las dos mitades |

@@ -218,16 +218,88 @@ detecta.
 
 # 6. Pruebas y evidencia
 
-⚠️ PENDIENTE · *los tres*
+El enunciado fija la vara: *«una ejecución exitosa con datos ideales no es evidencia
+suficiente»*. Por eso la evidencia está partida en tres piezas con propósitos distintos.
 
-> Lo que pide el enunciado: **pruebas de lógica y de tiempo, escenarios adversos, y
-> demostración del recorrido completo.**
+## 6.1 La demostración narrada
 
-- Pruebas unitarias: 34 del simulador, 23 de franjas.
-- Pruebas con `TestStream`: duplicado, tardío dentro de tolerancia, tardío fuera, desorden.
-- **La prueba de humo**, que recorre simulador → Kafka → Beam → Kafka → `infra/README.md`.
-- **El contraste A/B**: el mismo pipeline, sin cambiar una línea, contra las dos arquitecturas
-  de recolección. Convierte el error de atribución de estimación en medición.
+`uv run python -m pipeline.demostracion` cuenta una historia de cinco lecturas sobre **un
+solo medidor**, elegida para que cada paso se verifique con una resta mental. Corre con
+`DirectRunner` y `TestStream`, sin Docker: el tiempo se controla, así que la salida es
+idéntica en cualquier máquina — que es lo que la vuelve evidencia y no anécdota.
+
+Las lecturas del contador, en kWh acumulados, rodean el borde de las 18:00 donde empieza
+`punta`:
+
+| Acto | Qué llega | Qué debe pasar |
+|---|---|---|
+| 1 | 17:40 → 100,0 · 17:55 → 101,5 · 18:20 → 105,5 | Dos intervalos; el segundo cruza el borde y se reparte por interpolación |
+| 2 | Otra vez 17:55 → 101,5 | **Nada cambia.** Es un reintento de publicación |
+| 3 | Tardía: 18:00 → 102,4 | Parte el intervalo y **corrige** el reparto estimado |
+
+Y lo que efectivamente sale:
+
+| Celda | Acto 1 y 2 | Acto 3 | Diferencia |
+|---|---|---|---|
+| `MED-0042\|2026-09-25\|resto` | 2,300 *interpolado* | 2,400 *medido* | +0,100 |
+| `MED-0042\|2026-09-25\|punta` | 3,200 *interpolado* | 3,100 *medido* | −0,100 |
+| **Total** | **5,500** | **5,500** | **0** |
+
+Hay tres cosas para leer ahí, y son las tres que el enunciado pide ver.
+
+**El duplicado no movió la tabla.** No apareció ningún intervalo de 0 kWh pisando un valor
+bueno, que es lo que pasaría si se deduplicara después de diferenciar (§5.2).
+
+**La tardía corrigió el reparto sin cambiar el total.** Medir con más detalle no crea ni
+destruye energía: solo cambia a qué franja se le atribuye. La columna de origen pasa de
+*interpolado* a *medido*, porque la lectura cayó justo sobre el borde y ya no hubo nada que
+estimar.
+
+**Los 0,100 kWh son el error de atribución**, el número que el proyecto existe para medir. No
+es un defecto del pipeline: viene de que el intervalo cruzaba el borde y hubo que suponer
+potencia constante. La tardía es la que revela cuánto se erró.
+
+La demostración verifica sus propias afirmaciones y devuelve código de salida, y está
+cubierta por la suite: si se rompe, el video que la muestra deja de ser reproducible.
+
+## 6.2 Las pruebas automáticas
+
+76 en total, y la división importa:
+
+| Suite | Cuántas | Qué fija |
+|---|---|---|
+| Simulador | 34 | Determinismo por semilla, inyección de fallas, curva de consumo |
+| Franjas | 29 | Validación del calendario, atribución, reparto por borde, conservación de la energía |
+| `TestStream` | 10 | Duplicado, desorden, contador que retrocede, cuarentena, orden de las etapas |
+| Demostración | 3 | Que la evidencia de §6.1 siga saliendo como está escrita acá |
+
+Las de `TestStream` son las que no se pueden escribir de otra forma: el comportamiento tardío
+depende de dónde está el watermark, y con un reloj real habría que esperar y el resultado
+dependería de la máquina.
+
+Dos merecen mención porque fijan decisiones que alguien podría deshacer sin darse cuenta:
+
+- `test_el_duplicado_debe_deduplicarse_antes_de_diferenciar` — el orden de las dos etapas.
+- `test_la_tardia_no_puede_contarse_dos_veces` — que el intervalo superado deje de sumar.
+
+## 6.3 El recorrido completo sobre Kafka y Flink
+
+`pipeline.humo` verifica que el cableado funciona de punta a punta —que KafkaIO levanta, que
+Flink acepta el trabajo, que los bytes entran y salen— y devuelve código de salida. Separa
+«el pipeline está mal» de «la infraestructura está mal», que son dos problemas distintos.
+Comandos en [`infra/README.md`](../../infra/README.md).
+
+## 6.4 Un error que solo una prueba podía encontrar
+
+Vale la pena contarlo porque es el argumento del enunciado comprobado sobre el propio código.
+
+La agregación sumaba el intervalo grosero **junto con** las dos mitades que lo reemplazan:
+`6 + 2 + 4 = 12` kWh, el doble del consumo real, sobre un dato que se factura. Se creía que
+el *upsert* lo resolvía, y no: opera sobre la celda, y los tres intervalos caen dentro de la
+misma celda (§5.4).
+
+Con datos ideales eso no aparece nunca. Hace falta una lectura tardía — exactamente el
+escenario adverso que el enunciado pide demostrar.
 
 # 7. Límites, supuestos y posibles mejoras
 

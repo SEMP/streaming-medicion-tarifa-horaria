@@ -9,6 +9,7 @@ from __future__ import annotations
 import textwrap
 from datetime import UTC, datetime, time
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 from pipeline.franjas import (
@@ -16,6 +17,7 @@ from pipeline.franjas import (
     borde_siguiente,
     cargar_calendario,
     fecha_y_franja,
+    repartir_por_franja,
 )
 
 EJEMPLO = Path(__file__).parents[2] / "config" / "franjas.example.toml"
@@ -195,3 +197,90 @@ def test_borde_siguiente_encuentra_el_fin_de_la_franja():
     assert borde_siguiente(time(19, 30), cal) == 22 * 60   # punta termina a las 22:00
     assert borde_siguiente(time(3, 0), cal) == 7 * 60      # valle termina a las 07:00
     assert borde_siguiente(time(23, 0), cal) == 24 * 60    # el último tramo cierra el día
+
+
+# ------------------------------------------------- reparto de un intervalo entre franjas
+
+ASU = ZoneInfo("America/Asuncion")
+
+
+def local(dia: str, hora: str) -> datetime:
+    return datetime.fromisoformat(f"{dia}T{hora}").replace(tzinfo=ASU)
+
+
+@pytest.fixture
+def cal():
+    return cargar_calendario(EJEMPLO)
+
+
+def test_un_intervalo_que_no_cruza_ningun_borde_no_se_interpola(cal):
+    """Si entra entero en una franja, el dato es **medido**, no estimado."""
+    partes = repartir_por_franja(
+        local("2026-09-25", "17:40"), local("2026-09-25", "17:55"), 1.5, cal
+    )
+    assert len(partes) == 1
+    assert (partes[0].franja, partes[0].energia_kwh) == ("resto", 1.5)
+    assert partes[0].interpolada is False
+
+
+def test_un_intervalo_que_cruza_el_borde_de_punta_se_reparte_en_proporcion(cal):
+    """**El caso que vuelve obligatoria la interpolación** (decisión 5).
+
+    Con readout no hay grilla de medición, así que los intervalos cruzan bordes siempre. Las
+    17:55 → 18:20 son 25 minutos, de los cuales 5 caen en `resto` y 20 en `punta`. Con
+    potencia constante, la energía sigue esa misma proporción.
+    """
+    partes = repartir_por_franja(
+        local("2026-09-25", "17:55"), local("2026-09-25", "18:20"), 4.0, cal
+    )
+    assert [(p.franja, p.minutos, round(p.energia_kwh, 3)) for p in partes] == [
+        ("resto", 5.0, 0.8),
+        ("punta", 20.0, 3.2),
+    ]
+    assert all(p.interpolada for p in partes)
+
+
+def test_repartir_conserva_la_energia(cal):
+    """**La propiedad que no se puede romper.** Repartir no crea ni destruye energía: es la
+    misma medición vista por partes. Si esto falla, se está facturando de más o de menos."""
+    for desde, hasta, energia in [
+        ("00:00", "23:59", 48.0),      # casi el día entero, cruza los cuatro tramos
+        ("17:55", "18:20", 4.0),       # el borde de punta
+        ("21:50", "22:10", 2.0),       # el borde de vuelta a resto
+        ("06:58", "07:03", 0.4),       # el borde de valle
+    ]:
+        partes = repartir_por_franja(
+            local("2026-09-25", desde), local("2026-09-25", hasta), energia, cal
+        )
+        assert sum(p.energia_kwh for p in partes) == pytest.approx(energia)
+        assert sum(p.minutos for p in partes) == pytest.approx(
+            (local("2026-09-25", hasta) - local("2026-09-25", desde)).total_seconds() / 60
+        )
+
+
+def test_un_intervalo_que_cruza_la_medianoche_cae_en_dos_fechas(cal):
+    """La fecha local va en la clave de salida: un intervalo a caballo de medianoche aporta a
+    **dos celdas distintas**, y confundirlas mete consumo en el día equivocado."""
+    partes = repartir_por_franja(
+        local("2026-09-25", "23:50"), local("2026-09-26", "00:10"), 2.0, cal
+    )
+    assert [(str(p.fecha_local), p.franja, p.energia_kwh) for p in partes] == [
+        ("2026-09-25", "resto", 1.0),
+        ("2026-09-26", "valle", 1.0),
+    ]
+
+
+def test_un_intervalo_invertido_o_vacio_es_un_error(cal):
+    """No se devuelve una lista vacía: sería un consumo que desaparece en silencio."""
+    with pytest.raises(ValueError, match="invertido"):
+        repartir_por_franja(
+            local("2026-09-25", "18:00"), local("2026-09-25", "17:00"), 1.0, cal
+        )
+
+
+def test_un_intervalo_sin_huso_es_un_error(cal):
+    """Mismo criterio que `fecha_y_franja`: sin huso, la franja dependería de la máquina."""
+    with pytest.raises(ValueError, match="timezone-aware"):
+        repartir_por_franja(
+            datetime(2026, 9, 25, 17, 55), local("2026-09-25", "18:20"), 4.0, cal
+        )
