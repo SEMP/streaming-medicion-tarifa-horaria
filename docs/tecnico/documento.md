@@ -160,7 +160,37 @@ escritura. Todos los panes de una celda comparten clave, van a la misma partici�
 orden y **el último gana**. Recalcular una ventana reemplaza su valor en lugar de sumar otro,
 y eso es lo que hace que el replay converja al mismo resultado.
 
-## 5.4 Qué garantiza el sistema, y dónde termina
+## 5.4 El upsert no alcanza: un intervalo superado no puede seguir sumando
+
+La clave anterior resuelve los reintentos de escritura, pero **no** el caso de la lectura
+tardía, y conviene separarlos porque se parecen.
+
+Cuando llega una tardía, la diferenciación parte el intervalo que la contenía y emite las dos
+mitades. El intervalo grosero ya salió, y Beam Python no tiene retractaciones. El *upsert* no
+lo retira, porque opera sobre la **celda** y los tres intervalos caen dentro de la misma celda.
+Con `ACCUMULATING`, la agregación los suma a los tres:
+
+| Intervalo | Energía |
+|---|---|
+| 08:00 → 09:00 | 6 kWh |
+| 08:00 → 08:30 | 2 kWh |
+| 08:30 → 09:00 | 4 kWh |
+| **Suma** | **12 kWh**, el doble del consumo real |
+
+La regla que lo corrige: los intervalos de un medidor parten la línea de tiempo, y cada uno
+queda identificado por su **borde izquierdo**. Partirlo exige una lectura interior, que acerca
+el borde derecho — un intervalo solo puede **acortarse**. Entre varios que empiezan en el mismo
+instante, **el vigente es el más corto**.
+
+Es función pura del dato, no del orden de llegada, y por eso un *replay* converge al mismo
+resultado. Con la regla alternativa —«el último que llegó»— haría falta un orden que en un
+reproceso no existe.
+
+**Este error lo encontró una prueba, no una ejecución.** Con datos ideales no aparece nunca:
+hace falta una lectura tardía, que es exactamente el escenario adverso que el enunciado pide
+demostrar y la razón por la que una corrida feliz no es evidencia.
+
+## 5.5 Qué garantiza el sistema, y dónde termina
 
 Declarado por tramo, sin sobreprometer:
 
@@ -176,7 +206,7 @@ llegara al tercer día se contaría de nuevo. Es una decisión consciente — ma
 indefinidamente no es una opción sobre una entrada no acotada — y el límite queda declarado en
 lugar de escondido.
 
-## 5.5 Un consumo negativo nunca es válido
+## 5.6 Un consumo negativo nunca es válido
 
 En el mercado modelado no hay compra de energía al usuario, así que el contador solo puede
 subir. Una resta negativa es un **reseteo del equipo** o una **trama truncada**, nunca una
@@ -233,7 +263,7 @@ escritura por lectura. En producción convendría agrupar los disparos tardíos,
 demorar la corrección unos minutos — algo que a la facturación no le cambia nada. Se eligió la
 versión por evento **para que la corrección sea visible en la demostración**.
 
-**Fuera de las 36 horas no hay deduplicación**, como se explica en §5.4.
+**Fuera de las 36 horas no hay deduplicación**, como se explica en §5.5.
 
 ## 7.3 Posibles mejoras
 

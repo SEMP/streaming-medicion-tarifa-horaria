@@ -54,6 +54,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 25/09 | — | **Una lectura tardía duplicaba el consumo de su intervalo.** El *upsert* no retiraba el intervalo superado. Corregido con `IntervalosVigentes` → [decisión 12](decisiones-de-diseno.md). ⚠️ **Clara: afecta cómo se arma la agregación** |
 | 24/09 | — | **Diagrama de arquitectura** en SVG a mano, y **secciones 1, 2, 5 y 7 del documento técnico**. Quedan 5 pendientes de 9 |
 | 23/09 | — | **Deduplicación y diferenciación con estado**, y sus 8 pruebas con `TestStream`. La diferenciación guarda las lecturas en lugar de restar contra la última: una tardía que cae en el medio parte el intervalo y emite las dos mitades |
 | 22/09 | — | **Esqueleto del documento técnico** en `tecnico/`, con la cadena pandoc → Typst ya funcionando y las 8 secciones que pide el enunciado, cada una con dueño |

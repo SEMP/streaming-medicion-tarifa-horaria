@@ -125,8 +125,11 @@ class DiferenciarContador(beam.DoFn):
 
     Es a lo sumo dos emisiones por llegada, no una recomputación completa, y es correcto sin
     importar en qué orden lleguen: una lectura tardía que cae en el medio parte el intervalo
-    que la contenía y emite las dos mitades, que con salida por *upsert* reemplazan al valor
-    grosero anterior.
+    que la contenía y emite las dos mitades.
+
+    ⚠️ **El intervalo grosero no se retira**: ya fue emitido, y Beam Python no tiene
+    retractaciones. Antes de sumar hay que pasar por `IntervalosVigentes`, que descarta los
+    superados. Sin ese paso la agregación cuenta el consumo dos veces.
 
     **Un consumo negativo nunca es válido**: en el mercado modelado no hay compra de energía
     al usuario, así que el contador solo puede subir. Un retroceso es un reseteo del equipo o
@@ -205,3 +208,44 @@ class DiferenciarContador(beam.DoFn):
     @on_timer(EXPIRA)
     def expirar(self, lecturas=beam.DoFn.StateParam(LECTURAS)):
         lecturas.clear()
+
+
+def el_mas_corto(consumos):
+    """De varios intervalos con el mismo inicio, el que llega menos lejos.
+
+    Es asociativa y conmutativa —el mínimo de mínimos es el mínimo—, así que Beam puede
+    combinarla parcialmente sin cambiar el resultado.
+    """
+    return min(consumos, key=lambda c: c.hasta)
+
+
+class IntervalosVigentes(beam.PTransform):
+    """Se queda con un solo intervalo por borde izquierdo: el que no fue superado.
+
+    **Por qué hace falta.** Cuando llega una lectura tardía, `DiferenciarContador` emite las
+    dos mitades del intervalo que la contenía, pero **el grosero ya salió** y sigue en la
+    ventana. El *upsert* del contrato (§2.1) no lo retira: opera sobre la celda
+    `medidor|fecha|franja`, y los tres intervalos caen dentro de la misma celda. Con
+    `ACCUMULATING`, la agregación los sumaría a los tres:
+
+        6 kWh (08:00→09:00)  +  2 (08:00→08:30)  +  4 (08:30→09:00)  =  12 ✘
+
+    Beam Python no tiene retractaciones, así que el intervalo viejo no se puede desemitir.
+    Lo que sí se puede es **no contarlo**, y para eso alcanza con una regla sobre el dato.
+
+    **La regla.** Los intervalos de un medidor parten la línea de tiempo, y cada uno queda
+    identificado por su borde izquierdo. Partir uno exige una lectura interior, que acerca el
+    borde derecho: un intervalo solo puede **acortarse**, nunca estirarse. Entonces, entre
+    varios que empiezan en el mismo instante, el vigente es el más corto.
+
+    Es función pura del dato, no del orden de llegada. Un *replay* converge al mismo
+    resultado, que es la mitad de la idempotencia que el proyecto declara.
+    """
+
+    def expand(self, consumos):
+        return (
+            consumos
+            | "PorBordeIzquierdo" >> beam.Map(lambda c: ((c.medidor_id, c.desde), c))
+            | "ElVigente" >> beam.CombinePerKey(el_mas_corto)
+            | "SoloElIntervalo" >> beam.Values()
+        )

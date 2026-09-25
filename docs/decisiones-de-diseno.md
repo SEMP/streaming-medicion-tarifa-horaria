@@ -318,6 +318,41 @@ emite consumo por intervalo directamente y la etapa se desactiva. Está diseñad
 propósito: es la pieza que acopla el pipeline al trabajo de estado, y conviene poder
 desacoplarla sin rehacer nada.
 
+## 12. Un intervalo superado no puede seguir sumando
+
+**Decidido el 25/09**, a partir de una prueba que falló.
+
+Cuando llega una lectura tardía, la diferenciación (decisión 10) parte el intervalo que la
+contenía y emite las dos mitades. El intervalo grosero, en cambio, **ya salió**, y Beam Python
+no tiene retractaciones: no hay forma de desemitirlo.
+
+Se creía que el *upsert* del contrato lo resolvía. **No lo resuelve**: el *upsert* opera sobre
+la celda `medidor|fecha|franja` ([`contratos.md`](contratos.md) §2.1) y los tres intervalos
+caen dentro de la misma celda. Con `ACCUMULATING`, la agregación suma todo lo que hay en la
+ventana:
+
+```
+  6 kWh (08:00→09:00)  +  2 (08:00→08:30)  +  4 (08:30→09:00)  =  12 ✘
+```
+
+El doble del consumo real, y sobre un dato que se factura.
+
+**La regla.** Los intervalos de un medidor parten la línea de tiempo, y cada uno queda
+identificado por su **borde izquierdo**. Partir uno exige una lectura interior, que acerca el
+borde derecho: un intervalo solo puede **acortarse**, nunca estirarse. Entonces, entre varios
+que empiezan en el mismo instante, el vigente es **el más corto**.
+
+Se implementa en `IntervalosVigentes`, que va entre la diferenciación y la agregación.
+
+**Por qué esta regla y no «el último que llegó»:** porque es función pura del dato y no del
+orden de llegada. Un *replay* converge al mismo resultado, que es la mitad de la idempotencia
+que el proyecto declara. Con «el último que llegó» habría que conservar un orden que en un
+reproceso no existe.
+
+**Lo que esto deja como lección**, y va al documento: una ejecución con datos ideales no
+habría encontrado esto nunca. El error solo aparece cuando llega una lectura tardía — que es
+exactamente el escenario adverso que el enunciado pide demostrar.
+
 ## 11. Licencia: MIT
 
 **Decidido el 20/09.** El proyecto se publica bajo [MIT](../LICENSE), con los tres integrantes

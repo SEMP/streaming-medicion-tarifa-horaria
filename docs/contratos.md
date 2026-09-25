@@ -303,6 +303,13 @@ consumidor es **upsert, nunca insert**: eso es lo que hace que recalcular una ve
 La clave **no incluye `cabina_id`**, aunque el campo viaje en el valor: un medidor podría
 cambiar de cabina y la identidad del resultado no debe depender de eso.
 
+> ⚠️ **Lo que el upsert NO resuelve** (Sergio, 25/09). Opera sobre la **celda**, así que
+> reescribirla es inocuo — pero los intervalos superados que llegan a la agregación **caen
+> dentro de esa misma celda** y se suman igual. Una lectura tardía duplicaba el consumo de su
+> intervalo. La corrección va aguas arriba de la agregación, en `IntervalosVigentes`:
+> [decisión 12](decisiones-de-diseno.md). Afecta a cómo se arma la agregación, por eso queda
+> anotado acá.
+
 ## 2.2 Cobertura, en lugar de «intervalos esperados»
 
 El borrador anterior proponía `intervalos_contados` contra `intervalos_esperados`. **Con
