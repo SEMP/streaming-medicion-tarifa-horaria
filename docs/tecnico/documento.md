@@ -299,10 +299,34 @@ Dos merecen mención porque fijan decisiones que alguien podría deshacer sin da
 
 ## 6.3 El recorrido completo sobre Kafka y Flink
 
-`pipeline.humo` verifica que el cableado funciona de punta a punta —que KafkaIO levanta, que
-Flink acepta el trabajo, que los bytes entran y salen— y devuelve código de salida. Separa
+Son dos pruebas, y la separación es deliberada.
+
+`pipeline.humo` verifica **el cableado** con un *passthrough*: que KafkaIO levanta, que Flink
+acepta el trabajo, que los bytes entran y salen. Sin lógica de dominio de por medio, separa
 «el pipeline está mal» de «la infraestructura está mal», que son dos problemas distintos.
-Comandos en [`infra/README.md`](../../infra/README.md).
+
+`pipeline.extremo_a_extremo` responde la pregunta que ninguna de las otras responde: **¿la
+lógica da lo mismo cuando la ejecuta Flink?** No es retórica. El runner portable serializa las
+funciones y el estado hacia procesos que no comparten memoria con el que arma el pipeline, y
+hay cosas que andan en `DirectRunner` y no allá. Siembra las mismas cinco lecturas de §6.1 y
+exige el mismo resultado:
+
+```
+  celda                                   kWh   esperado  origen
+  MED-0042|2026-09-25|punta             3.100      3.100  medido ✔
+  MED-0042|2026-09-25|resto             2.400      2.400  medido ✔
+  TOTAL                                 5.500      5.500
+```
+
+Dos detalles que la corrida deja ver y que valen como evidencia por sí solos. La **cuarentena
+quedó vacía**, así que nada se perdió por el camino. Y el tópico de salida recibió **cinco
+mensajes para dos celdas**: son las revisiones sucesivas, una por cada lectura que cambió algo,
+y el *upsert* del consumidor se queda con las dos últimas. Es la semántica del contrato
+funcionando sobre el stack real, no sobre una maqueta.
+
+Usa tópicos propios (`medicion.*.e2e`) para que cada corrida sea independiente: compartir los
+de producción hacía que leyera lo que había dejado la prueba anterior. Comandos en
+[`infra/README.md`](../../infra/README.md).
 
 ## 6.4 Un error que solo una prueba podía encontrar
 

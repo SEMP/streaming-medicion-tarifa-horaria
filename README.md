@@ -119,11 +119,22 @@ docker compose -f infra/docker-compose.yml down -v         # bajar y limpiar
 La interfaz de Flink queda en <http://localhost:8081> y Kafka en `localhost:29092`.
 Detalles y resolución de problemas en [`infra/README.md`](infra/README.md).
 
-**Prueba de humo**, que verifica el recorrido completo y devuelve código de salida:
+**Prueba de humo**, que verifica el cableado —que KafkaIO levanta y los bytes entran y
+salen— con un *passthrough*, sin lógica de dominio de por medio:
 
 ```bash
 docker compose -f infra/docker-compose.yml --profile humo run --rm -T humo
 ```
+
+**Verificación de punta a punta**, que siembra las mismas cinco lecturas de la demostración
+y exige el mismo resultado, pero ejecutado por Flink:
+
+```bash
+docker compose -f infra/docker-compose.yml --profile e2e run --rm -T extremo-a-extremo
+```
+
+Usa tópicos propios (`medicion.*.e2e`) para que cada corrida sea independiente de la
+anterior, y devuelve código de salida.
 
 ## Equipo y contribuciones
 

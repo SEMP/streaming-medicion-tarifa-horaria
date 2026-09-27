@@ -75,6 +75,16 @@ services:
         # Nada se descarta en silencio: lo que no se puede procesar queda acá, contado.
         /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists \
           --topic medicion.cuarentena.v1 --partitions 2 --replication-factor 1
+        # Tópicos propios de la verificación de punta a punta. Separados a propósito: si
+        # compartiera los de arriba, cada corrida leería lo que dejó la anterior y el
+        # resultado dependería de qué se ejecutó antes.
+        # Doble signo de peso a propósito: Compose interpola las variables del host antes
+        # de que bash vea el script, y con uno solo la variable del bucle se expandiría a
+        # nada. Vale también para los comentarios, que Compose no distingue del código.
+        for t in lecturas consumo-franja cuarentena; do
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists \
+            --topic medicion.$$t.e2e --partitions 2 --replication-factor 1
+        done
         /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --describe
 
   jobmanager:
@@ -159,6 +169,22 @@ services:
       beam-job-server:
         condition: service_started
     command: ["/app/.venv/bin/python", "-m", "pipeline"]
+
+  extremo-a-extremo:
+    <<: *app
+    profiles: ["e2e"]
+    environment:
+      <<: *entorno
+      TOPICO_LECTURAS: medicion.lecturas.e2e
+      TOPICO_CONSUMO: medicion.consumo-franja.e2e
+      TOPICO_CUARENTENA: medicion.cuarentena.e2e
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      beam-job-server:
+        condition: service_started
+    command: ["/app/.venv/bin/python", "-m", "pipeline.extremo_a_extremo"]
+    restart: "no"
 
   humo:
     <<: *app
