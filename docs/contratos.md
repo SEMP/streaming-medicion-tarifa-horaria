@@ -168,11 +168,16 @@ que el validador tiene que hacer cumplir: los códigos OBIS son únicos dentro d
 | Valor | Qué significa | Qué hace el pipeline |
 |---|---|---|
 | `ok` | Trama completa y verificada | Procesa |
-| `checksum_no_verificado` | La trama llegó entera pero no se pudo verificar su carácter de control | **Procesa**, y lo cuenta. Es el 48 % del tráfico: rechazarlo tiraría media muestra |
+| `checksum_no_verificado` | La trama llegó entera pero no se pudo verificar su carácter de control | **Procesa**, y lo cuenta. Es del orden de **dos tercios** del tráfico: rechazarlo tiraría casi toda la muestra |
 | `truncada` | La trama se cortó | **Cuarentena** |
 
 ⚠️ La propuesta anterior enumeraba `ok | estimado | sin_sincronizar`, que eran los valores del
 modelo de perfil de carga. Estos son los del readout, verificados contra el corpus.
+
+> **Corregido el 26/09 (Sergio):** acá decía 48 %, que contradecía el 66 % de la tabla de
+> arriba. Medido sobre el simulador con 8 cabinas y semilla 2026: **63,2 % checksum, 36,1 %
+> `ok`, 0,7 % truncada**. La proporción depende de qué modelos de equipo toque el sorteo del
+> parque, así que lo defendible es «del orden de dos tercios» y no un número exacto.
 
 **`truncada` no alcanza como defensa**, y es el punto fino: una trama cortada en medio de un
 número —`014380.81` → `01438`— sigue siendo un número válido y el simulador no siempre la

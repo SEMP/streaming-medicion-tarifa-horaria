@@ -95,30 +95,231 @@ acceso al demonio de Docker. Está documentado en [`infra/README.md`](../../infr
 
 # 3. Contrato de eventos y topología de Kafka
 
-⚠️ PENDIENTE · *Clara* — **es casi transcripción**: `contratos.md` §1 ya lo tiene resuelto
+> Borrador escrito por Sergio a partir de [`contratos.md`](../contratos.md) §1–§2, que es de
+> Clara. Pendiente de su revisión.
 
-> Lo que pide el enunciado: **contrato de eventos, tópicos, claves, particiones y esquema de
-> salida.**
+## 3.1 El evento de entrada
 
-Lo que no puede faltar, porque son las decisiones que se defienden:
+**Tópico** `medicion.lecturas.v1` · **clave** `medidor_id` · **4 particiones**.
 
-- Por qué `medidor_id` como clave y no `cabina_id` — el desbalance de 200× → `contratos.md` §1.2.
-- Por qué 4 particiones, y por qué el criterio **no** es el throughput de escritura.
-- La estrategia de evolución del esquema, que el enunciado pide explícitamente → §1.3.
-- **La bandera de calidad que no significa corrupción** → §1.5. Es el hallazgo más fuerte que
-  tenemos: descartar por esa bandera tiraría dos tercios de la muestra.
+```json
+{
+  "schema_version": 1,
+  "event_id": "0c12196f5ef41988",
+  "medidor_id": "MED-0002-000",
+  "cabina_id": "CAB-0002",
+  "lote_id": "LOTE-CAB-0002-0000",
+  "secuencia": 0,
+  "instante_lectura": "2026-09-22T00:00:18-03:00",
+  "registros": [
+    { "obis": "15.8.0", "naturaleza": "acumulado", "valor": 10898.124, "unidad": "kWh" }
+  ],
+  "calidad": "ok",
+  "publicado_at": "2026-09-22T00:00:19.269-03:00"
+}
+```
+
+Tres campos merecen explicación porque no son obvios:
+
+**`event_id` es determinista**, `sha256("<medidor_id>|<instante_lectura>")[:16]`. Si fuera
+aleatorio, un reintento de publicación produciría un id distinto y el duplicado dejaría de ser
+reconocible. Es la mitad de la clave de deduplicación.
+
+**`cabina_id` no es decorativo.** La duración de la ronda —y por lo tanto el error de
+atribución— es una propiedad **de la cabina**, porque sus medidores comparten un bus RS-485 y
+se leen en secuencia. Sin este campo no se distingue «un medidor no contesta» de «se cayó la
+cabina entera».
+
+**`publicado_at` contra `instante_lectura`** da el retraso de publicación, que es el insumo de
+la observabilidad y lo que justifica el valor de la lateness.
+
+Los registros van como **lista de objetos y no como mapa `código → valor`**, porque la unidad y
+la naturaleza son propiedad del registro y no de la lectura: `15.8.0` viene en kWh, pero un
+registro de potencia vendría en kW. Con un mapa, esa tabla viviría hardcodeada en el consumidor.
+Lo que la lista pierde —un mapa impide por estructura que un código se repita— pasa a ser una
+regla que el validador hace cumplir.
+
+## 3.2 Por qué la clave es el medidor y no la cabina
+
+El orden que este caso necesita es **por medidor**, y es un requisito duro: la diferenciación
+resta lecturas consecutivas del mismo equipo, así que necesita verlas en secuencia. Kafka
+preserva el orden dentro de una partición, y con esta clave todas las lecturas de un medidor
+caen siempre en la misma.
+
+`cabina_id` agruparía la ronda, que es tentador, pero las cabinas van de 1 a 199 medidores:
+produciría particiones desbalanceadas en un factor de **200**. Con `medidor_id` el reparto es
+parejo por construcción.
+
+## 3.3 Cuatro particiones, y por qué el criterio no es el throughput
+
+Aun el caso grande —100.000 medidores en rondas continuas— son unos 9,6 millones de mensajes
+por día, que para un broker es poco. Lo que fija el número es otra cosa:
+
+1. **El paralelismo útil está acotado por `min(particiones, slots, claves)`.** El stack corre 2
+   TaskManagers con 2 slots. Con 4 particiones hay margen para duplicar los slots sin
+   reparticionar, que es una operación que rompe el orden por clave.
+2. **El estado vive por clave, no por partición**, así que agregar particiones no alivia
+   memoria: solo reparte.
+3. **Más particiones alargan la recuperación**, porque releer una partición es serial.
+
+## 3.4 Tópicos, retención y evolución del esquema
+
+| Tópico | Para qué | Clave | Retención |
+|---|---|---|---|
+| `medicion.lecturas.v1` | Lecturas crudas | `medidor_id` | `delete`, 7 días |
+| `medicion.consumo-franja.v1` | Resultado por medidor, día y franja | `medidor\|fecha\|franja` | `compact,delete`, 90 días |
+| `medicion.cuarentena.v1` | Todo lo rechazado, con su motivo | `medidor_id` si se conoce | `delete`, 30 días |
+
+La convención es `<dominio>.<sustantivo>.v<mayor>`, y la regla de evolución tiene dos ramas.
+Un **cambio compatible** —un campo opcional, un registro OBIS más en la lista— no cambia nada,
+porque un consumidor que solo mira `15.8.0` no se entera. Un **cambio incompatible** —quitar o
+renombrar un campo, cambiar un tipo o su significado— crea un tópico `.v2`, y los dos conviven
+mientras dure la transición.
+
+`schema_version` viaja en **tres lugares** y cada uno tiene su razón: en el nombre del tópico,
+para que un consumidor incompatible no se suscriba siquiera; en un header, para decidir sin
+deserializar; y en el cuerpo, para que el mensaje sea autodescriptivo cuando se lo mira suelto,
+en un archivo o en la cuarentena.
+
+En la salida, `compact,delete` es una combinación deliberada: **`compact` solo nunca borra una
+clave**, y como la clave incluye la fecha local, el espacio de claves crecería todos los días
+para siempre. La política combinada conserva el último valor de cada clave *y* deja caducar las
+viejas.
+
+## 3.5 La bandera de calidad que no significa corrupción
+
+Es el hallazgo más fuerte del análisis del dominio, y el que más plata cambia.
+
+| Valor | Qué significa | Qué hace el pipeline |
+|---|---|---|
+| `ok` | Trama completa y verificada | Procesa |
+| `checksum_no_verificado` | La trama llegó **entera**, pero no se pudo verificar su carácter de control | **Procesa**, y lo cuenta |
+| `truncada` | La trama se cortó | Cuarentena |
+
+La lectura ingenua de `checksum_no_verificado` es «dato sospechoso, descartar». Sería un error
+caro: **es del orden de dos tercios del tráfico** —medido sobre el simulador, 63,2 % con 8
+cabinas— y los datos están completos. Descartarlos tiraría casi toda la muestra. No indica
+corrupción sino un equipo cuyo cálculo del carácter de control difiere del que el concentrador
+espera, que es una propiedad del **modelo de medidor**, no del estado de la trama.
+
+Y `truncada` **no alcanza como defensa**: una trama cortada en medio de un número
+—`014380.81` → `01438`— sigue siendo un número válido y no siempre se marca. Por eso hay una
+segunda defensa aguas abajo, en la diferenciación: un contador no baja (§5.6).
+
+## 3.6 El registro de salida
+
+**Tópico** `medicion.consumo-franja.v1` · **clave** `medidor_id|fecha_local|franja`.
+
+La clave **es el contrato**: es estable a través de todos los panes de una misma celda, todos
+van a la misma partición, se leen en orden y el último gana. La semántica del consumidor es
+**upsert, nunca insert**. No incluye `cabina_id` aunque el campo viaje en el valor, porque un
+medidor podría cambiar de cabina y la identidad del resultado no debe depender de eso.
+
+Cada registro **declara su propia incertidumbre**, que es lo que lo hace honesto:
+`interpolada` dice si algún borde se estimó en lugar de medirse, `separacion_maxima_minutos`
+da la cota del error de atribución, y `cobertura` —minutos cubiertos contra duración de la
+franja— distingue «consumió poco» de «todavía no llegó todo».
+
+Sobre la cobertura hay una decisión que vale contar: el borrador anterior proponía
+`intervalos_contados` contra `intervalos_esperados`, y **con readout eso no se puede calcular**.
+No hay grilla fija de medición, hay rondas continuas cuya duración depende del tamaño de la
+cabina, así que no existe un número de intervalos «esperados».
 
 # 4. Tiempo de evento, ventanas y datos tardíos
 
-⚠️ PENDIENTE · *Clara*
+> Borrador escrito por Sergio a partir de [`contratos.md`](../contratos.md) §2.4 y de las
+> decisiones 5, 6 y 8, material de Clara. Pendiente de su revisión.
 
-> Lo que pide el enunciado: **ventanas, lateness, y la política de datos tardíos.**
+## 4.1 Cuál es el tiempo de evento, y quién lo pone
 
-- Ventana diaria alineada al día local, y por qué la franja **no** es una ventana → decisión 6.
-- Lateness de 36 h, con el razonamiento de por qué no 24 ni 48 → `contratos.md` §2.4.
-- Triggers, panes y modo acumulativo, con lo que se resigna en el trigger tardío.
-- **El error de atribución**, que es el resultado central: sale de la duración de la ronda, y
-  la ronda la fija la tasa de fallas y no la velocidad → decisión 5.
+El record de Kafka trae **cuándo se publicó**; `instante_lectura` trae **cuándo se midió**.
+Entre los dos puede haber horas —es justamente el retraso que justifica la lateness— y
+ventanear por el de publicación metería consumo en el día equivocado. El pipeline asigna el
+timestamp explícitamente después de parsear.
+
+El instante lo pone el **concentrador**, no el medidor, y esa es una decisión del dominio y no
+una comodidad: el modo *readout* no devuelve timestamp, y muchos equipos tienen el reloj mal
+configurado o desactualizado. El concentrador sella al recibir la respuesta, lo que traslada el
+problema de «miles de relojes dudosos» a «unos pocos relojes que se pueden sincronizar».
+
+## 4.2 La ventana diaria, y por qué hay que desplazarla
+
+**Ventana fija de un día, alineada a la medianoche local.**
+
+Beam ventanea sobre el instante absoluto, así que una `FixedWindows(1 día)` sin desplazar
+cortaría a medianoche UTC — **las 21:00 en Asunción, en pleno horario de `punta`**. El corte
+caería en el medio de la franja más cara. Se corrige con un desplazamiento de 3 h, que el
+pipeline calcula del propio calendario en lugar de tenerlo escrito a mano: si alguien cambia la
+zona en la configuración, el desplazamiento la sigue.
+
+**La franja no es una ventana**, y conviene decir por qué se evaluó y se descartó. Una franja
+es función pura del tiempo de evento, así que no necesita agrupamiento: se calcula y **viaja en
+la clave**. Modelarla como ventana obligaría a redefinir el ventaneo cada vez que cambiara el
+calendario tarifario, y el calendario es configuración.
+
+## 4.3 Los 36 horas de lateness
+
+| Alternativa | Por qué no |
+|---|---|
+| 24 h | Es exactamente la cadencia de recolección, sin margen: cualquier corte que dure un poco más pierde datos |
+| 48 h | Duplica el estado sin evidencia de que haga falta |
+| **36 h** | Cubre un día entero de caída de enlace con media jornada de margen |
+
+El máximo retraso medido en el corpus fue de **3,97 h**, un orden de magnitud por debajo. La
+holgura no es por incertidumbre sobre el caso típico sino por el caso raro: una cabina que
+queda incomunicada un día entero.
+
+Ese número es también el horizonte de la deduplicación (§5.2) y el tiempo que vive el estado.
+No es coincidencia: si el estado expirara antes, un tardío legítimo volvería a parecer nuevo.
+
+## 4.4 Triggers, panes y acumulación
+
+| Parámetro | Valor | Por qué |
+|---|---|---|
+| Trigger temprano | `AfterProcessingTime(60 s)` | El tablero tiene que moverse. Más rápido no compra nada: una ronda dura de 20 a 40 min, así que antes de 60 s rara vez hay información nueva |
+| Trigger tardío | `AfterCount(1)` | Cada llegada tardía **corrige dinero**, y hace visible el pane correctivo |
+| Acumulación | `ACCUMULATING` | Cada pane es la revisión completa de la celda y reemplaza al anterior |
+
+**Lo que se resigna en el trigger tardío:** un pane por evento significa que la ráfaga de una
+cabina que vuelve de una caída produce una escritura por lectura. En producción convendría
+agrupar los disparos tardíos con `AfterProcessingTime`, a costa de demorar la corrección unos
+minutos — algo que a la facturación no le cambia nada, porque se factura días después. Se elige
+la versión por evento **para que la corrección sea visible en la demostración**.
+
+**Ningún pane anuncia que es el último.** Después del último tardío simplemente no se emite
+nada. La finalidad la deduce el consumidor cuando su reloj pasa `fin_de_ventana + 36 h`, y por
+eso hay dos lectores del mismo tópico con patrones distintos: el tablero lee todos los panes y
+muestra un valor que cambia; la facturación lee una sola vez, pasado ese horizonte.
+
+## 4.5 La validación va antes del watermark
+
+El orden es una decisión y no un detalle: **un evento se valida antes de participar del avance
+del watermark.** Un solo concentrador con el reloj adelantado arrastraría el watermark hacia el
+futuro y haría que Beam descartara por tardías las lecturas legítimas **de todos los demás
+medidores**. Un dato malo pasaría de arruinar su propia celda a arruinar la ventana entera.
+
+Por eso una lectura sin offset horario va a cuarentena en lugar de interpretarse en la zona del
+proceso: si se asumiera la zona local del worker, la franja atribuida dependería de en qué
+máquina corre el pipeline.
+
+## 4.6 El error de atribución, que es el resultado central
+
+```
+error_atribucion_pct = separacion_maxima_minutos / duracion_franja_minutos
+```
+
+Con la franja `punta` de 4 h del calendario de ejemplo y una separación máxima de 38 min, da
+**15,9 %**. El número es distinto para cada medidor, porque depende del tamaño de su cabina, y
+en el corpus medido va de 16 min en la mediana a **249 min** en el peor caso: una cabina caída.
+
+Lo que hay que entender de ese número es de dónde sale. Los medidores de una cabina comparten
+un bus RS-485 y se leen **en secuencia**, así que la separación entre dos lecturas del mismo
+equipo la fija la duración de la ronda. Y la duración de la ronda la fija sobre todo **la tasa
+de fallas**, no la velocidad del enlace: cada medidor que no contesta cuesta el tiempo de
+espera y los reintentos.
+
+De ahí sale la conclusión que el sistema habilita y que no estaba en el enunciado: **para
+cobrar por franja horaria, mejorar la confiabilidad de la recolección vale más que acelerarla.**
 
 # 5. Confiabilidad: duplicados, idempotencia y garantías
 

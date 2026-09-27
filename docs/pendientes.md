@@ -44,7 +44,7 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 | Clara | Esqueleto del pipeline con fuente conmutable (`jsonl` \| `kafka`) | No depende de `infra/`: se construye contra `datos/*.jsonl` |
 | Los tres | **Documento técnico**: el esqueleto está en [`tecnico/`](tecnico/documento.md) con dueño por sección y `⚠️ PENDIENTE` donde falta. Se arma con `./docs/tecnico/armar-pdf.sh` | 9 secciones sin escribir. Varias son casi transcripción de lo ya documentado |
 | ~~Sergio~~ | ~~Diagrama de arquitectura~~ · ✅ `docs/diagramas/arquitectura.svg`, incrustado en el documento en página apaisada | — |
-| Clara | **Secciones 3 y 4** del documento técnico | Casi transcripción de [`contratos.md`](contratos.md). La 6 ya está escrita |
+| ⚠️ Clara | **Revisar las secciones 3 y 4** del documento técnico | Las escribí yo a partir de tu `contratos.md` porque se venía la fecha. Están marcadas como borrador: son tus decisiones, corregí lo que haya quedado mal contado |
 | ⚠️ Clara | **Aviso de colisión**: `pipeline.demostracion` arma la cadena completa —deduplicar, diferenciar, vigencia, franja, agregar— para producir la evidencia. Si estabas escribiendo eso mismo, hablémoslo antes de mergear | Pasa por el hueco `transformaciones` de `esqueleto.py`, no toca tus archivos |
 | Los tres | **Sección 8**: contribuciones de cada uno | `git shortlog -sn --no-merges` lo respalda |
 | Los tres | **Video** | Nadie empezó. Conviene grabarlo antes del último día |
@@ -55,6 +55,8 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 26/09 | — | **Secciones 3 y 4 del documento** escritas a partir de `contratos.md`, marcadas como borrador para Clara. Quedan 2 pendientes de 9 |
+| 26/09 | — | **Corregido el 48 % de `contratos.md` §1.5**: contradecía el 66 % de la tabla resumen. Medido, es 63,2 % |
 | 26/09 | — | **La cadena corre sobre Flink y da el mismo resultado que con `DirectRunner`**: `pipeline.extremo_a_extremo`, dos corridas idénticas, cuarentena vacía |
 | 26/09 | — | **Cadena completa conectada a Kafka** (`cadena.py`): parseo, cuarentena por motivo, ventana alineada al día local, y la agregación por celda con estado. 86 pruebas |
 | 26/09 | — | **Segunda trampa del mismo error**: encadenar dos agregaciones bajo `ACCUMULATING` cuenta doble. Ver [decisión 12](decisiones-de-diseno.md) |
