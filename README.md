@@ -136,6 +136,11 @@ docker compose -f infra/docker-compose.yml --profile e2e run --rm -T extremo-a-e
 Usa tópicos propios (`medicion.*.e2e`) para que cada corrida sea independiente de la
 anterior, y devuelve código de salida.
 
+## Demostración
+
+El guion del video está en [`docs/guion-video.md`](docs/guion-video.md): siete escenas, nueve
+minutos, con el comando de cada una y quién habla.
+
 ## Equipo y contribuciones
 
 | Integrante | Responsabilidad principal |

@@ -47,7 +47,7 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 | ⚠️ Clara | **Revisar las secciones 3 y 4** del documento técnico | Las escribí yo a partir de tu `contratos.md` porque se venía la fecha. Están marcadas como borrador: son tus decisiones, corregí lo que haya quedado mal contado |
 | ⚠️ Clara | **Aviso de colisión**: `pipeline.demostracion` arma la cadena completa —deduplicar, diferenciar, vigencia, franja, agregar— para producir la evidencia. Si estabas escribiendo eso mismo, hablémoslo antes de mergear | Pasa por el hueco `transformaciones` de `esqueleto.py`, no toca tus archivos |
 | Los tres | **Sección 8**: contribuciones de cada uno | `git shortlog -sn --no-merges` lo respalda |
-| Los tres | **Video** | Nadie empezó. Conviene grabarlo antes del último día |
+| Los tres | **Video** — guion escrito en [`guion-video.md`](guion-video.md): 7 escenas, 9 minutos, con los comandos de cada una y quién habla. Falta grabarlo | Lo único que no se puede dejar para el último día |
 
 ## 3. Bitácora — qué se decidió y cuándo
 
