@@ -14,12 +14,14 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import datetime
 
 import apache_beam as beam
 from apache_beam.coders import StrUtf8Coder
 from apache_beam.transforms.timeutil import TimeDomain
 from apache_beam.transforms.userstate import (
     BagStateSpec,
+    ReadModifyWriteStateSpec,
     SetStateSpec,
     TimerSpec,
     on_timer,
@@ -128,8 +130,8 @@ class DiferenciarContador(beam.DoFn):
     que la contenía y emite las dos mitades.
 
     ⚠️ **El intervalo grosero no se retira**: ya fue emitido, y Beam Python no tiene
-    retractaciones. Antes de sumar hay que pasar por `IntervalosVigentes`, que descarta los
-    superados. Sin ese paso la agregación cuenta el consumo dos veces.
+    retractaciones. Quien decide cuál sigue vigente es `CeldasVigentes`, aguas abajo. Sumar
+    todo lo que emite esta etapa cuenta el consumo dos veces.
 
     **Un consumo negativo nunca es válido**: en el mercado modelado no hay compra de energía
     al usuario, así que el contador solo puede subir. Un retroceso es un reseteo del equipo o
@@ -210,42 +212,120 @@ class DiferenciarContador(beam.DoFn):
         lecturas.clear()
 
 
-def el_mas_corto(consumos):
-    """De varios intervalos con el mismo inicio, el que llega menos lejos.
+class CeldasVigentes(beam.DoFn):
+    """Mantiene los intervalos vigentes de un medidor y emite el valor **absoluto** de cada
+    celda que cambia.
 
-    Es asociativa y conmutativa —el mínimo de mínimos es el mínimo—, así que Beam puede
-    combinarla parcialmente sin cambiar el resultado.
-    """
-    return min(consumos, key=lambda c: c.hasta)
+    Reemplaza a lo que antes eran dos pasos —descartar intervalos superados y después sumar
+    por celda—, y el motivo por el que son uno solo es la parte importante.
 
+    ⚠️ **Encadenar dos agregaciones bajo un trigger `ACCUMULATING` cuenta doble.** Cada pane
+    de la primera llega a la segunda como un elemento nuevo, y la segunda, que también
+    acumula, lo suma otra vez. Con una ventana que dispara dos veces —lo normal en cuanto
+    llega un tardío— el resultado se duplica:
 
-class IntervalosVigentes(beam.PTransform):
-    """Se queda con un solo intervalo por borde izquierdo: el que no fue superado.
+        pane 1:   6 kWh   ✔
+        pane 2:  12 kWh   ✘   y es el que el consumidor se queda, porque el último gana
 
-    **Por qué hace falta.** Cuando llega una lectura tardía, `DiferenciarContador` emite las
-    dos mitades del intervalo que la contenía, pero **el grosero ya salió** y sigue en la
-    ventana. El *upsert* del contrato (§2.1) no lo retira: opera sobre la celda
-    `medidor|fecha|franja`, y los tres intervalos caen dentro de la misma celda. Con
-    `ACCUMULATING`, la agregación los sumaría a los tres:
+    No se ve con `TestStream` avanzando el watermark a infinito, porque dispara un solo pane.
+    Se ve en producción, que es donde importa.
 
-        6 kWh (08:00→09:00)  +  2 (08:00→08:30)  +  4 (08:30→09:00)  =  12 ✘
+    Una etapa con estado no tiene ese problema: `process` corre **una vez por elemento**, no
+    una vez por pane. Y al emitir el valor absoluto de la celda —no un incremento— el destino
+    es un *upsert* puro, que es exactamente lo que el contrato pide (`contratos.md` §2.1).
 
-    Beam Python no tiene retractaciones, así que el intervalo viejo no se puede desemitir.
-    Lo que sí se puede es **no contarlo**, y para eso alcanza con una regla sobre el dato.
-
-    **La regla.** Los intervalos de un medidor parten la línea de tiempo, y cada uno queda
-    identificado por su borde izquierdo. Partir uno exige una lectura interior, que acerca el
-    borde derecho: un intervalo solo puede **acortarse**, nunca estirarse. Entonces, entre
-    varios que empiezan en el mismo instante, el vigente es el más corto.
-
-    Es función pura del dato, no del orden de llegada. Un *replay* converge al mismo
-    resultado, que es la mitad de la idempotencia que el proyecto declara.
+    **La regla de vigencia.** Los intervalos de un medidor parten la línea de tiempo, y cada
+    uno queda identificado por su borde izquierdo. Partir uno exige una lectura interior, que
+    acerca el borde derecho: un intervalo solo puede **acortarse**, nunca estirarse. Entre
+    varios que empiezan en el mismo instante, vale el más corto. Es función pura del dato y no
+    del orden de llegada, así que un *replay* converge al mismo resultado.
     """
 
-    def expand(self, consumos):
-        return (
-            consumos
-            | "PorBordeIzquierdo" >> beam.Map(lambda c: ((c.medidor_id, c.desde), c))
-            | "ElVigente" >> beam.CombinePerKey(el_mas_corto)
-            | "SoloElIntervalo" >> beam.Values()
-        )
+    INTERVALOS = ReadModifyWriteStateSpec("intervalos", StrUtf8Coder())
+    CELDAS = ReadModifyWriteStateSpec("celdas", StrUtf8Coder())
+    EXPIRA = TimerSpec("expira_celdas", TimeDomain.WATERMARK)
+
+    def __init__(self, calendario, lateness_segundos: int = LATENCIA_PERMITIDA_SEGUNDOS):
+        self.calendario = calendario
+        self.lateness_segundos = lateness_segundos
+
+    def process(
+        self,
+        elemento: tuple[str, Consumo],
+        intervalos=beam.DoFn.StateParam(INTERVALOS),
+        celdas=beam.DoFn.StateParam(CELDAS),
+        expira=beam.DoFn.TimerParam(EXPIRA),
+        ventana=beam.DoFn.WindowParam,
+    ):
+        medidor, consumo = elemento
+
+        vigentes = json.loads(intervalos.read() or "{}")
+        previo = vigentes.get(consumo.desde)
+        if previo is not None and previo[0] <= consumo.hasta:
+            # Ya hay uno igual o más corto para ese borde izquierdo: este quedó superado.
+            return
+
+        vigentes[consumo.desde] = [consumo.hasta, consumo.energia_kwh, consumo.cabina_id]
+        intervalos.write(json.dumps(vigentes))
+        expira.set(ventana.end + self.lateness_segundos)
+
+        tabla = self._recalcular(medidor, vigentes)
+        anteriores = json.loads(celdas.read() or "{}")
+        celdas.write(json.dumps(tabla))
+
+        # Solo lo que cambió. Reemitir una celda idéntica no rompe nada —el upsert es
+        # idempotente— pero gasta ancho de banda del tópico y ruido en el tablero.
+        for clave, valor in tabla.items():
+            if anteriores.get(clave) != valor:
+                yield (clave, valor)
+
+    def _recalcular(self, medidor: str, vigentes: dict) -> dict:
+        """Recalcula **todas** las celdas del medidor desde los intervalos vigentes.
+
+        Recalcular todo en lugar de solo lo que tocó la lectura nueva es más caro, y es a
+        propósito: el resultado no depende de qué llegó antes, así que no hay forma de que un
+        orden de llegada raro deje una celda desactualizada. El costo está acotado —los
+        intervalos de un medidor en un día son del orden de cien— y la alternativa es un
+        cálculo incremental cuya corrección habría que demostrar.
+        """
+        from .franjas import repartir_por_franja
+
+        tabla: dict[str, dict] = {}
+        for desde, (hasta, energia, cabina) in vigentes.items():
+            for parte in repartir_por_franja(
+                datetime.fromisoformat(desde), datetime.fromisoformat(hasta),
+                energia, self.calendario,
+            ):
+                clave = f"{medidor}|{parte.fecha_local}|{parte.franja}"
+                celda = tabla.setdefault(
+                    clave,
+                    {
+                        "energia_kwh": 0.0,
+                        "minutos_cubiertos": 0.0,
+                        "interpolada": False,
+                        "separacion_maxima_minutos": 0.0,
+                        "cabina_id": "",
+                        "intervalos_usados": 0,
+                    },
+                )
+                separacion = (
+                    datetime.fromisoformat(hasta) - datetime.fromisoformat(desde)
+                ).total_seconds() / 60
+                celda["energia_kwh"] = round(celda["energia_kwh"] + parte.energia_kwh, 6)
+                celda["minutos_cubiertos"] += parte.minutos
+                celda["interpolada"] = celda["interpolada"] or parte.interpolada
+                celda["separacion_maxima_minutos"] = max(
+                    celda["separacion_maxima_minutos"], separacion
+                )
+                celda["cabina_id"] = cabina or celda["cabina_id"]
+                celda["intervalos_usados"] += 1
+        return tabla
+
+    @on_timer(EXPIRA)
+    def expirar(
+        self,
+        intervalos=beam.DoFn.StateParam(INTERVALOS),
+        celdas=beam.DoFn.StateParam(CELDAS),
+    ):
+        intervalos.clear()
+        celdas.clear()

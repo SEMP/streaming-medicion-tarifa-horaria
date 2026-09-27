@@ -186,9 +186,24 @@ Es función pura del dato, no del orden de llegada, y por eso un *replay* conver
 resultado. Con la regla alternativa —«el último que llegó»— haría falta un orden que en un
 reproceso no existe.
 
-**Este error lo encontró una prueba, no una ejecución.** Con datos ideales no aparece nunca:
-hace falta una lectura tardía, que es exactamente el escenario adverso que el enunciado pide
-demostrar y la razón por la que una corrida feliz no es evidencia.
+**Y hay una segunda trampa, del mismo error.** La primera corrección fue descartar los
+superados con un `CombinePerKey` y dejar la agregación por celda detrás. Estaba mal igual:
+**encadenar dos agregaciones bajo un trigger `ACCUMULATING` cuenta doble**, porque cada pane
+de la primera llega a la segunda como un elemento nuevo y la segunda lo suma otra vez.
+
+| Pane | Resultado |
+|---|---|
+| 1 | 6 kWh ✔ |
+| 2 | 12 kWh ✘ — y es el que vale, porque el último gana |
+
+Por eso las dos etapas son **una sola**, con estado y sin `GroupByKey`: `process` corre una vez
+por elemento, no una vez por pane. Emite el **valor absoluto** de cada celda que cambia, de
+modo que el destino sea un *upsert* puro.
+
+**Los dos errores los encontraron pruebas, no ejecuciones.** Ninguno aparece con datos ideales:
+el primero necesita una lectura tardía, el segundo además necesita que la ventana dispare dos
+veces. Son exactamente los escenarios adversos que el enunciado pide demostrar, y la razón por
+la que una corrida feliz no es evidencia.
 
 ## 5.5 Qué garantiza el sistema, y dónde termina
 
@@ -298,8 +313,13 @@ La agregación sumaba el intervalo grosero **junto con** las dos mitades que lo 
 el *upsert* lo resolvía, y no: opera sobre la celda, y los tres intervalos caen dentro de la
 misma celda (§5.4).
 
-Con datos ideales eso no aparece nunca. Hace falta una lectura tardía — exactamente el
-escenario adverso que el enunciado pide demostrar.
+Lo que más enseña es que **la primera corrección también estaba mal**, y que tampoco se veía.
+Descartar los superados en una etapa y sumar en la siguiente vuelve a duplicar, porque dos
+agregaciones encadenadas bajo `ACCUMULATING` se suman entre sí. Apareció recién al conectar la
+cadena a Kafka y probarla con una ventana que dispara dos veces.
+
+Con datos ideales ninguno de los dos aparece. El primero necesita una lectura tardía; el
+segundo, además, que la ventana dispare más de una vez.
 
 # 7. Límites, supuestos y posibles mejoras
 

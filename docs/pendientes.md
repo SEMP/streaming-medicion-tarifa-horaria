@@ -47,6 +47,7 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 | Clara | **Secciones 3 y 4** del documento técnico | Casi transcripción de [`contratos.md`](contratos.md). La 6 ya está escrita |
 | ⚠️ Clara | **Aviso de colisión**: `pipeline.demostracion` arma la cadena completa —deduplicar, diferenciar, vigencia, franja, agregar— para producir la evidencia. Si estabas escribiendo eso mismo, hablémoslo antes de mergear | Pasa por el hueco `transformaciones` de `esqueleto.py`, no toca tus archivos |
 | Los tres | **Sección 8**: contribuciones de cada uno | `git shortlog -sn --no-merges` lo respalda |
+| Sergio | **Correr la cadena contra el stack en Docker.** Está probada de punta a punta con `DirectRunner`, pero `PortableRunner` sobre Flink puede romper por lo que el runner local no ejercita: serialización del calendario hacia los workers y `ReadModifyWriteStateSpec` sobre el runner portable | Es lo siguiente. Hasta que corra, la parte de infraestructura del recorrido real no está verificada |
 | Los tres | **Video** | Nadie empezó. Conviene grabarlo antes del último día |
 
 ## 3. Bitácora — qué se decidió y cuándo
@@ -55,8 +56,10 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 26/09 | — | **Cadena completa conectada a Kafka** (`cadena.py`): parseo, cuarentena por motivo, ventana alineada al día local, y la agregación por celda con estado. 86 pruebas |
+| 26/09 | — | **Segunda trampa del mismo error**: encadenar dos agregaciones bajo `ACCUMULATING` cuenta doble. Ver [decisión 12](decisiones-de-diseno.md) |
 | 25/09 | — | **Demostración narrada** de los tres escenarios (`pipeline.demostracion`), **reparto de un intervalo entre franjas** (`repartir_por_franja`, era de Daniel) y **sección 6** del documento técnico. 76 pruebas |
-| 25/09 | — | **Una lectura tardía duplicaba el consumo de su intervalo.** El *upsert* no retiraba el intervalo superado. Corregido con `IntervalosVigentes` → [decisión 12](decisiones-de-diseno.md). ⚠️ **Clara: afecta cómo se arma la agregación** |
+| 25/09 | — | **Una lectura tardía duplicaba el consumo de su intervalo.** El *upsert* no retiraba el intervalo superado. Corregido con `CeldasVigentes` → [decisión 12](decisiones-de-diseno.md). ⚠️ **Clara: afecta cómo se arma la agregación** |
 | 24/09 | — | **Diagrama de arquitectura** en SVG a mano, y **secciones 1, 2, 5 y 7 del documento técnico**. Quedan 5 pendientes de 9 |
 | 23/09 | — | **Deduplicación y diferenciación con estado**, y sus 8 pruebas con `TestStream`. La diferenciación guarda las lecturas en lugar de restar contra la última: una tardía que cae en el medio parte el intervalo y emite las dos mitades |
 | 22/09 | — | **Esqueleto del documento técnico** en `tecnico/`, con la cadena pandoc → Typst ya funcionando y las 8 secciones que pide el enunciado, cada una con dueño |

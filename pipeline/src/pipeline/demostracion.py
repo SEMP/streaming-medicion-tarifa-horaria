@@ -28,12 +28,12 @@ from apache_beam.options.pipeline_options import PipelineOptions, StandardOption
 from apache_beam.testing.test_stream import TestStream
 from apache_beam.transforms import trigger
 
-from .franjas import CalendarioTarifario, cargar_calendario, repartir_por_franja
+from .franjas import CalendarioTarifario, cargar_calendario
 from .transformaciones import (
     CUARENTENA,
+    CeldasVigentes,
     DeduplicarLecturas,
     DiferenciarContador,
-    IntervalosVigentes,
 )
 
 DIA = "2026-09-25"
@@ -120,33 +120,6 @@ def titulo(texto: str) -> None:
 # ----------------------------------------------------------------------------- pipeline
 
 
-def a_celdas(consumos, cal: CalendarioTarifario, *, etiqueta: str):
-    """Intervalos → celdas `medidor|fecha|franja`, que es la clave de salida del contrato."""
-
-    def repartir(c):
-        for parte in repartir_por_franja(
-            datetime.fromisoformat(c.desde), datetime.fromisoformat(c.hasta),
-            c.energia_kwh, cal,
-        ):
-            yield (
-                f"{c.medidor_id}|{parte.fecha_local}|{parte.franja}",
-                (parte.energia_kwh, parte.interpolada),
-            )
-
-    def combinar(valores):
-        valores = list(valores)
-        return (
-            sum(e for e, _ in valores),
-            any(i for _, i in valores),
-        )
-
-    return (
-        consumos
-        | f"Repartir{etiqueta}" >> beam.FlatMap(repartir)
-        | f"Sumar{etiqueta}" >> beam.CombinePerKey(combinar)
-    )
-
-
 def correr(lecturas: tuple[tuple[str, float], ...], cal: CalendarioTarifario) -> dict:
     """Reproduce las lecturas desde cero y devuelve qué emitió el pipeline.
 
@@ -165,9 +138,7 @@ def correr(lecturas: tuple[tuple[str, float], ...], cal: CalendarioTarifario) ->
     flujo = flujo.advance_watermark_to_infinity()
 
     with tempfile.TemporaryDirectory() as tmp:
-        salidas = {
-            n: f"{tmp}/{n}" for n in ("emitidos", "celdas", "celdas_sin_vigencia")
-        }
+        salidas = {n: f"{tmp}/{n}" for n in ("emitidos", "celdas")}
         with beam.Pipeline(options=opciones) as p:
             deduplicadas = (
                 p
@@ -196,17 +167,11 @@ def correr(lecturas: tuple[tuple[str, float], ...], cal: CalendarioTarifario) ->
                 | "GuardarEmitidos" >> beam.io.WriteToText(salidas["emitidos"])
             )
             (
-                a_celdas(consumos.ok | IntervalosVigentes(), cal, etiqueta="Vigentes")
+                consumos.ok
+                | "ClavearPorMedidor" >> beam.Map(lambda c: (c.medidor_id, c))
+                | "Celdas" >> beam.ParDo(CeldasVigentes(cal))
                 | "GuardarCeldas" >> beam.Map(json.dumps)
                 | "EscribirCeldas" >> beam.io.WriteToText(salidas["celdas"])
-            )
-            # La misma agregación **sin** el filtro de vigencia, para mostrar qué pasaría.
-            (
-                a_celdas(consumos.ok, cal, etiqueta="SinVigencia")
-                | "GuardarSinVigencia" >> beam.Map(json.dumps)
-                | "EscribirSinVigencia" >> beam.io.WriteToText(
-                    salidas["celdas_sin_vigencia"]
-                )
             )
 
         return {n: leer(Path(tmp), Path(ruta).name) for n, ruta in salidas.items()}
@@ -230,13 +195,17 @@ def mostrar_intervalos(emitidos: list) -> None:
 
 
 def mostrar_celdas(celdas: list) -> dict[str, float]:
+    """Cada celda se emite con su **valor absoluto**, así que una clave repetida es una
+    revisión de la anterior y vale la última. Es la misma regla que aplica el consumidor."""
     print("\n  Celdas de salida — clave `medidor|fecha|franja`")
     print(f"  {'clave':<34} {'kWh':>8}  origen")
-    tabla = {}
-    for clave, (kwh, interpolada) in sorted(celdas):
-        origen = "interpolado" if interpolada else "medido"
-        print(f"  {clave:<34} {kwh:>8.3f}  {origen}")
-        tabla[clave] = kwh
+    tabla: dict[str, float] = {}
+    origenes: dict[str, str] = {}
+    for clave, valor in celdas:
+        tabla[clave] = valor["energia_kwh"]
+        origenes[clave] = "interpolado" if valor["interpolada"] else "medido"
+    for clave in sorted(tabla):
+        print(f"  {clave:<34} {tabla[clave]:>8.3f}  {origenes[clave]}")
     print(f"  {'TOTAL':<34} {sum(tabla.values()):>8.3f}")
     return tabla
 
@@ -273,10 +242,11 @@ def main() -> int:
         tablas.append(mostrar_celdas(salida["celdas"]))
 
         if acto is ACTOS[-1]:
-            sin = sum(kwh for _, (kwh, _) in salida["celdas_sin_vigencia"])
+            ingenuo = sum(kwh for _, _, kwh in salida["emitidos"])
             print(
-                f"\n  Sin el filtro de intervalos vigentes serían {sin:.3f} kWh: el intervalo\n"
-                "  grosero seguiría sumando junto con las dos mitades que lo reemplazan."
+                f"\n  Sumar todos los intervalos emitidos daría {ingenuo:.3f} kWh: el grosero\n"
+                "  seguiría contando junto con las dos mitades que lo reemplazan. Por eso la\n"
+                "  etapa de celdas mantiene cuáles siguen vigentes."
             )
 
     # --------------------------------------------------------------- lo que hay que leer

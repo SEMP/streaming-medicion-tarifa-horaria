@@ -306,7 +306,7 @@ cambiar de cabina y la identidad del resultado no debe depender de eso.
 > ⚠️ **Lo que el upsert NO resuelve** (Sergio, 25/09). Opera sobre la **celda**, así que
 > reescribirla es inocuo — pero los intervalos superados que llegan a la agregación **caen
 > dentro de esa misma celda** y se suman igual. Una lectura tardía duplicaba el consumo de su
-> intervalo. La corrección va aguas arriba de la agregación, en `IntervalosVigentes`:
+> intervalo. La corrección está en `CeldasVigentes`, que reemplaza a la agregación:
 > [decisión 12](decisiones-de-diseno.md). Afecta a cómo se arma la agregación, por eso queda
 > anotado acá.
 

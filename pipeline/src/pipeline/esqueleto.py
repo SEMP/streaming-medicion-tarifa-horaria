@@ -1,16 +1,17 @@
 """Esqueleto del pipeline: entra por Kafka, sale por Kafka.
 
-**Lo que hay acá es el cableado, no la lógica.** Las transformaciones del dominio
-—validación, diferenciación, atribución de franja, agregación— van en el hueco marcado más
-abajo y son responsabilidad de Clara (ver `docs/planes/`).
+**Lo que hay acá es el cableado, no la lógica.** Las transformaciones del dominio viven en
+[`cadena`], que es lo que se mete en el hueco que deja `construir`.
 
-La idea es que ese hueco se pueda llenar **sin pelear con la infraestructura**: leer de
-Kafka desde Python no es un `pip install`, y ese problema ya está resuelto acá.
+La separación se mantiene aunque el hueco ya esté lleno: permite correr el recorrido con un
+*passthrough* para verificar que la infraestructura funciona antes de sospechar de la lógica,
+que es lo que hace `pipeline.humo`.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
 import apache_beam as beam
 from apache_beam.io.kafka import ReadFromKafka, WriteToKafka, default_io_expansion_service
@@ -106,15 +107,19 @@ def construir(
     ajustes: Ajustes,
     *,
     grupo: str,
-    transformaciones: Callable[[beam.PCollection], beam.PCollection] | None = None,
+    transformaciones: Callable[[beam.PCollection], Any] | None = None,
     max_registros: int | None = None,
-) -> beam.PCollection:
+):
     """Arma el recorrido completo: Kafka → transformaciones → Kafka.
 
-    `transformaciones` es **el hueco de Clara**: recibe la PCollection de records crudos y
-    devuelve la de resultados, ya en pares (clave, valor) de bytes. Si no se pasa nada, el
-    pipeline hace *passthrough* — sirve para verificar que el cableado funciona antes de
-    que exista una sola transformación del dominio.
+    `transformaciones` recibe la PCollection de records crudos y devuelve o bien una sola
+    PCollection de pares (clave, valor) en bytes, o bien un objeto con los atributos `consumo`
+    y `cuarentena` — que es lo que devuelve [`cadena.cadena`]. Cuando trae cuarentena, se
+    escribe a su propio tópico.
+
+    Si no se pasa nada, el pipeline hace *passthrough*. Sirve para verificar que el cableado
+    funciona sin que la lógica del dominio intervenga: separa «el pipeline está mal» de «la
+    infraestructura está mal», que son dos problemas distintos.
     """
     crudas = leer_lecturas(pipeline, ajustes, grupo=grupo, max_registros=max_registros)
 
@@ -125,5 +130,11 @@ def construir(
     else:
         salida = transformaciones(crudas)
 
-    escribir(salida, ajustes, ajustes.topico_consumo, etiqueta="Consumo")
+    consumo = getattr(salida, "consumo", salida)
+    escribir(consumo, ajustes, ajustes.topico_consumo, etiqueta="Consumo")
+
+    cuarentena = getattr(salida, "cuarentena", None)
+    if cuarentena is not None:
+        escribir(cuarentena, ajustes, ajustes.topico_cuarentena, etiqueta="Cuarentena")
+
     return salida

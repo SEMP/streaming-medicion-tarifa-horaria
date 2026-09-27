@@ -342,7 +342,30 @@ identificado por su **borde izquierdo**. Partir uno exige una lectura interior, 
 borde derecho: un intervalo solo puede **acortarse**, nunca estirarse. Entonces, entre varios
 que empiezan en el mismo instante, el vigente es **el más corto**.
 
-Se implementa en `IntervalosVigentes`, que va entre la diferenciación y la agregación.
+### Y una segunda trampa, encontrada al conectar el pipeline a Kafka
+
+La primera corrección fue un `CombinePerKey` que descartaba los superados, con la agregación
+por celda detrás. **Estaba mal igual**, y el motivo es más sutil: encadenar dos agregaciones
+bajo un trigger `ACCUMULATING` cuenta doble. Cada pane de la primera llega a la segunda como
+un elemento nuevo, y la segunda, que también acumula, lo suma otra vez.
+
+```
+  pane 1:   6 kWh   ✔
+  pane 2:  12 kWh   ✘   y es el que vale, porque el último gana
+```
+
+No se ve con `TestStream` avanzando el watermark a infinito, porque dispara un solo pane. Se
+ve en cuanto algo llega tarde, que es lo normal.
+
+**Por eso las dos etapas son una sola**, `CeldasVigentes`, con estado y sin `GroupByKey`:
+`process` corre una vez por elemento, no una vez por pane. Emite el **valor absoluto** de cada
+celda que cambia, de modo que el destino sea un *upsert* puro — que es exactamente lo que el
+contrato pide.
+
+Recalcula todas las celdas del medidor en cada llegada en lugar de solo las afectadas. Es más
+caro y es a propósito: el resultado no depende de qué llegó antes. El costo está acotado —los
+intervalos de un medidor en un día son del orden de cien— y la alternativa es un cálculo
+incremental cuya corrección habría que demostrar.
 
 **Por qué esta regla y no «el último que llegó»:** porque es función pura del dato y no del
 orden de llegada. Un *replay* converge al mismo resultado, que es la mitad de la idempotencia
