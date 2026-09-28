@@ -14,13 +14,19 @@ zona_horaria = "America/Asuncion"
 cadencia_objetivo_minutos = 15
 
 # Separación máxima entre las dos lecturas que rodean un borde de franja para que todavía se
-# acepte interpolar. Por encima de esto el consumo se marca `indeterminado` en lugar de
-# inventarse.
+# acepte interpolar. Por encima de esto la energía no se reparte: se cuenta aparte y la celda
+# queda marcada como indeterminada, en lugar de inventarse.
 #
-# ⚠️ PENDIENTE P1: el valor de abajo es un marcador de posición, no una decisión tomada.
-# Tiene consecuencia económica en los dos sentidos: tolerar de más mete consumo de una franja
-# en otra, y tolerar de menos deja franjas sin cerrar y sin facturar.
-separacion_maxima_minutos = 45
+# 90 y no otro número, y no es gusto: la duración de los intervalos que cruzan un borde tiene
+# DOS modas. Abajo de 90 min está la ronda normal, aun una lenta (79 % de los casos); arriba de
+# 120 está la cabina caída (20 %). Entre medio casi no hay nada, así que el umbral va en el
+# valle, donde el dato separa dos fenómenos distintos.
+#
+# Cortar más abajo —los 45 min que decía antes— atravesaría el medio de la población normal y
+# marcaría indeterminado el 42 % de los cruces, casi todos rondas que funcionaron bien.
+#
+# Ver la decisión 13 en docs/decisiones-de-diseno.md, con el histograma medido.
+separacion_maxima_minutos = 90
 
 # Una franja puede tener varios rangos: "resto" cubre la mañana y la noche tardía.
 [[franjas]]

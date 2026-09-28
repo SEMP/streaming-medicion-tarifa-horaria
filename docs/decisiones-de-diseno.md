@@ -470,9 +470,20 @@ duración declarada en `separacion_minutos`.
 Así que P2 está resuelto por construcción, y el umbral de 90 minutos es lo que decide cuándo
 incluso eso es demasiado.
 
-**Lo que queda por hacer:** cambiar `separacion_maxima_minutos` de 45 a 90 en
-`config/franjas.example.toml`, y que la etapa de celdas marque `indeterminada` el intervalo que
-lo supere. Hoy el campo se carga y se valida, pero todavía no se aplica.
+### Cómo quedó implementado
+
+El umbral aplica **al reparto, no a la duración**. Un intervalo de tres horas que entra entero
+en una franja no se toca: sus dos extremos se midieron y toda su energía pertenece a esa
+franja, así que no hay nada que interpolar. Lo que se corta es repartir *por interpolación* a
+lo largo de un hueco largo.
+
+Cuando un cruce supera el umbral, su energía **no entra** en `energia_kwh`, la celda queda con
+`indeterminada = True`, y `minutos_indeterminados` dice cuánto de la franja quedó sin cubrir.
+El resto de la celda se conserva: una celda puede tener veinte intervalos sanos y un cruce
+impresentable, y anularla entera tiraría los veinte.
+
+Eso **diverge de [`contratos.md`](contratos.md) §2.3**, que decía que con `indeterminado` el
+valor es `null`. La divergencia está anotada allá para que Clara la revise.
 
 # Posibles mejoras
 

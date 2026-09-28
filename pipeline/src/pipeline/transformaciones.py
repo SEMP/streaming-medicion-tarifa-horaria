@@ -234,6 +234,13 @@ class CeldasVigentes(beam.DoFn):
     una vez por pane. Y al emitir el valor absoluto de la celda —no un incremento— el destino
     es un *upsert* puro, que es exactamente lo que el contrato pide (`contratos.md` §2.1).
 
+    **Lo que no se reparte.** Un intervalo que cruza un borde y dura más que
+    `separacion_maxima_minutos` no se interpola: su energía no entra en `energia_kwh`, la celda
+    queda con `indeterminada = True` y `minutos_indeterminados` dice cuánto de la franja quedó
+    sin cubrir. El resto de la celda **se conserva** — descartarla entera tiraría los intervalos
+    buenos, y distinguir «consumió poco» de «falta un pedazo» es justamente para lo que están
+    esos campos.
+
     **La regla de vigencia.** Los intervalos de un medidor parten la línea de tiempo, y cada
     uno queda identificado por su borde izquierdo. Partir uno exige una lectura interior, que
     acerca el borde derecho: un intervalo solo puede **acortarse**, nunca estirarse. Entre
@@ -290,8 +297,13 @@ class CeldasVigentes(beam.DoFn):
         """
         from .franjas import repartir_por_franja
 
+        tolerado = self.calendario.separacion_maxima_minutos
         tabla: dict[str, dict] = {}
         for desde, (hasta, energia, cabina) in vigentes.items():
+            separacion = (
+                datetime.fromisoformat(hasta) - datetime.fromisoformat(desde)
+            ).total_seconds() / 60
+
             for parte in repartir_por_franja(
                 datetime.fromisoformat(desde), datetime.fromisoformat(hasta),
                 energia, self.calendario,
@@ -302,22 +314,31 @@ class CeldasVigentes(beam.DoFn):
                     {
                         "energia_kwh": 0.0,
                         "minutos_cubiertos": 0.0,
+                        "minutos_indeterminados": 0.0,
                         "interpolada": False,
+                        "indeterminada": False,
                         "separacion_maxima_minutos": 0.0,
                         "cabina_id": "",
                         "intervalos_usados": 0,
                     },
                 )
-                separacion = (
-                    datetime.fromisoformat(hasta) - datetime.fromisoformat(desde)
-                ).total_seconds() / 60
-                celda["energia_kwh"] = round(celda["energia_kwh"] + parte.energia_kwh, 6)
-                celda["minutos_cubiertos"] += parte.minutos
-                celda["interpolada"] = celda["interpolada"] or parte.interpolada
+                celda["cabina_id"] = cabina or celda["cabina_id"]
                 celda["separacion_maxima_minutos"] = max(
                     celda["separacion_maxima_minutos"], separacion
                 )
-                celda["cabina_id"] = cabina or celda["cabina_id"]
+
+                # El umbral solo aplica al reparto. Un intervalo largo que entra ENTERO en una
+                # franja no tiene error de atribución: sus dos extremos se midieron y toda su
+                # energía pertenece a esa franja. Lo que no se puede sostener es repartir por
+                # interpolación a lo largo de un hueco de horas (decisión 13).
+                if parte.interpolada and separacion > tolerado:
+                    celda["indeterminada"] = True
+                    celda["minutos_indeterminados"] += parte.minutos
+                    continue
+
+                celda["energia_kwh"] = round(celda["energia_kwh"] + parte.energia_kwh, 6)
+                celda["minutos_cubiertos"] += parte.minutos
+                celda["interpolada"] = celda["interpolada"] or parte.interpolada
                 celda["intervalos_usados"] += 1
         return tabla
 

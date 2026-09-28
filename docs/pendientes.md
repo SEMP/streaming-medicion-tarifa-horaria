@@ -37,7 +37,6 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 | ~~Sergio~~ | ~~`naturaleza` en `Registro.a_dict()`~~ · ✅ hecho, más `instante` opcional y los headers de Kafka | — |
 | ~~Sergio~~ | ~~`infra/` vacío~~ · ✅ **stack levantado y verificado end-to-end** | — |
 | Sergio | Reescribir la regla 1 de `config/franjas.example.toml` (era P4, de Daniel) | Si se reparten el trabajo de Daniel, alguien tiene que tomarla |
-| Sergio | **Aplicar la decisión 13**: subir `separacion_maxima_minutos` a 90 y marcar `indeterminada` la celda cuyo intervalo lo supere. Hoy el campo se carga y valida, pero no se usa | Depende de que el equipo ratifique el umbral |
 | ~~Daniel~~ | ~~Puede empezar las pruebas~~ · ✅ 23 de franjas y **8 con `TestStream`**: duplicado, desorden, reseteo y el orden dedup→diferenciación | — |
 | Clara | Esqueleto del pipeline con fuente conmutable (`jsonl` \| `kafka`) | No depende de `infra/`: se construye contra `datos/*.jsonl` |
 | Los tres | **Documento técnico**: el esqueleto está en [`tecnico/`](tecnico/documento.md) con dueño por sección y `⚠️ PENDIENTE` donde falta. Se arma con `./docs/tecnico/armar-pdf.sh` | 9 secciones sin escribir. Varias son casi transcripción de lo ya documentado |
@@ -53,6 +52,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 28/09 | — | **Decisión 13 aplicada**: umbral en 90 min, celda `indeterminada` con `minutos_indeterminados`. Verificado sobre Flink. 89 pruebas. ⚠️ **Diverge de `contratos.md` §2.3** (conserva la energía buena en lugar de anular la celda): anotado allá para Clara |
 | 27/09 | — | **Guion del video** en [`guion-video.md`](guion-video.md) |
 | 27/09 | — | **P7 cerrado de hecho**: el recorrido corre sobre Flink y las pruebas con `DirectRunner`, las dos cosas verificadas |
 | 27/09 | — | **P1 y P2 cerrados con datos**: umbral de 90 min, elegido donde la distribución se parte en dos → [decisión 13](decisiones-de-diseno.md). ⚠️ **Falta que el equipo lo ratifique y aplicarlo en el código** |

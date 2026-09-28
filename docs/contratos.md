@@ -344,9 +344,19 @@ en el corpus medido va de 16 min (p50) a **249 min** en el peor caso — una cab
 - `indeterminado`: si la separación superó el límite tolerado y el valor **no se inventó**.
   Cuando es `true`, `energia_kwh` es `null`.
 
-⚠️ **El límite tolerado sigue abierto** en la decisión 5 y es la misma decisión que el desvío
-respecto del borde de la decisión 3. Hasta que se cierre, el contrato ya prevé el campo: el
-valor del umbral es configuración, no esquema.
+> **Cerrado el 27/09 (Sergio):** el límite quedó en **90 minutos**, elegido donde la
+> distribución de los cruces se parte en dos → [decisión 13](decisiones-de-diseno.md). Está
+> implementado en `CeldasVigentes`.
+>
+> ⚠️ **Y con una divergencia respecto de lo escrito arriba, que conviene discutir.** Acá decía
+> que con `indeterminado = true`, `energia_kwh` es `null`. La implementación **conserva la
+> energía de los intervalos buenos de la celda** y suma aparte `minutos_indeterminados`.
+>
+> El motivo: una celda puede tener veinte intervalos sanos y un cruce impresentable. Anular la
+> celda entera tiraría los veinte. Y distinguir «consumió poco» de «falta un pedazo» es
+> exactamente para lo que existe la cobertura de §2.2 — `null` hace esa distinción imposible.
+> Si preferís el `null`, se cambia en una línea, pero creo que este camino es más fiel al
+> resto del diseño: declarar la incertidumbre en lugar de esconder el dato.
 
 ## 2.4 La política temporal, con sus números
 

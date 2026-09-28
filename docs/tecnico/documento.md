@@ -217,8 +217,20 @@ medidor podría cambiar de cabina y la identidad del resultado no debe depender 
 
 Cada registro **declara su propia incertidumbre**, que es lo que lo hace honesto:
 `interpolada` dice si algún borde se estimó en lugar de medirse, `separacion_maxima_minutos`
-da la cota del error de atribución, y `cobertura` —minutos cubiertos contra duración de la
-franja— distingue «consumió poco» de «todavía no llegó todo».
+da la cota del error de atribución, y `minutos_cubiertos` contra la duración de la franja
+distingue «consumió poco» de «todavía no llegó todo».
+
+Y hay un límite a lo que se estima. Repartir por interpolación supone potencia constante
+durante el intervalo, y eso deja de ser defendible cuando el intervalo dura horas: en `punta`
+sabemos que el consumo no es uniforme — es la razón de que la franja exista. Por encima de
+**90 minutos** la energía de ese cruce no se reparte: la celda queda `indeterminada` y
+`minutos_indeterminados` dice cuánto quedó sin cubrir. El resto de la celda se conserva.
+
+El umbral no se eligió por gusto. La duración de los intervalos que cruzan un borde tiene
+**dos modas**: abajo de 90 minutos está la ronda normal, aun una lenta, con el 79 % de los
+casos; arriba de 120 está la cabina caída, con el 20 %. Entre medio hay 13 casos de 1.146. El
+umbral va en ese valle, porque a cada lado hay un fenómeno distinto — y cortar más abajo
+marcaría indeterminado el 42 % de los cruces, casi todos rondas que funcionaron bien.
 
 Sobre la cobertura hay una decisión que vale contar: el borrador anterior proponía
 `intervalos_contados` contra `intervalos_esperados`, y **con readout eso no se puede calcular**.

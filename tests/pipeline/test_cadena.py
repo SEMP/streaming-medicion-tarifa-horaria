@@ -47,6 +47,15 @@ def registro(medidor: str, instante: str, valor: float, *, cabina: str = "CAB-07
     return medidor.encode(), json.dumps(payload).encode()
 
 
+def ultimo_por_clave(emitidas) -> dict:
+    """Aplica el upsert del contrato: cada celda se emite con su valor absoluto, así que una
+    clave repetida es una revisión y vale la última."""
+    tabla: dict = {}
+    for clave, valor in emitidas:
+        tabla[clave] = valor
+    return tabla
+
+
 def opciones():
     o = PipelineOptions()
     o.view_as(StandardOptions).streaming = True
@@ -76,7 +85,9 @@ def test_la_cadena_produce_celdas_por_franja(ajustes, cal):
             equal_to([("MED-1|2026-09-25|resto", {
                 "energia_kwh": 1.5,
                 "minutos_cubiertos": 15.0,
+                "minutos_indeterminados": 0.0,
                 "interpolada": False,
+                "indeterminada": False,
                 "separacion_maxima_minutos": 15.0,
                 "cabina_id": "CAB-07",
                 "intervalos_usados": 1,
@@ -158,4 +169,88 @@ def test_el_duplicado_no_llega_a_la_salida(ajustes, cal):
         assert_that(
             salidas.consumo | beam.Map(lambda kv: round(json.loads(kv[1])["energia_kwh"], 3)),
             equal_to([1.5]),
+        )
+
+
+# ------------------------------------------------------- el umbral de la decisión 13
+
+
+def test_un_cruce_demasiado_largo_no_se_reparte(ajustes, cal):
+    """**Decisión 13.** Repartir por interpolación a lo largo de un hueco de horas supone
+    potencia constante durante ese hueco, y en `punta` sabemos que no lo es — es la razón de
+    que la franja exista. Por encima del umbral la energía no se inventa: se cuenta aparte.
+
+    Estas dos lecturas están separadas 3 horas y cruzan el borde de las 18:00.
+    """
+    with TestPipeline(options=opciones()) as p:
+        salidas = cadena(ajustes, cal)(
+            p | beam.Create([
+                registro("MED-1", "2026-09-25T16:30:00-03:00", 100.0),
+                registro("MED-1", "2026-09-25T19:30:00-03:00", 130.0),
+            ])
+        )
+        assert_that(
+            salidas.consumo | beam.Map(lambda kv: (
+                kv[0].decode(),
+                json.loads(kv[1])["energia_kwh"],
+                json.loads(kv[1])["indeterminada"],
+                json.loads(kv[1])["minutos_indeterminados"],
+            )),
+            equal_to([
+                ("MED-1|2026-09-25|resto", 0.0, True, 90.0),
+                ("MED-1|2026-09-25|punta", 0.0, True, 90.0),
+            ]),
+        )
+
+
+def test_un_intervalo_largo_que_no_cruza_si_se_cuenta(ajustes, cal):
+    """**El umbral aplica al reparto, no a la duración.**
+
+    Tres horas enteras dentro de `resto`: los dos extremos se midieron y toda la energía
+    pertenece a esa franja, así que no hay nada que interpolar ni error de atribución que
+    declarar. Marcarla indeterminada sería tirar un dato que es exacto.
+    """
+    with TestPipeline(options=opciones()) as p:
+        salidas = cadena(ajustes, cal)(
+            p | beam.Create([
+                registro("MED-1", "2026-09-25T13:00:00-03:00", 100.0),
+                registro("MED-1", "2026-09-25T16:00:00-03:00", 130.0),
+            ])
+        )
+        assert_that(
+            salidas.consumo | beam.Map(lambda kv: (
+                round(json.loads(kv[1])["energia_kwh"], 3),
+                json.loads(kv[1])["indeterminada"],
+                json.loads(kv[1])["interpolada"],
+            )),
+            equal_to([(30.0, False, False)]),
+        )
+
+
+def test_la_parte_buena_de_una_celda_sobrevive(ajustes, cal):
+    """Una celda con un cruce impresentable **y** un intervalo sano conserva el sano.
+
+    Descartar la celda entera tiraría datos correctos. La celda queda marcada, y
+    `minutos_indeterminados` dice cuánto de la franja quedó sin cubrir — que es lo que
+    distingue «consumió poco» de «falta un pedazo».
+    """
+    with TestPipeline(options=opciones()) as p:
+        salidas = cadena(ajustes, cal)(
+            p | beam.Create([
+                registro("MED-1", "2026-09-25T19:00:00-03:00", 100.0),   # dentro de punta
+                registro("MED-1", "2026-09-25T20:00:00-03:00", 104.0),   # dentro de punta
+                registro("MED-1", "2026-09-25T23:30:00-03:00", 120.0),   # cruza a resto, 3,5 h
+            ])
+        )
+        # La celda de punta se emite dos veces: primero medida, y después revisada cuando
+        # llega el cruce impresentable. Vale la última, igual que para el consumidor.
+        assert_that(
+            salidas.consumo | beam.Map(lambda kv: (
+                kv[0].decode(),
+                (round(json.loads(kv[1])["energia_kwh"], 3), json.loads(kv[1])["indeterminada"]),
+            )),
+            lambda emitidas: ultimo_por_clave(emitidas) == {
+                "MED-1|2026-09-25|punta": (4.0, True),   # la hora medida se conserva
+                "MED-1|2026-09-25|resto": (0.0, True),
+            },
         )
