@@ -141,6 +141,21 @@ anterior, y devuelve código de salida.
 El guion del video está en [`docs/guion-video.md`](docs/guion-video.md): siete escenas, nueve
 minutos, con el comando de cada una y quién habla.
 
+## Evidencia de ejecución
+
+```bash
+./evidencia/generar-evidencia.sh
+```
+
+Deja [`evidencia/evidencia-ejecucion.txt`](evidencia/evidencia-ejecucion.txt) con una corrida
+completa y fechada: entorno, las pruebas, la demostración de los tres escenarios, el stack
+levantándose, los tópicos creados, la prueba de humo, el recorrido sobre Flink, cuántos
+mensajes quedaron en cada tópico y las celdas de salida tal como las lee el consumidor.
+
+Los offsets de los tópicos son la parte que el enunciado pide como «logs o métricas
+suficientes para observar producción, consumo, procesamiento y errores»: dicen cuántos
+mensajes entraron, cuántos salieron y cuántos cayeron en cuarentena.
+
 ## Equipo y contribuciones
 
 | Integrante | Responsabilidad principal |
