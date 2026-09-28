@@ -20,13 +20,10 @@ la última vez que hiciste `git pull`.
 
 | # | Qué hay que decidir | Decide | Bloquea a | Detalle |
 |---|---|---|---|---|
-| **P1** | Umbral de desvío tolerado respecto del borde de franja, y su gemelo: el límite de separación por encima del cual no se interpola | Daniel, con Clara | Marcar `indeterminado`; **facturar** | [decisiones §3](decisiones-de-diseno.md) y [§5](decisiones-de-diseno.md) |
-| **P2** | Qué se hace con los dos intervalos que quedan indeterminados cuando falta una lectura: marcarlos, o imputar el consumo combinado al bloque | Clara y Sergio | La agregación | [decisiones §10](decisiones-de-diseno.md) |
 | ~~**P3**~~ | ~~Confirmar 4 particiones contra el `docker-compose`~~ · ✅ **coinciden** | Sergio | — | [infra](../infra/README.md) |
 | ~~**P4**~~ | ~~La «regla 1 — alineación a la grilla» quedó sin efecto~~ · ✅ reescrita: con readout no hay grilla, los intervalos **siempre** cruzan bordes | Sergio | — | [config](../config/franjas.example.toml) |
 | ~~**P5**~~ | ~~Cómo se representa `CalendarioTarifario`~~ · ✅ tabla de 1440 posiciones precomputada al cargar: construirla **es** la validación de cobertura | Sergio | — | `pipeline/franjas.py` |
 | ~~**P6**~~ | ~~Si `fecha_y_franja` valida el timestamp~~ · ✅ **no**: un naive es error de programación y levanta excepción. La validación de datos va aguas arriba | Sergio | — | `pipeline/franjas.py` |
-| **P7** | **Runner**: la propuesta es Flink con el stack de la clase 7 para la demo end-to-end, y `DirectRunner` con `TestStream` para las pruebas | Los tres | Clara: cómo escribe el pipeline | — |
 | **P8** | Confirmación de Daniel sobre su parte del reparto: no estuvo en la reunión del 20/09 | Daniel | Planificación | [planes/README](planes/README.md) |
 | **P9** | Cuarto integrante, si se suma alguien | Los tres | Nada | — |
 
@@ -40,6 +37,7 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 | ~~Sergio~~ | ~~`naturaleza` en `Registro.a_dict()`~~ · ✅ hecho, más `instante` opcional y los headers de Kafka | — |
 | ~~Sergio~~ | ~~`infra/` vacío~~ · ✅ **stack levantado y verificado end-to-end** | — |
 | Sergio | Reescribir la regla 1 de `config/franjas.example.toml` (era P4, de Daniel) | Si se reparten el trabajo de Daniel, alguien tiene que tomarla |
+| Sergio | **Aplicar la decisión 13**: subir `separacion_maxima_minutos` a 90 y marcar `indeterminada` la celda cuyo intervalo lo supere. Hoy el campo se carga y valida, pero no se usa | Depende de que el equipo ratifique el umbral |
 | ~~Daniel~~ | ~~Puede empezar las pruebas~~ · ✅ 23 de franjas y **8 con `TestStream`**: duplicado, desorden, reseteo y el orden dedup→diferenciación | — |
 | Clara | Esqueleto del pipeline con fuente conmutable (`jsonl` \| `kafka`) | No depende de `infra/`: se construye contra `datos/*.jsonl` |
 | Los tres | **Documento técnico**: el esqueleto está en [`tecnico/`](tecnico/documento.md) con dueño por sección y `⚠️ PENDIENTE` donde falta. Se arma con `./docs/tecnico/armar-pdf.sh` | 9 secciones sin escribir. Varias son casi transcripción de lo ya documentado |
@@ -55,6 +53,9 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 27/09 | — | **Guion del video** en [`guion-video.md`](guion-video.md) |
+| 27/09 | — | **P7 cerrado de hecho**: el recorrido corre sobre Flink y las pruebas con `DirectRunner`, las dos cosas verificadas |
+| 27/09 | — | **P1 y P2 cerrados con datos**: umbral de 90 min, elegido donde la distribución se parte en dos → [decisión 13](decisiones-de-diseno.md). ⚠️ **Falta que el equipo lo ratifique y aplicarlo en el código** |
 | 26/09 | — | **Secciones 3 y 4 del documento** escritas a partir de `contratos.md`, marcadas como borrador para Clara. Quedan 2 pendientes de 9 |
 | 26/09 | — | **Corregido el 48 % de `contratos.md` §1.5**: contradecía el 66 % de la tabla resumen. Medido, es 63,2 % |
 | 26/09 | — | **La cadena corre sobre Flink y da el mismo resultado que con `DirectRunner`**: `pipeline.extremo_a_extremo`, dos corridas idénticas, cuarentena vacía |

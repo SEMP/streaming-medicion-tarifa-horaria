@@ -318,6 +318,33 @@ emite consumo por intervalo directamente y la etapa se desactiva. Está diseñad
 propósito: es la pieza que acopla el pipeline al trabajo de estado, y conviene poder
 desacoplarla sin rehacer nada.
 
+## 11. Licencia: MIT
+
+**Decidido el 20/09.** El proyecto se publica bajo [MIT](../LICENSE), con los tres integrantes
+como titulares.
+
+**Por qué una licencia permisiva y no copyleft.** Uno de los destinos previstos del simulador
+es incorporarlo a un sistema de trabajo. Con GPL o AGPL eso obligaría a liberar ese sistema
+entero; con MPL, los archivos modificados. Ninguna de las dos sirve para ese objetivo. Las
+permisivas —MIT, Apache-2.0— permiten que una obra derivada sea cerrada.
+
+**Por qué MIT y no Apache-2.0.** Se evaluaron las dos y en un primer momento se eligió
+Apache-2.0, por su **concesión expresa de derechos de patente** (§3), que suele ser lo que una
+revisión legal corporativa verifica antes de incorporar código externo. MIT no dice nada al
+respecto: se suele interpretar que hay una licencia implícita, pero no está escrito.
+
+Se optó finalmente por **MIT por simplicidad**: su única obligación es conservar el aviso de
+copyright, mientras que Apache-2.0 agrega marcar los archivos modificados (§4b) y reproducir el
+archivo `NOTICE` en las obras derivadas (§4d).
+
+**Lo que se resigna, dicho explícitamente:** la concesión expresa de patentes. Si alguna vez una
+revisión legal pregunta por ella, la respuesta será que MIT no la contempla.
+
+**Sin sentido alguno en cualquiera de las dos:** ninguna obliga a que las obras derivadas usen
+la misma licencia.
+
+---
+
 ## 12. Un intervalo superado no puede seguir sumando
 
 **Decidido el 25/09**, a partir de una prueba que falló.
@@ -376,32 +403,76 @@ reproceso no existe.
 habría encontrado esto nunca. El error solo aparece cuando llega una lectura tardía — que es
 exactamente el escenario adverso que el enunciado pide demostrar.
 
-## 11. Licencia: MIT
+## 13. El umbral de separación: 90 minutos, y por qué lo dice el dato
 
-**Decidido el 20/09.** El proyecto se publica bajo [MIT](../LICENSE), con los tres integrantes
-como titulares.
+**Propuesta del 27/09, pendiente de que la ratifique el equipo.** Cierra P1 y, de paso, P2.
 
-**Por qué una licencia permisiva y no copyleft.** Uno de los destinos previstos del simulador
-es incorporarlo a un sistema de trabajo. Con GPL o AGPL eso obligaría a liberar ese sistema
-entero; con MPL, los archivos modificados. Ninguna de las dos sirve para ese objetivo. Las
-permisivas —MIT, Apache-2.0— permiten que una obra derivada sea cerrada.
+La pregunta abierta era cuánta separación se tolera entre las dos lecturas que rodean un borde
+de franja antes de dejar de interpolar. Estaba en 45 minutos como marcador de posición, elegido
+sin datos.
 
-**Por qué MIT y no Apache-2.0.** Se evaluaron las dos y en un primer momento se eligió
-Apache-2.0, por su **concesión expresa de derechos de patente** (§3), que suele ser lo que una
-revisión legal corporativa verifica antes de incorporar código externo. MIT no dice nada al
-respecto: se suele interpretar que hay una licencia implícita, pero no está escrito.
+**Lo primero que hay que ver es que el umbral casi no muerde.** Solo aplica a los intervalos
+que **cruzan un borde**, que son el 5,4 % del total — unos 3 por medidor y día, que es lo
+esperable con cuatro bordes diarios. Los otros 94,6 % entran enteros en una franja y se miden,
+no se estiman.
 
-Se optó finalmente por **MIT por simplicidad**: su única obligación es conservar el aviso de
-copyright, mientras que Apache-2.0 agrega marcar los archivos modificados (§4b) y reproducir el
-archivo `NOTICE` en las obras derivadas (§4d).
+**Y lo segundo es que esos cruces no son una población, son dos.** Medido sobre el simulador
+con 8 cabinas y semilla 2026:
 
-**Lo que se resigna, dicho explícitamente:** la concesión expresa de patentes. Si alguna vez una
-revisión legal pregunta por ella, la respuesta será que MIT no la contempla.
+```
+   0–15   min  █████████████████████████████                  233
+  15–30   min  █████████████████                              138
+  30–45   min  █████████████████████████████████████          294
+  45–60   min  ████████████████████                           156
+  60–75   min  ██████                                          44
+  75–90   min  █████                                           39
+  90–105  min                                                   3   ← el valle
+ 105–120  min  █                                               10
+ 120–150  min  ███                                             27
+ 150–180  min  ████████                                        66
+ 180–210  min  ██                                              20
+ 210–240  min  ██████████                                      82
+ 240–300  min  ███                                             24
+```
 
-**Sin sentido alguno en cualquiera de las dos:** ninguna obliga a que las obras derivadas usen
-la misma licencia.
+Abajo de 90 minutos está la **ronda normal**, incluso una lenta: 79 % de los cruces. Arriba de
+120 está **la cabina caída**: 20 %. En el medio casi no hay nada, y eso no es casualidad — son
+dos fenómenos distintos, no los extremos de uno solo.
 
----
+**Por eso 90 minutos.** El umbral no se elige por gusto: se pone donde el dato se parte. Un
+corte en 45 min atravesaría el medio de la población normal y marcaría como indeterminado el
+42 % de los cruces, la mayoría de ellos rondas que funcionaron bien.
+
+| Umbral | Cruces indeterminados | Qué deja afuera |
+|---|---|---|
+| 30 min | 67,6 % | Casi toda la operación normal |
+| 45 min | 42,0 % | Medio de la población normal |
+| **90 min** | **21,1 %** | **Solo lo que está del otro lado del valle** |
+| 120 min | 20,0 % | Casi lo mismo, con más error admitido |
+
+**La objeción, y por qué no alcanza.** Un intervalo de 90 minutos contra una franja `punta` de
+4 horas declara un error de atribución del 37,5 %, que es mucho. Pero *declara* es la palabra:
+el diseño de este sistema es decir cuánto vale cada número, no esconderlo. Un dato impreciso y
+marcado como tal es información; marcarlo indeterminado es tirarla. El umbral tiene que excluir
+lo **inutilizable**, no lo meramente impreciso.
+
+### Esto también cierra P2
+
+P2 preguntaba qué hacer con los dos intervalos que quedan indeterminados cuando falta una
+lectura: marcarlos, o imputar el consumo combinado al bloque.
+
+**La pregunta era sobre un diseño que ya no tenemos.** `DiferenciarContador` no razona sobre
+«el intervalo que debería haber estado»: guarda las lecturas que llegaron y emite los
+intervalos entre lecturas **consecutivas**. Una lectura que falta no produce dos intervalos
+rotos — produce **uno más largo**, con el consumo combinado ya imputado al bloque y su
+duración declarada en `separacion_minutos`.
+
+Así que P2 está resuelto por construcción, y el umbral de 90 minutos es lo que decide cuándo
+incluso eso es demasiado.
+
+**Lo que queda por hacer:** cambiar `separacion_maxima_minutos` de 45 a 90 en
+`config/franjas.example.toml`, y que la etapa de celdas marque `indeterminada` el intervalo que
+lo supere. Hoy el campo se carga y se valida, pero todavía no se aplica.
 
 # Posibles mejoras
 
