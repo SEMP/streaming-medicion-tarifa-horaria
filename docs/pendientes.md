@@ -25,7 +25,6 @@ la última vez que hiciste `git pull`.
 | ~~**P5**~~ | ~~Cómo se representa `CalendarioTarifario`~~ · ✅ tabla de 1440 posiciones precomputada al cargar: construirla **es** la validación de cobertura | Sergio | — | `pipeline/franjas.py` |
 | ~~**P6**~~ | ~~Si `fecha_y_franja` valida el timestamp~~ · ✅ **no**: un naive es error de programación y levanta excepción. La validación de datos va aguas arriba | Sergio | — | `pipeline/franjas.py` |
 | **P8** | Con qué se lista Daniel en la sección 8. Su plan original quedó superado: el área se implementó entre el 22 y el 27/09 → [puesta al día](planes/daniel-puesta-al-dia.md) | Los tres | La sección 8 | [planes/daniel-puesta-al-dia](planes/daniel-puesta-al-dia.md) |
-| **P9** | Cuarto integrante, si se suma alguien | Los tres | Nada | — |
 
 **P1 y P2 son las que tienen consecuencia económica**: las dos deciden a qué franja se atribuye
 energía que se factura a precio distinto. Las demás son de coordinación.
@@ -52,6 +51,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 29/09 | — | **P9 cerrado: el equipo es de tres.** No se suma un cuarto integrante |
 | 29/09 | `33fbe76` | **PDF del documento técnico regenerado**, que había quedado tres commits atrás del `.md`. ⚠️ Requiere **pandoc y las fuentes Liberation**: sin ellas Typst cae a otra tipografía en los títulos y el mismo fuente da un PDF distinto según quién compile. Verificar con `pdffonts` |
 | 29/09 | `4290862` | **Secciones 3 y 4 del documento técnico revisadas** y marcas de borrador retiradas. Tres correcciones: §3.6 y §4.4 se contradecían sobre los panes, §3.6 contaba el borrador anterior, y §4.6 presentaba `error_atribucion_pct` como campo del mensaje cuando lo calcula el consumidor |
 | 29/09 | `68ff16f` | **El contrato de salida ahora describe la salida.** §2 declaraba 20 campos y el pipeline emite 8; está el JSON real, y se dice que la identidad viaja en la clave del mensaje. Cae `es_provisional`, que contradecía a §2.4. §2.3 resuelve la divergencia del `null` **a favor de la implementación**: conservar los intervalos sanos. Salen las notas de bitácora de §1.5, §2.1, §2.2 y §2.3 |
