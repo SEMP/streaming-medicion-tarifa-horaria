@@ -358,40 +358,71 @@ en el corpus medido va de 16 min (p50) a **249 min** en el peor caso — una cab
 > Si preferís el `null`, se cambia en una línea, pero creo que este camino es más fiel al
 > resto del diseño: declarar la incertidumbre en lugar de esconder el dato.
 
-## 2.4 La política temporal, con sus números
+## 2.4 La política temporal
 
 | Parámetro | Valor | Por qué |
 |---|---|---|
-| **Ventana** | Fija de 1 día, alineada al día local | La franja **no** es una ventana (decisión 6): es función pura del tiempo de evento y viaja en la clave. Beam ventanea sobre el instante absoluto, así que el día local se consigue con `FixedWindows(1 día)` desplazada 3 h, porque la medianoche de `America/Asuncion` es 03:00 UTC |
-| **Allowed lateness** | **36 h** | La decisión 8 fija el rango 24–48 h. 24 h es exactamente la cadencia de recolección, sin margen: cualquier corte que dure un poco más pierde datos. 48 h duplica el estado sin evidencia de que haga falta. 36 h cubre un día entero de caída de enlace con media jornada de margen. El máximo medido en el corpus fue 3,97 h, un orden de magnitud por debajo |
-| **Trigger temprano** | `AfterProcessingTime(60 s)` | El tablero tiene que moverse. Más rápido no compra nada: una ronda dura de 20 a 40 min, así que antes de 60 s rara vez hay información nueva |
-| **Trigger tardío** | `AfterCount(1)` — un pane por cada tardío | Cada llegada tardía **corrige dinero**. Y hace visible el pane correctivo, que es la evidencia que pide el criterio 6 |
-| **Acumulación** | `ACCUMULATING` | Cada pane es la revisión completa de la celda y reemplaza al anterior. Es lo que hace que el *upsert* del consumidor sea correcto |
+| **Ventana** | Fija de 1 día, **desplazada 3 h** | La franja **no** es una ventana (decisión 6): es función pura del tiempo de evento y viaja en la clave. Beam ventanea sobre el instante absoluto, así que sin desplazar cortaría a medianoche UTC —las 21:00 locales, en plena `punta`—. El desplazamiento se calcula del calendario, no se escribe a mano: si cambia la zona, lo sigue |
+| **Allowed lateness** | **36 h** | La decisión 8 fija el rango 24–48 h. 24 h es exactamente la cadencia de recolección, sin margen: cualquier corte que dure un poco más pierde datos. 48 h duplica el estado sin evidencia de que haga falta. 36 h cubre un día entero de caída de enlace con media jornada de margen. El máximo medido en el corpus fue 3,97 h |
+| **Triggers** | **Ninguno** | Ver abajo: en esta topología no puede haberlos |
+| **Modo de acumulación** | **No aplica** | Ídem |
 
-> ⚠️ **Corregido el 29/09 (Sergio), a partir de tu revisión del guion.** Tenías razón en que
-> el código no tiene el trigger temprano — pero el motivo es más de fondo: **el pipeline no
-> tiene ningún trigger, y no puede tenerlo**. Los triggers disparan en un `GroupByKey` o un
-> `Combine`, y al fusionar las dos agregaciones en `CeldasVigentes` para que dejaran de contar
-> doble ([decisión 12](decisiones-de-diseno.md)), dejó de haber agregación en el grafo.
->
-> Lo verifiqué sacando la configuración de trigger de `cadena.py`: las 89 pruebas y la
-> demostración dan **exactamente lo mismo**. Era inerte.
->
-> La tabla de arriba describe el diseño anterior. Lo que ocurre hoy es que **la salida se emite
-> por cada lectura que cambia una celda**, que es más reactivo que un pane cada 60 s. Dejo la
-> tabla como registro de lo que se había decidido; si preferís reescribirla, es tuya.
+### Por qué no hay triggers, y por qué eso no es una omisión
 
-**Lo que se resigna en el trigger tardío:** un pane por evento tardío significa que la ráfaga
-de una cabina que vuelve de una caída produce una escritura por lectura. En producción
-convendría agrupar los disparos tardíos con `AfterProcessingTime`, a costa de demorar la
-corrección unos minutos — algo que a la facturación no le cambia nada. Se elige la versión por
-evento **para la demostración**, y queda declarado como límite conocido.
+Un trigger contesta una sola pregunta: *¿cuándo emito el resultado acumulado de esta clave en
+esta ventana?* Esa pregunta **solo existe si hay algo acumulando** — un `GroupByKey` o un
+`Combine`. Un `ParDo` no acumula: recibe un elemento, lo procesa y emite en el acto.
 
-**Sobre `es_provisional` y la finalidad.** Ningún pane anuncia que es el último: después del
-último tardío simplemente no se emite nada. La finalidad la **deduce el consumidor** cuando su
-reloj pasa `ventana_fin + 36 h`. Por eso hay dos lectores del mismo tópico con patrones
-distintos: el tablero lee todos los panes y muestra un valor que cambia; la facturación lee una
-sola vez, pasado ese horizonte.
+Y después del `WindowInto` este pipeline es todo `ParDo`:
+
+```
+WindowInto(FixedWindows(1 día, offset))
+  → ParDo(DeduplicarLecturas) → ParDo(DiferenciarContador)
+  → ParDo(CeldasVigentes) → WriteToKafka
+```
+
+No quedó así por casualidad. **Originalmente había dos agregaciones encadenadas**, y se
+fusionaron en `CeldasVigentes` porque encadenarlas bajo un modo acumulativo **contaba doble**
+(decisión 12). Al sacar las agregaciones para arreglar ese error, el trigger quedó huérfano:
+seguía configurado, pero ya no tenía dónde dispararse.
+
+Estuvo escrito en `cadena.py` hasta el 29/09 y **era inerte**. Se verificó sacándolo: las 89
+pruebas y la demostración dan exactamente lo mismo. Dejarlo sugería un comportamiento que no
+ocurre, que es lo que el criterio 5 castiga.
+
+**De la configuración de ventana, lo que sí trabaja:**
+
+| Parte | ¿Hace algo? |
+|---|---|
+| `FixedWindows(1 día, offset)` | **Sí.** Asigna la ventana, y de ahí sale el `ventana.end` contra el que los tres timers programan su expiración |
+| `allowed_lateness = 36 h` | **Sí.** Descarta lo que llega más tarde, y acota cuánto vive el estado |
+| `trigger` | No. Nada que gatillar |
+| `accumulation_mode` | No. Sin agregación no hay panes que acumular o descartar |
+
+### Qué hace las veces de política de emisión
+
+`CeldasVigentes.process` corre **una vez por elemento** y emite **solo las celdas que
+cambiaron**, comparando contra la tabla anterior. O sea que el resultado se publica **con cada
+lectura que cambia algo**, sin esperar ningún reloj, y cuando no hay novedad no se escribe
+nada.
+
+En la práctica es más reactivo que el pane cada 60 s que este documento prometía antes.
+
+⚠️ **Y corrige un argumento que estaba mal en la versión anterior:** el *upsert* del consumidor
+**no** es correcto «porque el modo es `ACCUMULATING`». Es correcto porque **`CeldasVigentes`
+emite el valor absoluto de la celda y no un incremento**, así que reescribir la misma clave
+converge al mismo valor. La idempotencia sale de la forma del dato, no del modo de acumulación.
+
+**Lo que se resigna:** emitir por elemento significa **una escritura a Kafka por cada celda que
+cambia**, sin agrupar. Es lo que produce los cinco mensajes para dos celdas de la demostración.
+A esta escala está bien; con 100.000 medidores habría que agrupar las escrituras, a costa de
+demorar la corrección unos minutos — algo que a la facturación no le cambia nada.
+
+**Sobre la finalidad.** Nada anuncia que una revisión es la última: después del último tardío
+simplemente no se emite más. La finalidad la **deduce el consumidor** cuando su reloj pasa
+`ventana_fin + 36 h`. Por eso hay dos lectores del mismo tópico con patrones distintos: el
+tablero lee todas las revisiones y muestra un valor que cambia; la facturación lee **una sola
+vez**, pasado ese horizonte.
 
 ## 2.5 El tablero lee el tópico directo
 
