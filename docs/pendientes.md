@@ -36,13 +36,13 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 |---|---|---|
 | ~~Sergio~~ | ~~`naturaleza` en `Registro.a_dict()`~~ · ✅ hecho, más `instante` opcional y los headers de Kafka | — |
 | ~~Sergio~~ | ~~`infra/` vacío~~ · ✅ **stack levantado y verificado end-to-end** | — |
-| Sergio | Reescribir la regla 1 de `config/franjas.example.toml` (era P4, de Daniel) | Si se reparten el trabajo de Daniel, alguien tiene que tomarla |
+| ~~Sergio~~ | ~~Reescribir la regla 1 de `config/franjas.example.toml`~~ · ✅ ya estaba hecha: la regla 1 es «cobertura exacta del día» y el archivo explica qué dejó de exigir. La fila contradecía a P4 en §1 | — |
 | ~~Daniel~~ | ~~Puede empezar las pruebas~~ · ✅ 23 de franjas y **8 con `TestStream`**: duplicado, desorden, reseteo y el orden dedup→diferenciación | — |
-| Clara | Esqueleto del pipeline con fuente conmutable (`jsonl` \| `kafka`) | No depende de `infra/`: se construye contra `datos/*.jsonl` |
+| ~~Clara~~ | ~~Esqueleto del pipeline con fuente conmutable~~ · ✅ **superada**: el pipeline está construido y corre end-to-end sobre Flink, leyendo de Kafka | — |
 | Los tres | **Documento técnico**: el esqueleto está en [`tecnico/`](tecnico/documento.md) con dueño por sección y `⚠️ PENDIENTE` donde falta. Se arma con `./docs/tecnico/armar-pdf.sh` | Queda **1 de 9**: la sección 8, contribuciones |
 | ~~Sergio~~ | ~~Diagrama de arquitectura~~ · ✅ `docs/diagramas/arquitectura.svg`, incrustado en el documento en página apaisada | — |
-| ⚠️ Clara | **Revisar las secciones 3 y 4** del documento técnico | Las escribí yo a partir de tu `contratos.md` porque se venía la fecha. Están marcadas como borrador: son tus decisiones, corregí lo que haya quedado mal contado |
-| ⚠️ Clara | **Aviso de colisión**: `pipeline.demostracion` arma la cadena completa —deduplicar, diferenciar, vigencia, franja, agregar— para producir la evidencia. Si estabas escribiendo eso mismo, hablémoslo antes de mergear | Pasa por el hueco `transformaciones` de `esqueleto.py`, no toca tus archivos |
+| ~~Clara~~ | ~~Revisar las secciones 3 y 4 del documento técnico~~ · ✅ revisadas el 29/09, marcas de borrador retiradas | — |
+| ~~Clara~~ | ~~Aviso de colisión con `pipeline.demostracion`~~ · ✅ **no hubo colisión**: no llegué a escribir la cadena, la implementó Sergio entera | — |
 | Los tres | **Sección 8**: contribuciones de cada uno | `git shortlog -sn --no-merges` lo respalda |
 | Los tres | **Video** — guion escrito en [`guion-video.md`](guion-video.md): 7 escenas con sus comandos y quién habla. Falta grabarlo. ⚠️ La cátedra **no fija duración**: pide «video breve» y nada más | Lo único que no se puede dejar para el último día |
 
@@ -52,9 +52,13 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 29/09 | `33fbe76` | **PDF del documento técnico regenerado**, que había quedado tres commits atrás del `.md`. ⚠️ Requiere **pandoc y las fuentes Liberation**: sin ellas Typst cae a otra tipografía en los títulos y el mismo fuente da un PDF distinto según quién compile. Verificar con `pdffonts` |
+| 29/09 | `4290862` | **Secciones 3 y 4 del documento técnico revisadas** y marcas de borrador retiradas. Tres correcciones: §3.6 y §4.4 se contradecían sobre los panes, §3.6 contaba el borrador anterior, y §4.6 presentaba `error_atribucion_pct` como campo del mensaje cuando lo calcula el consumidor |
+| 29/09 | `68ff16f` | **El contrato de salida ahora describe la salida.** §2 declaraba 20 campos y el pipeline emite 8; está el JSON real, y se dice que la identidad viaja en la clave del mensaje. Cae `es_provisional`, que contradecía a §2.4. §2.3 resuelve la divergencia del `null` **a favor de la implementación**: conservar los intervalos sanos. Salen las notas de bitácora de §1.5, §2.1, §2.2 y §2.3 |
+| 29/09 | `bea30b8` | **`contratos.md` §2.4 reescrita**: el pipeline no tiene triggers y no puede tenerlos, porque no hay agregación en el grafo. Corrige además el argumento del *upsert*: la idempotencia sale de emitir el valor absoluto de la celda, no del modo de acumulación |
 | 29/09 | — | **Para Clara:** tu hallazgo del `RUBRICA.md` eran **tres** afirmaciones sobre triggers, no una — también decía en dos lugares que el proyecto hace «triggers avanzados» como extensión opcional. Corregidas y pusheadas al repo de la materia, que es privado. Es justo el patrón que estás persiguiendo: un cambio en el código dejó tres documentos diciendo lo de antes |
 | 29/09 | — | **Daniel validó el recorrido en otra máquina** (WSL2 + Docker Desktop): mismos números. Encontró que `uv run pytest` da *segmentation fault* en su host → nuevo perfil `pruebas` que corre la suite dentro del contenedor |
-| 28/09 | — | **Decisión 13 aplicada**: umbral en 90 min, celda `indeterminada` con `minutos_indeterminados`. Verificado sobre Flink. 89 pruebas. ⚠️ **Diverge de `contratos.md` §2.3** (conserva la energía buena en lugar de anular la celda): anotado allá para Clara |
+| 28/09 | — | **Decisión 13 aplicada**: umbral en 90 min, celda `indeterminada` con `minutos_indeterminados`. Verificado sobre Flink. 89 pruebas. ✅ La divergencia con `contratos.md` §2.3 quedó resuelta el 29/09 **a favor de la implementación** |
 | 27/09 | — | **Guion del video** en [`guion-video.md`](guion-video.md) |
 | 27/09 | — | **P7 cerrado de hecho**: el recorrido corre sobre Flink y las pruebas con `DirectRunner`, las dos cosas verificadas |
 | 27/09 | — | **P1 y P2 cerrados con datos**: umbral de 90 min, elegido donde la distribución se parte en dos → [decisión 13](decisiones-de-diseno.md). ⚠️ **Falta que el equipo lo ratifique y aplicarlo en el código** |
@@ -64,7 +68,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 | 26/09 | — | **Cadena completa conectada a Kafka** (`cadena.py`): parseo, cuarentena por motivo, ventana alineada al día local, y la agregación por celda con estado. 86 pruebas |
 | 26/09 | — | **Segunda trampa del mismo error**: encadenar dos agregaciones bajo `ACCUMULATING` cuenta doble. Ver [decisión 12](decisiones-de-diseno.md) |
 | 25/09 | — | **Demostración narrada** de los tres escenarios (`pipeline.demostracion`), **reparto de un intervalo entre franjas** (`repartir_por_franja`, era de Daniel) y **sección 6** del documento técnico. 76 pruebas |
-| 25/09 | — | **Una lectura tardía duplicaba el consumo de su intervalo.** El *upsert* no retiraba el intervalo superado. Corregido con `CeldasVigentes` → [decisión 12](decisiones-de-diseno.md). ⚠️ **Clara: afecta cómo se arma la agregación** |
+| 25/09 | — | **Una lectura tardía duplicaba el consumo de su intervalo.** El *upsert* no retiraba el intervalo superado. Corregido con `CeldasVigentes` → [decisión 12](decisiones-de-diseno.md). ✅ Reflejado en `contratos.md` §2.1 el 29/09 |
 | 24/09 | — | **Diagrama de arquitectura** en SVG a mano, y **secciones 1, 2, 5 y 7 del documento técnico**. Quedan 5 pendientes de 9 |
 | 23/09 | — | **Deduplicación y diferenciación con estado**, y sus 8 pruebas con `TestStream`. La diferenciación guarda las lecturas en lugar de restar contra la última: una tardía que cae en el medio parte el intervalo y emite las dos mitades |
 | 22/09 | — | **Esqueleto del documento técnico** en `tecnico/`, con la cadena pandoc → Typst ya funcionando y las 8 secciones con que organizamos los cinco contenidos que pide el enunciado, cada una con dueño |

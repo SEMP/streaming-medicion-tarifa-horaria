@@ -671,7 +671,7 @@ ad-hoc o muchos lectores concurrentes.
 | Integrante | Contribución principal |
 |---|---|
 | Sergio Morel | ⚠️ completar |
-| Clara Almirón | ⚠️ completar |
+| Clara Almirón | **Contratos de evento de entrada y de salida**: clave de particionamiento, cantidad de particiones, tópicos, regla de versionado y política de cuarentena. **Política temporal**: ventana diaria alineada al día local y lateness de 36 h, con su justificación contra 24 y 48. **Tablero de pendientes** y **mapa de la documentación**, que son la convención con que el equipo se mantuvo sincronizado. Revisión de las secciones 3 y 4 de este documento, donde detectó que la política de *triggers* documentada no existía en el código |
 | Daniel Ramírez | ⚠️ completar |
 
 El historial de git lo respalda: `git shortlog -sn --no-merges`.
