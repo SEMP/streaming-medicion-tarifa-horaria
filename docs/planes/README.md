@@ -45,3 +45,7 @@ de configuración con sus pruebas unitarias. Nada de eso depende de lo otro.
 
 **Desde el día 3:** el simulador se conforma al contrato, el pipeline se monta sobre la
 infraestructura y llama a la asignación de franja. Ahí recién hay dependencias reales.
+
+> **29/09:** el plan de Daniel quedó superado por los hechos — su área se implementó
+> entre el 22 y el 27/09. Lo que sí queda está en
+> [`daniel-puesta-al-dia.md`](daniel-puesta-al-dia.md).

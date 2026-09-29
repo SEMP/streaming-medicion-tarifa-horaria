@@ -24,7 +24,7 @@ la última vez que hiciste `git pull`.
 | ~~**P4**~~ | ~~La «regla 1 — alineación a la grilla» quedó sin efecto~~ · ✅ reescrita: con readout no hay grilla, los intervalos **siempre** cruzan bordes | Sergio | — | [config](../config/franjas.example.toml) |
 | ~~**P5**~~ | ~~Cómo se representa `CalendarioTarifario`~~ · ✅ tabla de 1440 posiciones precomputada al cargar: construirla **es** la validación de cobertura | Sergio | — | `pipeline/franjas.py` |
 | ~~**P6**~~ | ~~Si `fecha_y_franja` valida el timestamp~~ · ✅ **no**: un naive es error de programación y levanta excepción. La validación de datos va aguas arriba | Sergio | — | `pipeline/franjas.py` |
-| **P8** | Confirmación de Daniel sobre su parte del reparto: no estuvo en la reunión del 20/09 | Daniel | Planificación | [planes/README](planes/README.md) |
+| **P8** | Con qué se lista Daniel en la sección 8. Su plan original quedó superado: el área se implementó entre el 22 y el 27/09 → [puesta al día](planes/daniel-puesta-al-dia.md) | Los tres | La sección 8 | [planes/daniel-puesta-al-dia](planes/daniel-puesta-al-dia.md) |
 | **P9** | Cuarto integrante, si se suma alguien | Los tres | Nada | — |
 
 **P1 y P2 son las que tienen consecuencia económica**: las dos deciden a qué franja se atribuye
