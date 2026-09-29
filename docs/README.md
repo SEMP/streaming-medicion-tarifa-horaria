@@ -44,11 +44,11 @@ está. Estado al 29/09:
 
 | Entregable que pide el aula | Estado | Dónde está |
 |---|---|---|
-| "Enlace al repositorio del proyecto" | ✅ | Este repositorio, público |
-| "Documento técnico y diagrama de arquitectura" | 🚧 **8 de 9 secciones** — falta la 8, contribuciones | [`tecnico/documento.md`](tecnico/documento.md), se compila con `./tecnico/armar-pdf.sh` · [`diagramas/arquitectura.svg`](diagramas/arquitectura.svg) |
-| "Evidencia de pruebas y ejecución end-to-end" | ✅ | [`../evidencia/`](../evidencia/), una corrida completa con fecha y commit |
-| "Video breve o demostración en vivo" | 🔴 **sin grabar** | Guion en [`guion-video.md`](guion-video.md) |
-| "Integrantes y contribuciones principales" | 🔴 | §8 del documento — necesita a los tres |
+| "Enlace al repositorio del proyecto" | Listo | Este repositorio, público |
+| "Documento técnico y diagrama de arquitectura" | En curso **8 de 9 secciones** — falta la 8, contribuciones | [`tecnico/documento.md`](tecnico/documento.md), se compila con `./tecnico/armar-pdf.sh` · [`diagramas/arquitectura.svg`](diagramas/arquitectura.svg) |
+| "Evidencia de pruebas y ejecución end-to-end" | Listo | [`../evidencia/`](../evidencia/), una corrida completa con fecha y commit |
+| "Video breve o demostración en vivo" | Pendiente **sin grabar** | Guion en [`guion-video.md`](guion-video.md) |
+| "Integrantes y contribuciones principales" | Pendiente | sección 8 del documento — necesita a los tres |
 
 Y en el repositorio, que el PDF pide aparte: código, [`README`](../README.md) reproducible
 con y sin Docker —detalle en [`infra/`](../infra/README.md)— y el simulador como mecanismo
@@ -64,7 +64,7 @@ resumen**, que es decisión nuestra y no del enunciado. Cada contenido tiene su 
 | Problema, usuarios del resultado, y qué decisiones habilita | [`../README.md`](../README.md) + [`dominio-medicion.md`](dominio-medicion.md) |
 | Diagrama de arquitectura y descripción de cada componente | El diagrama, pendiente + [`../README.md`](../README.md) |
 | Contrato de eventos, tópicos, claves, particiones y esquema de salida | [`contratos.md`](contratos.md) |
-| Ventanas, lateness, deduplicación, idempotencia y semántica de entrega | [`contratos.md`](contratos.md) §1.9 y §2.4, y decisiones 8, 9 y 10 |
+| Ventanas, lateness, deduplicación, idempotencia y semántica de entrega | [`contratos.md`](contratos.md) sección 1.9 y sección 2.4, y decisiones 8, 9 y 10 |
 | Límites conocidos, supuestos y posibles mejoras | Los «**lo que se resigna**» de cada decisión, y la sección «Posibles mejoras» de [`decisiones-de-diseno.md`](decisiones-de-diseno.md) |
 
 **Por eso cada decisión se escribe con su motivo y con lo que resigna**: no es prolijidad, es
@@ -104,7 +104,7 @@ herramienta gráfica por tres razones:
 **Si hace falta un PNG para la entrega, se rinde del mismo SVG y con el mismo motor.** La
 Tarea 1 tuvo el problema opuesto y quedó documentado en su commit `ad27137`: el PNG se había
 generado aparte y salía en otra tipografía que el PDF, así que el mismo diagrama llegaba al
-corrector en dos versiones distintas. ⚠️ El renderizado usa **Typst**, que no es parte del
+corrector en dos versiones distintas. Atención: el renderizado usa **Typst**, que no es parte del
 stack del repo (Python + uv): quien arme el PNG tiene que tenerlo instalado.
 
 ## 5. Qué no va al repositorio

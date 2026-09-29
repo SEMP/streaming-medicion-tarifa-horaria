@@ -31,7 +31,7 @@ el de salida.
 esquema, si los eventos rechazados van a un tópico propio o a otro lado, la convención de
 nombres de tópicos.
 
-✅ **Resuelto el 20/09 — ya no te bloquea.** El medidor reporta el **contador acumulado**
+Listo **Resuelto el 20/09 — ya no te bloquea.** El medidor reporta el **contador acumulado**
 (registro OBIS `15.8.0`): cada lectura es el valor del contador, no el consumo. El consumo se
 obtiene restando la lectura anterior del mismo medidor. Ver la decisión 10 y
 [`../dominio-medicion.md`](../dominio-medicion.md).
@@ -51,7 +51,7 @@ configurado), armar la cadena:
 1. **Validar** contra el contrato. Lo inválido **no se descarta en silencio**: va a una salida
    lateral y queda contado. Incluye los timestamps que Daniel marca como inválidos.
 
-   > ⚠️ **LA TRAMPA MÁS IMPORTANTE DE TODO EL PROYECTO, y cae justo en tu parte.**
+   > **Atención — LA TRAMPA MÁS IMPORTANTE DE TODO EL PROYECTO, y cae justo en tu parte.**
    >
    > El campo `calidad` de la lectura puede venir en **`checksum_no_verificado`**, y eso
    > **NO significa que el dato esté corrupto**. Un fabricante que es el 55% del parque

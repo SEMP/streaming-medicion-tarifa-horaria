@@ -4,13 +4,13 @@ Los dos contratos de los que depende el resto del sistema: el **evento de entrad
 simulador produce y el pipeline consume, y el **registro de salida**, que el pipeline produce
 y leen el tablero y la facturación.
 
-Reemplaza a las secciones 1 y 3 de [`planes/propuesta-interfaces.md`](planes/propuesta-interfaces.md),
-que era un borrador. La sección 2 de ese archivo —la asignación de franja— sigue siendo de
-Daniel y no se toca acá.
+La tercera interfaz del sistema —la asignación de franja— no se documenta acá: es una función
+pura sin dependencias de Kafka ni de Beam, y vive en `pipeline/src/pipeline/franjas.py` con sus
+pruebas.
 
 > **Estado.** Las decisiones de este documento las toma Clara, que es la dueña de los dos
 > contratos. Las que necesitan acuerdo de otro integrante están marcadas
-> **⚠️ a confirmar con \<quien\>**. Todo lo demás está decidido y se puede construir encima.
+> **Atención — a confirmar con \<quien\>**. Todo lo demás está decidido y se puede construir encima.
 
 **Las cifras que se citan están medidas**, no estimadas. Salen de una corrida del simulador
 con 3 cabinas, 111 medidores y un día (`uv run python -m simulador --cabinas 3 --dias 1`),
@@ -25,7 +25,7 @@ que produjo 8.094 lecturas:
 | Separación entre lecturas del mismo medidor | p50 16 min · p90 29,7 min · **máx 249 min** |
 | Reparto de `calidad` | `ok` 33 % · `checksum_no_verificado` 66 % · `truncada` 0,7 % |
 
-> ⚠️ **Cifras corregidas el 22/09.** La corrida original se hizo con el simulador afectado
+> **Atención — Cifras corregidas el 22/09.** La corrida original se hizo con el simulador afectado
 > por un defecto de determinismo (`hash()` de cadenas está aleatorizado por proceso en
 > Python), así que el reparto de `calidad` variaba entre ejecuciones. Corregido en
 > `parque.semilla_derivada`, con dos pruebas que lo cubren. El resto de las cifras se
@@ -34,7 +34,7 @@ que produjo 8.094 lecturas:
 > Que `checksum_no_verificado` supere el 55 % que le corresponde al fabricante mayoritario
 > **no es un error**: ese fabricante es además el más confiable, así que entrega
 > proporcionalmente más lecturas que los otros. La marca está sobrerrepresentada en los
-> datos que llegan, lo que refuerza el argumento del §1.5 — descartar por esa bandera
+> datos que llegan, lo que refuerza el argumento de la sección 1.5 — descartar por esa bandera
 > tiraría **dos tercios** de la muestra, no la mitad.
 
 ---
@@ -67,15 +67,15 @@ enrutar o rechazar sin deserializar el cuerpo.
 
 | Campo | Obligatorio | Para qué |
 |---|---|---|
-| `schema_version` | sí | Versión del esquema. Ver §1.3 |
+| `schema_version` | sí | Versión del esquema. Ver sección 1.3 |
 | `event_id` | sí | Identidad estable: `sha256("<medidor_id>\|<instante_lectura>")[:16]`. **Determinista, no aleatorio**: un reintento de publicación produce el mismo id, y por eso el duplicado es reconocible. Es la mitad de la clave de deduplicación |
-| `medidor_id` | sí | **Clave de particionamiento.** Ver §1.2 |
+| `medidor_id` | sí | **Clave de particionamiento.** Ver sección 1.2 |
 | `cabina_id` | sí | La cabina cuyo bus RS-485 comparte el medidor. No es decorativo: la duración de la ronda —y por lo tanto el error de atribución— es una propiedad **de la cabina**, y una caída de enlace afecta a todos sus medidores a la vez. Sin este campo no se puede distinguir «un medidor no contesta» de «se cayó la cabina entera» |
 | `lote_id` | sí | La publicación en la que vino. Permite rastrear una ráfaga tardía completa y demostrar el duplicado por reintento |
 | `secuencia` | sí | Número de pedido del concentrador para ese medidor. Permite detectar pedidos perdidos sin depender del tiempo |
 | `instante_lectura` | sí | **El tiempo de evento.** El momento en que el concentrador obtuvo la respuesta. ISO-8601 con offset (decisión 4). Es un instante, no un período |
-| `registros` | sí, no vacío | Lista de los registros que trajo la lectura. Ver §1.4 |
-| `calidad` | sí | `ok` \| `checksum_no_verificado` \| `truncada`. Ver §1.5 |
+| `registros` | sí, no vacío | Lista de los registros que trajo la lectura. Ver sección 1.4 |
+| `calidad` | sí | `ok` \| `checksum_no_verificado` \| `truncada`. Ver sección 1.5 |
 | `publicado_at` | sí | Cuándo entró al tópico. Contra `instante_lectura` da el retraso de publicación, que es el insumo de la observabilidad y el que justifica la lateness |
 
 Cada entrada de `registros`:
@@ -83,10 +83,10 @@ Cada entrada de `registros`:
 | Campo | Obligatorio | Para qué |
 |---|---|---|
 | `obis` | sí | Código OBIS del registro (IEC 62056-61). Único dentro de la lectura |
-| `naturaleza` | sí | `acumulado` \| `instantaneo` \| `maximo`. Ver §1.7 |
+| `naturaleza` | sí | `acumulado` \| `instantaneo` \| `maximo`. Ver sección 1.7 |
 | `valor` | sí | El número tal como lo devolvió el medidor |
 | `unidad` | sí | La manda el medidor en el propio dato (`15.8.0(014380.81*kWh)`). Se guarda tal como llegó |
-| `instante` | **no** | Instante propio del registro, cuando lo trae. Ver §1.6 |
+| `instante` | **no** | Instante propio del registro, cuando lo trae. Ver sección 1.6 |
 
 ## 1.2 Clave, particiones y el orden que se conserva
 
@@ -113,7 +113,7 @@ Lo que fija el número es otra cosa:
    memoria: solo reparte.
 3. **Más particiones alargan la recuperación**: releer una partición es serial.
 
-⚠️ **A confirmar con Sergio**, que es el dueño de `infra/`: el número tiene que coincidir con
+**Atención — A confirmar con Sergio**, que es el dueño de `infra/`: el número tiene que coincidir con
 lo que se cree en el `docker-compose`.
 
 ## 1.3 Tópicos y versionado
@@ -121,7 +121,7 @@ lo que se cree en el `docker-compose`.
 | Tópico | Para qué | Clave | Retención |
 |---|---|---|---|
 | `medicion.lecturas.v1` | Lecturas crudas | `medidor_id` | `delete`, 7 días |
-| `medicion.consumo-franja.v1` | Resultado por medidor/día/franja | ver §2 | `compact,delete`, 90 días |
+| `medicion.consumo-franja.v1` | Resultado por medidor/día/franja | ver sección 2 | `compact,delete`, 90 días |
 | `medicion.cuarentena.v1` | Todo lo rechazado | `medidor_id` si se conoce | `delete`, 30 días |
 
 **Convención:** `<dominio>.<sustantivo>.v<mayor>`.
@@ -129,7 +129,7 @@ lo que se cree en el `docker-compose`.
 **Regla de versionado, que es la estrategia de evolución que pide el enunciado:**
 
 - **Cambio compatible** → no cambia nada. Agregar un campo opcional, o agregar un registro
-  OBIS a la lista, son cambios compatibles **por diseño** (§1.4): un consumidor que solo mira
+  OBIS a la lista, son cambios compatibles **por diseño** (sección 1.4): un consumidor que solo mira
   `15.8.0` no se entera.
 - **Cambio incompatible** —quitar o renombrar un campo, cambiar un tipo o el significado de
   uno— → **tópico nuevo `.v2`**, y los dos conviven mientras dure la transición.
@@ -139,7 +139,7 @@ lo que se cree en el `docker-compose`.
   se lo mira suelto, en un archivo o en la cuarentena.
 
 La retención de 7 días en la entrada no es arbitraria: tiene que cubrir la lateness de 36 h
-(§2.4) **con margen para reprocesar**. Poder releer una semana entera es lo que permite
+(sección 2.4) **con margen para reprocesar**. Poder releer una semana entera es lo que permite
 rehacer un cálculo cuando se corrige un bug, y es la forma barata de demostrar que el
 reproceso converge al mismo resultado.
 
@@ -159,7 +159,7 @@ propiedad **del registro**, no de la lectura: `15.8.0` viene en kWh, pero un reg
 potencia vendría en kW. Con un mapa habría que tener esa tabla hardcodeada en el consumidor,
 que es exactamente el conocimiento implícito que se desactualiza.
 
-⚠️ **Lo que la lista pierde y hay que compensar con validación:** un mapa garantizaba por
+**Atención — Lo que la lista pierde y hay que compensar con validación:** un mapa garantizaba por
 estructura que un código no apareciera dos veces. Con lista pasa a ser una **regla explícita
 que el validador tiene que hacer cumplir: los códigos OBIS son únicos dentro de una lectura.**
 
@@ -228,7 +228,7 @@ legítimas **de todos los demás medidores**.
 | `calidad = truncada` | Cuarentena | `trama_truncada` |
 | `calidad = checksum_no_verificado` | **Se procesa** y se cuenta | — |
 | Delta negativo contra la lectura anterior | Cuarentena, **aguas abajo** (necesita estado) | `contador_retrocede` |
-| Pedido corrido respecto del borde | **Se procesa.** No es inválido: alimenta el error declarado de §2.3 | — |
+| Pedido corrido respecto del borde | **Se procesa.** No es inválido: alimenta el error declarado de la sección 2.3 | — |
 
 **Sobre «falta `15.8.0`» → cuarentena, y no «válido pero no aporta».** En este sistema
 `15.8.0` es el único registro que se pide. Que no esté significa que la trama vino incompleta,
@@ -239,15 +239,15 @@ Queda anotado porque es una decisión dependiente del alcance actual, no una ver
 ## 1.9 Deduplicación, y el duplicado que no coincide
 
 **Clave de dedup: `(medidor_id, instante_lectura)`**, que es exactamente lo que resume el
-`event_id`. **Horizonte: 36 h**, el mismo que la lateness (§2.4). Fuera de ese horizonte no se
+`event_id`. **Horizonte: 36 h**, el mismo que la lateness (sección 2.4). Fuera de ese horizonte no se
 garantiza deduplicación, y se dice.
 
 **El duplicado va antes de la diferenciación.** Si no, la resta de una lectura contra sí misma
 emite un consumo de 0 que, con salida por *upsert*, **pisa el valor correcto**:
 
 ```
-1ª vez:   consumo = R₂ − R₁        ✔
-2ª vez:   consumo = R₂ − R₂ = 0    ✘  y el 0 reemplaza al bueno
+1ª vez:   consumo = R₂ − R₁        OK
+2ª vez:   consumo = R₂ − R₂ = 0    MAL  y el 0 reemplaza al bueno
 ```
 
 **Si llegan dos eventos con el mismo `event_id` y `registros` distintos: gana el primero**, y
@@ -298,10 +298,10 @@ posibilidad de que discrepen.
 |---|---|
 | `energia_kwh` | La energía atribuida a esta celda, sumando los trozos de cada intervalo vigente que cae en ella |
 | `minutos_cubiertos` | Cuántos minutos de la franja quedaron efectivamente cubiertos por intervalos |
-| `minutos_indeterminados` | Cuántos quedaron sin cubrir porque el intervalo que los cruzaba superaba el umbral de §2.3 |
+| `minutos_indeterminados` | Cuántos quedaron sin cubrir porque el intervalo que los cruzaba superaba el umbral de la sección 2.3 |
 | `interpolada` | `true` si algún trozo salió de repartir un intervalo que cruzaba un borde, en lugar de una lectura que cayera sobre él |
 | `indeterminada` | `true` si al menos un cruce superó el umbral y su energía **no** se repartió |
-| `separacion_maxima_minutos` | La separación del intervalo más largo que aportó a esta celda. Es la cota del error de atribución — ver §2.3 |
+| `separacion_maxima_minutos` | La separación del intervalo más largo que aportó a esta celda. Es la cota del error de atribución — ver sección 2.3 |
 | `cabina_id` | Diagnóstico: la duración de la ronda, y por lo tanto el error, es propiedad de la cabina |
 | `intervalos_usados` | Cuántos intervalos aportaron energía a la celda |
 
@@ -317,7 +317,7 @@ del consumidor es **upsert, nunca insert**.
 La clave **no incluye `cabina_id`**, aunque el campo viaje en el valor: un medidor podría
 cambiar de cabina y la identidad del resultado no debe depender de eso.
 
-⚠️ **El upsert no alcanza por sí solo, y conviene tenerlo claro.** Opera sobre la celda, así
+**Atención — El upsert no alcanza por sí solo, y conviene tenerlo claro.** Opera sobre la celda, así
 que reescribirla es inocuo — pero si a la celda llegaran a la vez un intervalo y las dos
 mitades que lo reemplazan, los tres caen **dentro de la misma celda** y se sumarían igual. Por
 eso quién sigue vigente lo decide `CeldasVigentes` **antes** de sumar, y no el destino
@@ -365,7 +365,7 @@ Los dos marcadores que acompañan:
 **Cuando `indeterminada` es `true`, `energia_kwh` no se anula.** Se conservan los intervalos
 sanos de la celda y los minutos del cruce impresentable se suman aparte, en
 `minutos_indeterminados`. Una celda puede tener veinte intervalos buenos y un cruce malo:
-anularla entera tiraría los veinte, y haría imposible la distinción que §2.2 existe para
+anularla entera tiraría los veinte, y haría imposible la distinción que la sección 2.2 existe para
 permitir. La incertidumbre se declara, no se esconde el dato.
 
 ## 2.4 La política temporal
@@ -417,7 +417,7 @@ nada.
 
 En la práctica es más reactivo que un pane periódico: no hay latencia de espera de reloj.
 
-⚠️ **Y corrige un argumento que estaba mal en la versión anterior:** el *upsert* del consumidor
+**Atención — Y corrige un argumento que estaba mal en la versión anterior:** el *upsert* del consumidor
 **no** es correcto «porque el modo es `ACCUMULATING`». Es correcto porque **`CeldasVigentes`
 emite el valor absoluto de la celda y no un incremento**, así que reescribir la misma clave
 converge al mismo valor. La idempotencia sale de la forma del dato, no del modo de acumulación.
@@ -461,14 +461,14 @@ no se pierda una corrección tardía.
 
 # 3. Lo que este contrato deja sin resolver
 
-- ⚠️ **El límite de separación tolerado** antes de marcar `indeterminado` (§2.3). Es la misma
+- **Atención — El límite de separación tolerado** antes de marcar `indeterminado` (sección 2.3). Es la misma
   decisión abierta que el desvío respecto del borde de la decisión 3.
-- ⚠️ **Qué se hace con los dos intervalos que quedan indeterminados** cuando falta una lectura
+- **Atención — Qué se hace con los dos intervalos que quedan indeterminados** cuando falta una lectura
   (decisión 10, consecuencia 2): marcarlos, o imputar el consumo combinado al bloque completo
   —correcto en el total, pero puede caer sobre dos franjas distintas—. Toca la agregación.
-- ⚠️ **A confirmar con Sergio:** el número de particiones (§1.2) tiene que coincidir con lo
+- **Atención — A confirmar con Sergio:** el número de particiones (sección 1.2) tiene que coincidir con lo
   que cree el `docker-compose` de `infra/`.
-- ⚠️ **A confirmar con Daniel:** `config/franjas.example.toml` todavía documenta la regla de
+- **Atención — A confirmar con Daniel:** `config/franjas.example.toml` todavía documenta la regla de
   **alineación a la grilla**, que la decisión 5 revirtió el 20/09. Con rondas continuas no hay
   grilla y los intervalos **sí** cruzan bordes: por eso la interpolación es obligatoria. La
   regla 1 de ese archivo habría que reescribirla como «la agenda cubre todos los bordes».
