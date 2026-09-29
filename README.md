@@ -138,8 +138,9 @@ anterior, y devuelve código de salida.
 
 ## Demostración
 
-El guion del video está en [`docs/guion-video.md`](docs/guion-video.md): siete escenas, nueve
-minutos, con el comando de cada una y quién habla.
+El guion del video está en [`docs/guion-video.md`](docs/guion-video.md): siete escenas, con
+el comando de cada una y quién habla. La cátedra no fija duración —pide un «video breve»—;
+estas escenas suman 9 min 45 s.
 
 ## Evidencia de ejecución
 

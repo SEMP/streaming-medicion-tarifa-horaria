@@ -12,13 +12,18 @@ quede implícita**:
 | **Para la defensa** | Clara escribió una versión extendida con el fondo conceptual de cada escena y las preguntas probables del profesor, con su respuesta. Está en su repositorio, en `TPF/guion_video_detallado.md` |
 | Integrantes y contribuciones | Escena 7 |
 
-**Duración: 9 min 45 s**, que es lo que suman las siete escenas —60 + 90 + 150 + 45 + 120 + 90
-+ 30 segundos—. Antes decía «9 minutos» y no cerraba; lo detectó Clara al contrastar el guion
-con el reloj.
+## Cuánto tiene que durar
 
-Se aceptan los 45 segundos de más en lugar de recortar. Las dos escenas largas son la 3 y la
-5, y son **la evidencia**: recortarlas sería sacar justo lo que el criterio 6 puntúa. Si hubiera
-que ganar tiempo, sale de la 2 y la 6, que son explicación y no demostración.
+⚠️ **La cátedra no fija una duración.** Dice «video **breve** o demostración en vivo», y nada
+más — ni el enunciado, ni la consigna del aula, ni ninguna lámina de las ocho clases. Conviene
+saberlo antes de recortar algo por creer que hay un límite: no lo hay.
+
+**Estas siete escenas suman 9 min 45 s** (60 + 90 + 150 + 45 + 120 + 90 + 30 s). No es un
+objetivo, es lo que sale de darle a cada tema el tiempo que necesita. Parece razonable para
+«breve» en un trabajo que integra ocho clases, pero es criterio nuestro.
+
+Si hubiera que acortar, **sale de las escenas 2 y 6**, que son explicación. Las escenas 3 y 5
+no se tocan: son la evidencia, y es lo que el criterio 6 puntúa.
 
 **Hablan los tres.** No es adorno: el criterio pide contribuciones por persona, y que cada uno
 explique su parte es la forma más creíble de mostrarlas. Cada escena dice quién habla.
