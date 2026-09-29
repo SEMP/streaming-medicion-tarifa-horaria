@@ -191,6 +191,23 @@ Cuando termina, señalar las tres cosas:
    cambió algo. El consumidor hace *upsert* y se queda con las dos últimas. Es la semántica del
    contrato funcionando sobre el stack real.
 
+### Y el remate: releer lo mismo desde cero
+
+Va inmediatamente después, sin bajar el stack:
+
+```bash
+docker compose -f infra/docker-compose.yml --profile e2e run --rm -T repeticion
+```
+
+> Esto no vuelve a sembrar nada. Relee **el mismo tópico desde el offset 0**, con otro grupo de
+> consumidor, y vuelve a procesarlo entero.
+>
+> Da las mismas dos celdas: 2,400 y 3,100. **Eso es la idempotencia, medida en lugar de
+> declarada.** Reprocesar no duplica, no suma y no corrige: converge al mismo resultado, porque
+> la salida se identifica por la celda y no por el intento de escritura.
+
+Es la evidencia más fuerte del criterio de confiabilidad, y cuesta un comando.
+
 ---
 
 ## Escena 6 — Lo que aprendimos · Sergio · 90 s
