@@ -143,12 +143,12 @@ def main() -> int:
     for clave, esperado in sorted(ESPERADO.items()):
         celda = tabla.get(clave)
         if celda is None:
-            print(f"  {clave:<34} {'—':>8}  {esperado:>9.3f}  ✘ no llegó")
+            print(f"  {clave:<34} {'—':>8}  {esperado:>9.3f}  MAL no llegó")
             problemas.append(f"falta {clave}")
             continue
         obtenido = round(celda["energia_kwh"], 3)
         origen = "interpolado" if celda["interpolada"] else "medido"
-        marca = "✔" if obtenido == esperado else "✘"
+        marca = "OK" if obtenido == esperado else "MAL"
         print(f"  {clave:<34} {obtenido:>8.3f}  {esperado:>9.3f}  {origen} {marca}")
         if obtenido != esperado:
             problemas.append(f"{clave}: {obtenido} ≠ {esperado}")
@@ -162,11 +162,11 @@ def main() -> int:
 
     if problemas:
         for p in problemas:
-            log.error("✘ %s", p)
+            log.error("MAL %s", p)
         return 1
 
     print(
-        "\n  ✅ Flink y Kafka dan el mismo resultado que la demostración con DirectRunner.\n"
+        "\n  BIEN: Flink y Kafka dan el mismo resultado que la demostración con DirectRunner.\n"
         "     El duplicado no sumó, la tardía corrigió el reparto, y el total se conserva.\n"
     )
     return 0

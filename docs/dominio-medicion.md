@@ -15,7 +15,7 @@ Un medidor eléctrico moderno es, para nosotros, dos cosas:
 2. **Una capacidad de responder cuando se le pregunta.** El medidor **no transmite por su
    cuenta**: espera un pedido y devuelve el valor actual de sus registros.
 
-⚠️ Muchos medidores tienen además una memoria de **perfil de carga** (objeto `99.1.0`) que
+Atención: Muchos medidores tienen además una memoria de **perfil de carga** (objeto `99.1.0`) que
 guarda internamente el valor cada N minutos, formando una serie fechada que se descarga
 completa. **En este parque no se usa**: solo se dispone del modo readout, lo que cambia todo
 el diseño. Ver más abajo.
@@ -73,7 +73,7 @@ informa. Por eso el contrato la guarda tal como llegó, y validarla contra el c�
 opcional — sirve para detectar un equipo mal configurado, no para saber en qué unidad está
 el valor.
 
-⚠️ **Pero el `*` no es un separador de valor y unidad: es un separador de campos genérico**,
+**Atención — Pero el `*` no es un separador de valor y unidad: es un separador de campos genérico**,
 y la cantidad y el orden de los campos **varía entre fabricantes**:
 
 ```
@@ -236,7 +236,7 @@ Cruzando cada pedido con la alcanzabilidad de red de su enlace:
 unos 29 cada uno, que es el tamaño de cabina típico. Confirma que el fallo correlacionado por
 cabina existe y no es momentáneo.
 
-⚠️ **Pero es menos de la mitad del problema.** El **52% de las lecturas fallidas ocurre sobre
+**Atención — Pero es menos de la mitad del problema.** El **52% de las lecturas fallidas ocurre sobre
 enlaces que pinguean perfecto.** Un modelo que solo contemple la caída de cabina le falta la
 mitad de la realidad: hace falta también un **fondo disperso** sobre equipos sanos.
 
@@ -259,12 +259,12 @@ de buffer. Para simular da igual — se modela como tasa por modelo, que es lo o
 modelo entre 1,07 y 3,97, y eso es costo de bus directo — el peor modelo ocupa unas 4 veces lo
 que el mejor, por lectura.
 
-⚠️ **El presupuesto es tiempo, no un contador de intentos.** Lo que se configura es el límite
+**Atención — El presupuesto es tiempo, no un contador de intentos.** Lo que se configura es el límite
 de tiempo por pedido, y dentro de él se reintenta las veces que entren. El máximo observado de
 11 intentos es simplemente cuántos ciclos caben en ese presupuesto: **no es un tope configurado
 ni una constante del sistema**, y modelarlo como contador se alejaría de la realidad.
 
-⚠️ **Reintento y éxito están desacoplados.** No vale "más reintentos, peor modelo":
+**Atención — Reintento y éxito están desacoplados.** No vale "más reintentos, peor modelo":
 
 - un modelo hace 3,97 intentos y entrega 89,5%;
 - otro hace 3,12 y entrega 65,5%;
@@ -283,7 +283,7 @@ primera respuesta del medidor: p50 2.260 ms. O sea que **el enlace explica ~74%*
 agrega unos 600 ms. Por eso se modela **por cabina**: las latencias están correlacionadas y no
 se promedian.
 
-✅ **No hay degradación en hora punta.** Medido en las 24 horas sobre 30 días: p50 entre 1.592
+Listo · **No hay degradación en hora punta.** Medido en las 24 horas sobre 30 días: p50 entre 1.592
 y 1.699 ms (±3%), alcanzabilidad entre 90,6% y 93,6%. Es buena noticia para este proyecto: la
 ronda no depende de la hora, así que **el error de atribución no empeora justo en la franja que
 más cuesta**, y el simulador no necesita término diurno.
@@ -296,7 +296,7 @@ Dos cosas más, contraintuitivas:
   —el 90% está ≥90% alcanzable, el 4,7% está muerto, el medio casi vacío— y el RTT **no**
   correlaciona con la disponibilidad. **No existe la población "enlace lento degradado".**
 
-### ⚠️ La bandera de calidad que no significa corrupción
+### Atención: La bandera de calidad que no significa corrupción
 
 Es la trampa más peligrosa del dominio, y la más fácil de leer al revés.
 

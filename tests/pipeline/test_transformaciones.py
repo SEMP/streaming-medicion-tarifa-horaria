@@ -69,7 +69,7 @@ def opciones_streaming() -> PipelineOptions:
 
 @pytest.fixture
 def ventana_diaria():
-    """Ventana de un día con la política temporal de `contratos.md` §2.4."""
+    """Ventana de un día con la política temporal de `contratos.md` sección 2.4."""
     return beam.WindowInto(
         beam.window.FixedWindows(24 * 3600),
         trigger=trigger.AfterWatermark(late=trigger.AfterCount(1)),
@@ -312,7 +312,7 @@ def test_la_tardia_no_puede_contarse_dos_veces(ventana_diaria, calendario):
     llega la tardía de 08:30 y emite las dos mitades, 2 y 4 kWh. Sumar los tres daría 12 — el
     doble del consumo real, sobre un dato que se factura.
 
-    El *upsert* del contrato (§2.1) no lo salva, porque opera sobre la celda
+    El *upsert* del contrato (sección 2.1) no lo salva, porque opera sobre la celda
     `medidor|fecha|franja` y los tres intervalos caen dentro de la misma celda.
     """
     flujo = (

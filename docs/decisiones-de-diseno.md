@@ -78,7 +78,7 @@ que el concentrador recibe la respuesta hay latencia, y un pedido puede resolver
 | Instante en el futuro respecto de la recepción | Cuarentena: indica un concentrador desincronizado |
 | **Trama incompleta**: falta el registro que interesa | Cuarentena: no aporta al cálculo |
 | **Trama truncada en medio de un número** | No se detecta por formato. Se ataca con el checksum de la trama y con la comparación contra la lectura anterior: un contador no baja ni salta un valor imposible |
-| **Desvío respecto del borde de franja** | ⚠️ **Abierto:** cuánto se tolera antes de considerar que la lectura no sirve para cerrar la franja |
+| **Desvío respecto del borde de franja** | **Atención — Abierto:** cuánto se tolera antes de considerar que la lectura no sirve para cerrar la franja |
 
 El último es el interesante, y reemplaza al viejo umbral de corrección de reloj. Tiene
 consecuencia económica concreta: un pedido que se corre siete minutos mueve siete minutos de
@@ -105,7 +105,7 @@ Offset y zona horaria no son lo mismo, y se usan los dos:
 Se guarda el identificador IANA y no un offset fijo porque el identificador sobrevive a un
 cambio de política horaria.
 
-⚠️ **Supuesto:** no rige horario de verano. Si volviera, habría dos días al año con franjas
+**Atención — Supuesto:** no rige horario de verano. Si volviera, habría dos días al año con franjas
 de duración distinta y la configuración tendría que contemplarlos.
 
 ## 5. Franjas configurables, y la agenda de pedidos que exigen
@@ -165,7 +165,7 @@ componentes muy distintos:
 | Componente | Cuánto | Qué es |
 |---|---|---|
 | Media por lectura | ~19,8 s | Consecuencia de la distribución trimodal: casi todo responde en 5–10 s, pero el ~9,5% que agota el tope de dos minutos arrastra la media |
-| **Pausa entre medidores** | **~10 s** | ⚠️ **Decisión de diseño del concentrador observado**, no del protocolo ni de los equipos |
+| **Pausa entre medidores** | **~10 s** | **Atención — Decisión de diseño del concentrador observado**, no del protocolo ni de los equipos |
 
 Que un tercio del tiempo por medidor sea una pausa configurable importa: **otro concentrador
 daría otra ronda, y por lo tanto otro error de facturación.** Es el parámetro más barato de
@@ -198,7 +198,7 @@ Con redundancia en los bordes los huecos quedan acotados, así que la interpolac
 defendible **dentro de un límite explícito**. Por encima de ese límite, el valor se marca como
 indeterminado en lugar de inventarse.
 
-⚠️ **Abierto:** cuál es ese límite. Es la misma decisión que el desvío tolerado respecto del
+**Atención — Abierto:** cuál es ese límite. Es la misma decisión que el desvío tolerado respecto del
 borde, vista desde el otro lado.
 
 ### Cuánta frecuencia hace falta
@@ -271,7 +271,7 @@ El costo del estado no es despreciable acá. Con ventanas diarias, ~48 h de late
 
 Clave de deduplicación: **`(medidor_id, instante_lectura)`** — estable y determinista.
 
-⚠️ Es `instante_lectura` y no `inicio_intervalo`: lo que llega por el tópico de entrada son
+Atención: Es `instante_lectura` y no `inicio_intervalo`: lo que llega por el tópico de entrada son
 **lecturas del contador en un instante**, no consumos de un bloque (decisión 10). El intervalo
 aparece recién después de diferenciar.
 
@@ -302,7 +302,7 @@ trabajo. Simplificarlo dejaría el pipeline sin nada sustantivo que hacer entre 
 1. **Necesita estado por medidor** para recordar la última lectura. Se apoya en el mismo
    mecanismo de estado con temporizador que ya usa la deduplicación (decisión 9).
 2. **Un evento perdido arruina dos intervalos, no uno.** Si falta la lectura de las 18:15, no
-   se puede calcular el consumo de 18:00–18:15 *ni* el de 18:15–18:30. ⚠️ **Abierto:** si esos
+   se puede calcular el consumo de 18:00–18:15 *ni* el de 18:15–18:30. **Atención — Abierto:** si esos
    dos intervalos se marcan como indeterminados o si se imputa el consumo combinado al bloque
    completo — correcto en total, pero puede caer sobre dos franjas distintas.
 3. **El contador se resetea** al cambiar o reprogramar un medidor, y la resta da un consumo
@@ -329,13 +329,13 @@ entero; con MPL, los archivos modificados. Ninguna de las dos sirve para ese obj
 permisivas —MIT, Apache-2.0— permiten que una obra derivada sea cerrada.
 
 **Por qué MIT y no Apache-2.0.** Se evaluaron las dos y en un primer momento se eligió
-Apache-2.0, por su **concesión expresa de derechos de patente** (§3), que suele ser lo que una
+Apache-2.0, por su **concesión expresa de derechos de patente** (sección 3), que suele ser lo que una
 revisión legal corporativa verifica antes de incorporar código externo. MIT no dice nada al
 respecto: se suele interpretar que hay una licencia implícita, pero no está escrito.
 
 Se optó finalmente por **MIT por simplicidad**: su única obligación es conservar el aviso de
-copyright, mientras que Apache-2.0 agrega marcar los archivos modificados (§4b) y reproducir el
-archivo `NOTICE` en las obras derivadas (§4d).
+copyright, mientras que Apache-2.0 agrega marcar los archivos modificados (sección 4b) y reproducir el
+archivo `NOTICE` en las obras derivadas (sección 4d).
 
 **Lo que se resigna, dicho explícitamente:** la concesión expresa de patentes. Si alguna vez una
 revisión legal pregunta por ella, la respuesta será que MIT no la contempla.
@@ -354,12 +354,12 @@ contenía y emite las dos mitades. El intervalo grosero, en cambio, **ya salió*
 no tiene retractaciones: no hay forma de desemitirlo.
 
 Se creía que el *upsert* del contrato lo resolvía. **No lo resuelve**: el *upsert* opera sobre
-la celda `medidor|fecha|franja` ([`contratos.md`](contratos.md) §2.1) y los tres intervalos
+la celda `medidor|fecha|franja` ([`contratos.md`](contratos.md) sección 2.1) y los tres intervalos
 caen dentro de la misma celda. Con `ACCUMULATING`, la agregación suma todo lo que hay en la
 ventana:
 
 ```
-  6 kWh (08:00→09:00)  +  2 (08:00→08:30)  +  4 (08:30→09:00)  =  12 ✘
+  6 kWh (08:00→09:00)  +  2 (08:00→08:30)  +  4 (08:30→09:00)  =  12 MAL
 ```
 
 El doble del consumo real, y sobre un dato que se factura.
@@ -377,8 +377,8 @@ bajo un trigger `ACCUMULATING` cuenta doble. Cada pane de la primera llega a la 
 un elemento nuevo, y la segunda, que también acumula, lo suma otra vez.
 
 ```
-  pane 1:   6 kWh   ✔
-  pane 2:  12 kWh   ✘   y es el que vale, porque el último gana
+  pane 1:   6 kWh   OK
+  pane 2:  12 kWh   MAL   y es el que vale, porque el último gana
 ```
 
 No se ve con `TestStream` avanzando el watermark a infinito, porque dispara un solo pane. Se
@@ -482,7 +482,7 @@ Cuando un cruce supera el umbral, su energía **no entra** en `energia_kwh`, la 
 El resto de la celda se conserva: una celda puede tener veinte intervalos sanos y un cruce
 impresentable, y anularla entera tiraría los veinte.
 
-Eso **diverge de [`contratos.md`](contratos.md) §2.3**, que decía que con `indeterminado` el
+Eso **diverge de [`contratos.md`](contratos.md) sección 2.3**, que decía que con `indeterminado` el
 valor es `null`. La divergencia está anotada allá para que Clara la revise.
 
 # Posibles mejoras

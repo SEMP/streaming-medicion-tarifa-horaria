@@ -53,7 +53,7 @@ cambiado.
    evidencia de las contribuciones individuales, y la entrega lo exige explícitamente. No
    commitear trabajo de otro integrante bajo la propia firma.
 5. **No inventar.** Si algo no está definido —un umbral, un formato, una regla—, agregarlo
-   como fila en [`docs/pendientes.md`](docs/pendientes.md) §1 y preguntar, en lugar de
+   como fila en [`docs/pendientes.md`](docs/pendientes.md) sección 1 y preguntar, en lugar de
    decidirlo en silencio.
 
 ## Stack, y por qué está fijado
@@ -65,7 +65,7 @@ Python 3.12   ·   apache-beam 2.74.0   ·   Kafka 4.1.1   ·   Flink 1.19
 Las versiones **no son elección libre**: las fija el job server de Beam
 (`apache/beam_flink1.19_job_server:2.74.0`). Cambiar una obliga a cambiar el resto.
 
-⚠️ **`KafkaIO` desde Python no es una librería Python.** Es una transformación
+**Atención — `KafkaIO` desde Python no es una librería Python.** Es una transformación
 *cross-language*: corre el SDK de **Java** a través de un *expansion service*. No se resuelve
 con `pip install`. El laboratorio de la cátedra
 <https://github.com/rparrapy/fpuna-clase7-taxi-streaming> ya lo tiene resuelto y probado

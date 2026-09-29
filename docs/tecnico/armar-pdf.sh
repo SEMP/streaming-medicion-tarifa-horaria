@@ -43,5 +43,5 @@ typst compile --root .. main.typ documento-tecnico.pdf
 rm -f cuerpo.typ main.typ
 
 paginas=$(pdfinfo documento-tecnico.pdf 2>/dev/null | awk '/^Pages/{print $2}')
-pendientes=$(grep -c "⚠️ PENDIENTE" documento.md || true)
+pendientes=$(grep -c "Atención: PENDIENTE" documento.md || true)
 echo "documento-tecnico.pdf — ${paginas} páginas · ${pendientes} secciones pendientes"

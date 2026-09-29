@@ -43,7 +43,7 @@ Validaciones básicas, que son directas:
 | Instante ausente o mal formado | Cuarentena: sin instante no hay franja posible |
 | Instante en el futuro respecto de la recepción | Cuarentena: indica un concentrador desincronizado |
 
-⚠️ **Y la decisión que es tuya: el desvío tolerado respecto del borde de franja.**
+**Atención — Y la decisión que es tuya: el desvío tolerado respecto del borde de franja.**
 
 El consumo de una franja sale de restar la lectura de su inicio y la de su fin. Si el pedido
 programado para las 18:00 se resuelve a las 18:07, esa lectura **no marca el borde real**: los

@@ -36,7 +36,7 @@ from .transformaciones import (
 log = logging.getLogger(__name__)
 
 LATENCIA_PERMITIDA_SEGUNDOS = 36 * 3600
-"""`contratos.md` §2.4."""
+"""`contratos.md` sección 2.4."""
 
 DIA_SEGUNDOS = 24 * 3600
 

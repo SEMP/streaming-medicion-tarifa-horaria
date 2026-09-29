@@ -231,7 +231,7 @@ espera, que es una propiedad del **modelo de medidor**, no del estado de la tram
 
 Y `truncada` **no alcanza como defensa**: una trama cortada en medio de un número
 —`014380.81` → `01438`— sigue siendo un número válido y no siempre se marca. Por eso hay una
-segunda defensa aguas abajo, en la diferenciación: un contador no baja (§5.6).
+segunda defensa aguas abajo, en la diferenciación: un contador no baja (sección 5.6).
 
 ## 3.6 El registro de salida
 
@@ -305,13 +305,13 @@ El máximo retraso medido en el corpus fue de **3,97 h**, un orden de magnitud p
 holgura no es por incertidumbre sobre el caso típico sino por el caso raro: una cabina que
 queda incomunicada un día entero.
 
-Ese número es también el horizonte de la deduplicación (§5.2) y el tiempo que vive el estado.
+Ese número es también el horizonte de la deduplicación (sección 5.2) y el tiempo que vive el estado.
 No es coincidencia: si el estado expirara antes, un tardío legítimo volvería a parecer nuevo.
 
 ## 4.4 Triggers, panes y acumulación
 
 **El pipeline no configura triggers, y conviene explicar por qué**, porque es consecuencia
-directa de la corrección de §5.4.
+directa de la corrección de sección 5.4.
 
 Los triggers disparan en un `GroupByKey` o un `Combine`. Cuando las dos etapas de agregación
 se fusionaron en una sola con estado —para que dejaran de contar doble—, **dejó de haber
@@ -399,8 +399,8 @@ un tardío legítimo volvería a parecer nuevo y se contaría dos veces.
 El orden respecto de la diferenciación **no es intercambiable**:
 
 ```
-1.ª vez:   consumo = R₂ − R₁       ✔
-2.ª vez:   consumo = R₂ − R₂ = 0   ✘   y con upsert, ese 0 pisa el valor correcto
+1.ª vez:   consumo = R₂ − R₁       OK
+2.ª vez:   consumo = R₂ − R₂ = 0   MAL   y con upsert, ese 0 pisa el valor correcto
 ```
 
 Hay una prueba con `TestStream` que fija este orden, de modo que nadie pueda invertirlo sin
@@ -450,8 +450,8 @@ de la primera llega a la segunda como un elemento nuevo y la segunda lo suma otr
 
 | Pane | Resultado |
 |---|---|
-| 1 | 6 kWh ✔ |
-| 2 | 12 kWh ✘ — y es el que vale, porque el último gana |
+| 1 | 6 kWh OK |
+| 2 | 12 kWh MAL — y es el que vale, porque el último gana |
 
 Por eso las dos etapas son **una sola**, con estado y sin `GroupByKey`: `process` corre una vez
 por elemento, no una vez por pane. Emite el **valor absoluto** de cada celda que cambia, de
@@ -520,7 +520,7 @@ Y lo que efectivamente sale:
 Hay tres cosas para leer ahí, y son las tres que el enunciado pide ver.
 
 **El duplicado no movió la tabla.** No apareció ningún intervalo de 0 kWh pisando un valor
-bueno, que es lo que pasaría si se deduplicara después de diferenciar (§5.2).
+bueno, que es lo que pasaría si se deduplicara después de diferenciar (sección 5.2).
 
 **La tardía corrigió el reparto sin cambiar el total.** Medir con más detalle no crea ni
 destruye energía: solo cambia a qué franja se le atribuye. La columna de origen pasa de
@@ -543,7 +543,7 @@ cubierta por la suite: si se rompe, el video que la muestra deja de ser reproduc
 | Simulador | 34 | Determinismo por semilla, inyección de fallas, curva de consumo |
 | Franjas | 29 | Validación del calendario, atribución, reparto por borde, conservación de la energía |
 | `TestStream` | 10 | Duplicado, desorden, contador que retrocede, cuarentena, orden de las etapas |
-| Demostración | 3 | Que la evidencia de §6.1 siga saliendo como está escrita acá |
+| Demostración | 3 | Que la evidencia de sección 6.1 siga saliendo como está escrita acá |
 
 Las de `TestStream` son las que no se pueden escribir de otra forma: el comportamiento tardío
 depende de dónde está el watermark, y con un reloj real habría que esperar y el resultado
@@ -565,13 +565,13 @@ acepta el trabajo, que los bytes entran y salen. Sin lógica de dominio de por m
 `pipeline.extremo_a_extremo` responde la pregunta que ninguna de las otras responde: **¿la
 lógica da lo mismo cuando la ejecuta Flink?** No es retórica. El runner portable serializa las
 funciones y el estado hacia procesos que no comparten memoria con el que arma el pipeline, y
-hay cosas que andan en `DirectRunner` y no allá. Siembra las mismas cinco lecturas de §6.1 y
+hay cosas que andan en `DirectRunner` y no allá. Siembra las mismas cinco lecturas de sección 6.1 y
 exige el mismo resultado:
 
 ```
   celda                                   kWh   esperado  origen
-  MED-0042|2026-09-25|punta             3.100      3.100  medido ✔
-  MED-0042|2026-09-25|resto             2.400      2.400  medido ✔
+  MED-0042|2026-09-25|punta             3.100      3.100  medido OK
+  MED-0042|2026-09-25|resto             2.400      2.400  medido OK
   TOTAL                                 5.500      5.500
 ```
 
@@ -592,7 +592,7 @@ Vale la pena contarlo porque es el argumento del enunciado comprobado sobre el p
 La agregación sumaba el intervalo grosero **junto con** las dos mitades que lo reemplazan:
 `6 + 2 + 4 = 12` kWh, el doble del consumo real, sobre un dato que se factura. Se creía que
 el *upsert* lo resolvía, y no: opera sobre la celda, y los tres intervalos caen dentro de la
-misma celda (§5.4).
+misma celda (sección 5.4).
 
 Lo que más enseña es que **la primera corrección también estaba mal**, y que tampoco se veía.
 Descartar los superados en una etapa y sumar en la siguiente vuelve a duplicar, porque dos
@@ -636,7 +636,7 @@ escritura por lectura. En producción convendría agrupar los disparos tardíos,
 demorar la corrección unos minutos — algo que a la facturación no le cambia nada. Se eligió la
 versión por evento **para que la corrección sea visible en la demostración**.
 
-**Fuera de las 36 horas no hay deduplicación**, como se explica en §5.5.
+**Fuera de las 36 horas no hay deduplicación**, como se explica en sección 5.5.
 
 ## 7.3 Posibles mejoras
 
@@ -665,7 +665,7 @@ ad-hoc o muchos lectores concurrentes.
 
 | Integrante | Contribución principal |
 |---|---|
-| Sergio Morel | **Simulador**: datos sintéticos deterministas por semilla, con inyección deliberada de fallas —pedidos corridos, cabinas caídas, tramas truncadas, duplicados y ráfagas tardías—. **Infraestructura**: Kafka, Flink, el job server y la resolución de `KafkaIO` como transformación *cross-language*. **Cadena del pipeline**: deduplicación con estado y timer, diferenciación del contador acumulado, y la etapa de celdas vigentes. **Franjas**: calendario tarifario, atribución y reparto de un intervalo entre los bordes que cruza, con el umbral de 90 min elegido sobre la distribución medida. Las **89 pruebas**, la demostración narrada y las dos verificaciones del recorrido completo. Secciones 1, 2, 5, 6 y 7 de este documento. Encontró los **dos errores de doble conteo** de §5.4 |
+| Sergio Morel | **Simulador**: datos sintéticos deterministas por semilla, con inyección deliberada de fallas —pedidos corridos, cabinas caídas, tramas truncadas, duplicados y ráfagas tardías—. **Infraestructura**: Kafka, Flink, el job server y la resolución de `KafkaIO` como transformación *cross-language*. **Cadena del pipeline**: deduplicación con estado y timer, diferenciación del contador acumulado, y la etapa de celdas vigentes. **Franjas**: calendario tarifario, atribución y reparto de un intervalo entre los bordes que cruza, con el umbral de 90 min elegido sobre la distribución medida. Las **89 pruebas**, la demostración narrada y las dos verificaciones del recorrido completo. Secciones 1, 2, 5, 6 y 7 de este documento. Encontró los **dos errores de doble conteo** de sección 5.4 |
 | Clara Almirón | **Contratos de evento de entrada y de salida**: clave de particionamiento, cantidad de particiones, tópicos, regla de versionado y política de cuarentena. **Política temporal**: ventana diaria alineada al día local y lateness de 36 h, con su justificación contra 24 y 48. **Tablero de pendientes** y **mapa de la documentación**, que son la convención con que el equipo se mantuvo sincronizado. Revisión de las secciones 3 y 4 de este documento, donde detectó que la política de *triggers* documentada no existía en el código |
 | Daniel Ramírez | **Validación de reproducibilidad en plataforma independiente.** Ejecutó el recorrido completo en una segunda máquina —Windows + WSL2 Ubuntu 24.04 + Docker Desktop, con otras versiones de Docker, Compose y `uv`— y obtuvo los mismos resultados, lo que convierte la reproducibilidad en algo verificado y no afirmado. Encontró además que `uv run pytest` aborta con *segmentation fault* en ese entorno, hallazgo que derivó en el perfil `pruebas` que corre la suite dentro del contenedor. Su evidencia está en [`evidencia/`](../../evidencia/) |
 

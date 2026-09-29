@@ -72,20 +72,20 @@ datos/        Datos de ejemplo generados por el simulador (no versionados).
 
 ## Estado
 
-🚧 **En construcción**, pero ya corre de punta a punta: el simulador produce lecturas, el
+En curso · **En construcción**, pero ya corre de punta a punta: el simulador produce lecturas, el
 stack de Kafka + Flink las procesa y salen por el tópico de destino. Lo que falta son las
 transformaciones del dominio — el pipeline hoy hace *passthrough*.
 
 | Componente | Estado |
 |---|---|
-| Decisiones de diseño | ✅ [`docs/decisiones-de-diseno.md`](docs/decisiones-de-diseno.md) · 11 decisiones |
-| Dominio | ✅ [`docs/dominio-medicion.md`](docs/dominio-medicion.md) · calibrado con mediciones reales |
-| Simulador | ✅ [`simulador/`](simulador/) · dos escenarios, fallas deterministas |
-| **Infraestructura** | ✅ [`infra/`](infra/) · Kafka + Flink + job server, con `KafkaIO` andando |
-| Configuración de franjas | 🚧 ejemplo en `config/`; falta el cargador y su validación |
-| Pipeline | 🚧 esqueleto cableado; faltan las transformaciones del dominio |
-| Pruebas | 🚧 34 del simulador; faltan las del pipeline |
-| Documento técnico | ⬜ |
+| Decisiones de diseño | Listo · [`docs/decisiones-de-diseno.md`](docs/decisiones-de-diseno.md) · 11 decisiones |
+| Dominio | Listo · [`docs/dominio-medicion.md`](docs/dominio-medicion.md) · calibrado con mediciones reales |
+| Simulador | Listo · [`simulador/`](simulador/) · dos escenarios, fallas deterministas |
+| **Infraestructura** | Listo · [`infra/`](infra/) · Kafka + Flink + job server, con `KafkaIO` andando |
+| Configuración de franjas | En curso · ejemplo en `config/`; falta el cargador y su validación |
+| Pipeline | En curso · esqueleto cableado; faltan las transformaciones del dominio |
+| Pruebas | En curso · 34 del simulador; faltan las del pipeline |
+| Documento técnico | pendiente |
 
 ## Cómo levantarlo
 

@@ -16,7 +16,7 @@ infraestructura.
 
 ## Parte 2 — Simulador
 
-⚠️ **Se escribe de cero, de forma independiente.** No deriva de ningún simulador de proyectos
+**Atención — Se escribe de cero, de forma independiente.** No deriva de ningún simulador de proyectos
 laborales. Hay tres razones y la tercera es la que más importa:
 
 1. Este repositorio es **público** y aquel código no es del equipo.
@@ -54,7 +54,7 @@ Eso se modela como **perfiles configurables** —rápido, lento, inestable— ca
 tiempo de respuesta, su probabilidad de reintento y su probabilidad de trama incompleta. Es
 barato de escribir y da evidencia de demo mucho mejor que un parque uniforme.
 
-⚠️ **La heterogeneidad vive acá, no en el pipeline.** El pipeline trata a todos los medidores
+**Atención — La heterogeneidad vive acá, no en el pipeline.** El pipeline trata a todos los medidores
 igual. Es una decisión de alcance deliberada.
 
 ### Escenario B: un dispositivo de lectura por medidor
@@ -79,7 +79,7 @@ económico del proyecto de dispositivos dedicados, obtenido en lugar de supuesto
 Y es buen material de demostración: *misma arquitectura de procesamiento, dos arquitecturas de
 recolección, esta es la diferencia*. Se cuenta en dos minutos.
 
-⚠️ **Lo que NO se hace:** el dispositivo también podría acumular los parciales por franja y
+**Atención — Lo que NO se hace:** el dispositivo también podría acumular los parciales por franja y
 entregarlos ya separados en códigos OBIS propios. Eso exigiría un camino distinto en el
 pipeline —saltear el diferenciado, reconciliar contra el total— y es trabajo real sobre la
 pieza que más pesa. Queda en posibles mejoras.

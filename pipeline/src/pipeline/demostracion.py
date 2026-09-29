@@ -287,9 +287,9 @@ def main() -> int:
     titulo("Resultado")
     if problemas:
         for p in problemas:
-            print(f"  ✘ {p}")
+            print(f"  MAL {p}")
         return 1
-    print("\n  ✅ Los tres escenarios se comportaron como está documentado.\n")
+    print("\n  BIEN: los tres escenarios se comportaron como está documentado.\n")
     return 0
 
 

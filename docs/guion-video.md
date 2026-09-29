@@ -14,7 +14,7 @@ quede implícita**:
 
 ## Cuánto tiene que durar
 
-⚠️ **La cátedra no fija una duración.** Dice «video **breve** o demostración en vivo», y nada
+**Atención — La cátedra no fija una duración.** Dice «video **breve** o demostración en vivo», y nada
 más — ni el enunciado, ni la consigna del aula, ni ninguna lámina de las ocho clases. Conviene
 saberlo antes de recortar algo por creer que hay un límite: no lo hay.
 
@@ -180,8 +180,8 @@ responde. Es el único momento del video con espera, y alcanza justo para esto:
 Cuando termina, señalar las tres cosas:
 
 ```
-  MED-0042|2026-09-25|punta             3.100      3.100  medido ✔
-  MED-0042|2026-09-25|resto             2.400      2.400  medido ✔
+  MED-0042|2026-09-25|punta             3.100      3.100  medido OK
+  MED-0042|2026-09-25|resto             2.400      2.400  medido OK
   TOTAL                                 5.500      5.500
 ```
 

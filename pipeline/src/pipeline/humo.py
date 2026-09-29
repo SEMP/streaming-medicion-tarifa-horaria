@@ -103,7 +103,7 @@ def main() -> int:
         )
         return 1
 
-    log.info("✅ el recorrido simulador → Kafka → Beam → Kafka funciona")
+    log.info("BIEN: el recorrido simulador → Kafka → Beam → Kafka funciona")
     return 0
 
 

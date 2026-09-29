@@ -1,6 +1,6 @@
 # Propuesta: las tres interfaces
 
-> ⚠️ **Es una propuesta, no una decisión.** Está escrita para que sea más rápido corregirla
+> **Atención — Es una propuesta, no una decisión.** Está escrita para que sea más rápido corregirla
 > que redactarla de cero entre varios. Cada interfaz tiene al final **lo que queda por
 > decidir**, que le corresponde a su dueño.
 >
@@ -10,14 +10,14 @@
 
 ## 1. Contrato de evento de entrada — dueña: Clara
 
-> ✅ **SUPERADA el 22/09 por [`../contratos.md`](../contratos.md) §1** (commit `f060d8b`).
+> Listo · **SUPERADA el 22/09 por [`../contratos.md`](../contratos.md) sección 1** (commit `f060d8b`).
 > Los ítems de «lo que falta decidir» de esta sección **ya están resueltos**; lo que sigue se
 > conserva solo como registro del borrador. **No tomar decisiones de acá.**
 
 
 Tópico `medicion.lecturas.v1`, clave de particionamiento `medidor_id`.
 
-> ⚠️ **Corregido el 20/09** tras cerrar la decisión 10. La versión anterior daba por hecho
+> **Atención — Corregido el 20/09** tras cerrar la decisión 10. La versión anterior daba por hecho
 > que el evento traía el consumo de un bloque; con contador acumulado eso no es así, y
 > obliga a distinguir dos registros en dos etapas. Ver la nota al final de esta sección.
 
@@ -97,11 +97,11 @@ idiomática; los mapas ahí son más incómodos.
 `15.8.0`. Eso **es** una estrategia de evolución de esquema —agregar registros deja de ser un
 cambio de versión— y el enunciado pide una explícitamente.
 
-⚠️ **Lo que la lista pierde y hay que compensar con validación:** un mapa garantizaba por
+**Atención — Lo que la lista pierde y hay que compensar con validación:** un mapa garantizaba por
 estructura que un código no apareciera dos veces. Con lista eso deja de ser gratis y pasa a
 ser una **regla explícita: los códigos OBIS deben ser únicos dentro de una lectura.**
 
-### ⚠️ Dos registros, dos etapas — no confundirlos
+### Atención: Dos registros, dos etapas — no confundirlos
 
 Con contador acumulado hay **dos formas de registro** y solo la primera viaja por el tópico de
 entrada:
@@ -137,7 +137,7 @@ intervalo que cruce dos franjas**, y atribuir por el inicio es exacto en lugar d
   corrección se pierde.
 - **Qué registros son obligatorios**, y qué hacer con una lectura que no trae `15.8.0`: ¿es
   inválida, o es válida pero no aporta al cálculo?
-- ✅ ~~De dónde sale la unidad~~ — **resuelto:** la manda el medidor en el propio dato. Se
+- Listo · ~~De dónde sale la unidad~~ — **resuelto:** la manda el medidor en el propio dato. Se
   guarda tal como llegó. Validarla contra el código es **opcional**: sirve para detectar un
   equipo mal configurado, no para saber la unidad. Ojo que en la trama el `*` es un
   separador de campos **genérico** y su cantidad y orden varían entre fabricantes
@@ -151,7 +151,7 @@ intervalo que cruce dos franjas**, y atribuir por el inicio es exacto en lugar d
   pipeline solo puede diferenciar los acumulados: restar dos corrientes instantáneas no
   significa nada. Hoy se sabe por el código, pero explicitarlo evita que alguien difiera lo
   que no debe.
-- ✅ ~~Contador acumulado o consumo del intervalo~~ — **resuelto: contador acumulado**
+- Listo · ~~Contador acumulado o consumo del intervalo~~ — **resuelto: contador acumulado**
   (OBIS `15.8.0`), y el contrato de arriba ya está corregido en consecuencia.
 
 ---
@@ -185,7 +185,7 @@ que hace que los intervalos cercanos a medianoche caigan en el día equivocado.
 
 ### Lo que falta decidir — Daniel
 
-- ⚠️ **El desvío tolerado respecto del borde de franja**, y qué hacer con una lectura que lo
+- **Atención — El desvío tolerado respecto del borde de franja**, y qué hacer con una lectura que lo
   excede. Derivarlo de lo que cuesta equivocar la franja.
 - Cómo se representa `CalendarioTarifario` en memoria, y si conviene precomputar una tabla
   por la grilla.
@@ -196,7 +196,7 @@ que hace que los intervalos cercanos a medianoche caigan en el día equivocado.
 
 ## 3. Contrato de salida — dueña: Clara
 
-> ✅ **SUPERADA el 22/09 por [`../contratos.md`](../contratos.md) §2** (commit `f060d8b`).
+> Listo · **SUPERADA el 22/09 por [`../contratos.md`](../contratos.md) sección 2** (commit `f060d8b`).
 > Mismo caso que la sección 1: se conserva como registro del borrador, no como fuente.
 
 
@@ -265,11 +265,11 @@ idiomática; los mapas ahí son más incómodos.
 `15.8.0`. Eso **es** una estrategia de evolución de esquema —agregar registros deja de ser un
 cambio de versión— y el enunciado pide una explícitamente.
 
-⚠️ **Lo que la lista pierde y hay que compensar con validación:** un mapa garantizaba por
+**Atención — Lo que la lista pierde y hay que compensar con validación:** un mapa garantizaba por
 estructura que un código no apareciera dos veces. Con lista eso deja de ser gratis y pasa a
 ser una **regla explícita: los códigos OBIS deben ser únicos dentro de una lectura.**
 
-### ⚠️ Dos registros, dos etapas — no confundirlos
+### Atención: Dos registros, dos etapas — no confundirlos
 
 Con contador acumulado hay **dos formas de registro** y solo la primera viaja por el tópico de
 entrada:

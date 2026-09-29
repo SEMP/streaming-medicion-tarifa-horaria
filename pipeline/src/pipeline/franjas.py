@@ -42,7 +42,7 @@ class CalendarioTarifario:
     zona: ZoneInfo
     separacion_maxima_minutos: int
     """Por encima de esta separación entre las dos lecturas que rodean un borde, el consumo
-    se marca indeterminado en lugar de interpolarse. ⚠️ Pendiente P1: el valor todavía no
+    se marca indeterminado en lugar de interpolarse. Atención: Pendiente P1: el valor todavía no
     está decidido."""
     cadencia_objetivo_minutos: int
     _por_minuto: tuple[str, ...]

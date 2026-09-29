@@ -30,7 +30,7 @@ muro, no una cola."""
 PAUSA_ENTRE_MEDIDORES = 10.0
 """Pausa fija que el concentrador deja entre un medidor y el siguiente.
 
-⚠️ **Es una decisión de diseño del concentrador observado, no una propiedad del protocolo
+**Atención — Es una decisión de diseño del concentrador observado, no una propiedad del protocolo
 ni de los medidores.** Otro concentrador daría otra ronda. Pesa mucho: sumada a los ~19,8 s
 de media por lectura da unos **30 s por medidor**, que es lo que fija la duración de la
 ronda."""
@@ -53,7 +53,7 @@ LATENCIA_ENLACE_P50 = 1.665
 El enlace explica ~74% de la latencia hasta la primera respuesta (p50 2,26 s); el equipo
 agrega unos 600 ms.
 
-⚠️ **Es estacionario a lo largo del día.** Medido en las 24 horas sobre 30 días: p50 entre
+**Atención — Es estacionario a lo largo del día.** Medido en las 24 horas sobre 30 días: p50 entre
 1,59 y 1,70 s (±3%). **No hay degradación en hora punta**, así que el simulador no necesita
 término diurno y el error de atribución no empeora justo en la franja que más cuesta."""
 
@@ -63,7 +63,7 @@ INTENTOS_MAX_OBSERVADO = 11
 al primero. Varía por modelo entre 1,07 y 3,97, y eso es costo de bus directo: el peor
 modelo ocupa ~4× lo que el mejor, por lectura.
 
-⚠️ **El presupuesto es TIEMPO, no un contador de intentos.** Lo que se configura es el
+**Atención — El presupuesto es TIEMPO, no un contador de intentos.** Lo que se configura es el
 límite por pedido (`TIMEOUT_SEGUNDOS`), y dentro de él se reintenta las veces que entren.
 Que el máximo observado sea 11 es simplemente cuántos ciclos caben en el presupuesto: **no
 es una constante ni un tope configurado**, y modelarlo como contador se alejaría de la
@@ -82,7 +82,7 @@ class ModeloMedidor:
     esa correlación es **espacialmente dispersa**: ninguna partición por ubicación la aísla.
     Para un pipeline particionado por cabina, ese patrón es invisible.
 
-    ⚠️ Se desconoce *por qué* unos modelos fallan más (se descartaron red, configuración y
+    Atención: Se desconoce *por qué* unos modelos fallan más (se descartaron red, configuración y
     truncamiento de buffer). Para un simulador da igual: se modela como tasa por modelo,
     que es lo observado.
     """
@@ -96,14 +96,14 @@ class ModeloMedidor:
     prob_exito_reintento: float
     """Probabilidad de que un reintento rescate la lectura.
 
-    ⚠️ **Reintento y éxito están desacoplados.** No vale "más reintentos = peor modelo": hay
+    **Atención — Reintento y éxito están desacoplados.** No vale "más reintentos = peor modelo": hay
     un modelo que hace 3,97 intentos y entrega 89,5%, y otro que hace 3,12 y entrega 65,5%.
     Para unos modelos reintentar funciona y para otros es tiempo tirado — asumir que el
     reintento siempre rescata la lectura es falso para una parte del parque."""
     marca_checksum: bool
     """Si el equipo marca sus lecturas con checksum incorrecto **sin que haya corrupción**.
 
-    ⚠️ **Es la trampa más peligrosa del dominio.** Un fabricante que es el 55% del parque
+    **Atención — Es la trampa más peligrosa del dominio.** Un fabricante que es el 55% del parque
     calcula el checksum distinto de lo que el concentrador espera, así que prácticamente
     **el 100% de sus lecturas sale marcada** — y el dato se extrae completo y correcto.
 
@@ -127,7 +127,7 @@ MODELOS = {
 """Tasas calibradas para que la tasa global de fallas del parque quede cerca del **9,2%
 medido**, con el ~52% de esas fallas cayendo sobre enlaces sanos.
 
-⚠️ El reparto **entre** modelos es nuestro: lo medido es que las tasas de entrega por modelo
+Atención: El reparto **entre** modelos es nuestro: lo medido es que las tasas de entrega por modelo
 van de 65% a 94%, no cuánto pesa cada modelo en el parque."""
 
 MEZCLA_MODELOS = {"modelo-a": 0.55, "modelo-b": 0.25, "modelo-c": 0.13, "modelo-d": 0.07}
@@ -139,7 +139,7 @@ PROPORCION_CABINAS_MUERTAS = 0.05
 el tamaño de cabina típico. La caída de cabina es real y **persistente**, no momentánea, y
 explica el 38% de las fallas.
 
-⚠️ Pero es **menos de la mitad** del problema: el 52% de las fallas ocurre sobre enlaces
+Atención: Pero es **menos de la mitad** del problema: el 52% de las fallas ocurre sobre enlaces
 sanos. Hacen falta los dos componentes."""
 
 TRAMOS_CABINA = [
@@ -189,7 +189,7 @@ class Cabina:
     enlace_muerto: bool
     """Si el enlace de esta cabina está caído.
 
-    ⚠️ **Es binario a propósito, no una degradación gradual.** Medido: la disponibilidad por
+    **Atención — Es binario a propósito, no una degradación gradual.** Medido: la disponibilidad por
     equipo es **bimodal** —el 90% está ≥90% alcanzable, el 4,7% está muerto, y el medio está
     casi vacío—, y el RTT **no** correlaciona con la disponibilidad. **No existe la población
     "enlace lento degradado".** Un enlace está arriba y rápido, o está caído."""
@@ -220,7 +220,7 @@ class Parque:
 def semilla_derivada(semilla: int, etiqueta: str) -> int:
     """Semilla estable para un identificador, derivada de la semilla global.
 
-    ⚠️ **No usar `hash()` acá.** Python aleatoriza el hash de las cadenas en cada proceso
+    **Atención — No usar `hash()` acá.** Python aleatoriza el hash de las cadenas en cada proceso
     (PYTHONHASHSEED), así que `hash((semilla, medidor_id))` da un valor distinto en cada
     ejecución — y con él, un parque distinto. El determinismo es la promesa central del
     simulador: sin él, una prueba que falla no se puede repetir y dos personas que corren la

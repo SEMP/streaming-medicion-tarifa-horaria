@@ -34,7 +34,7 @@ class ConfigFallas:
     equipo seguiría truncando tramas por su cuenta. Y sin línea de base limpia no se puede
     medir el efecto de cada falla por separado.
 
-    ⚠️ **No suprime la marca de checksum**, y es a propósito: esa marca **no es una falla**.
+    **Atención — No suprime la marca de checksum**, y es a propósito: esa marca **no es una falla**.
     Es una característica permanente del fabricante mayoritario, cuyo dato llega completo y
     correcto. El pipeline la va a ver siempre, incluso en un mundo sin fallas, y esconderla
     acá ocultaría la trampa más peligrosa del dominio — que un pipeline que descarte por

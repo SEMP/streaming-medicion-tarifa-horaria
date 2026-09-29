@@ -4,10 +4,10 @@ El orden entre ellas **no es intercambiable**. La deduplicación va primero, por
 una lectura contra sí misma produce un consumo de 0 que, con salida por *upsert*, pisa el
 valor correcto:
 
-    1ª vez:  consumo = R₂ − R₁       ✔
-    2ª vez:  consumo = R₂ − R₂ = 0   ✘  y el 0 reemplaza al bueno
+    1ª vez:  consumo = R₂ − R₁       OK
+    2ª vez:  consumo = R₂ − R₂ = 0   MAL  y el 0 reemplaza al bueno
 
-Ver `docs/contratos.md` §1.9.
+Ver `docs/contratos.md` sección 1.9.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from apache_beam.transforms.userstate import (
 )
 
 LATENCIA_PERMITIDA_SEGUNDOS = 36 * 3600
-"""36 horas, la lateness de `contratos.md` §2.4. El estado tiene que vivir al menos eso: si
+"""36 horas, la lateness de `contratos.md` sección 2.4. El estado tiene que vivir al menos eso: si
 expirara antes, un tardío legítimo volvería a parecer nuevo y se contaría dos veces."""
 
 CUARENTENA = "cuarentena"
@@ -129,7 +129,7 @@ class DiferenciarContador(beam.DoFn):
     importar en qué orden lleguen: una lectura tardía que cae en el medio parte el intervalo
     que la contenía y emite las dos mitades.
 
-    ⚠️ **El intervalo grosero no se retira**: ya fue emitido, y Beam Python no tiene
+    **Atención — El intervalo grosero no se retira**: ya fue emitido, y Beam Python no tiene
     retractaciones. Quien decide cuál sigue vigente es `CeldasVigentes`, aguas abajo. Sumar
     todo lo que emite esta etapa cuenta el consumo dos veces.
 
@@ -219,20 +219,20 @@ class CeldasVigentes(beam.DoFn):
     Reemplaza a lo que antes eran dos pasos —descartar intervalos superados y después sumar
     por celda—, y el motivo por el que son uno solo es la parte importante.
 
-    ⚠️ **Encadenar dos agregaciones bajo un trigger `ACCUMULATING` cuenta doble.** Cada pane
+    **Atención — Encadenar dos agregaciones bajo un trigger `ACCUMULATING` cuenta doble.** Cada pane
     de la primera llega a la segunda como un elemento nuevo, y la segunda, que también
     acumula, lo suma otra vez. Con una ventana que dispara dos veces —lo normal en cuanto
     llega un tardío— el resultado se duplica:
 
-        pane 1:   6 kWh   ✔
-        pane 2:  12 kWh   ✘   y es el que el consumidor se queda, porque el último gana
+        pane 1:   6 kWh   OK
+        pane 2:  12 kWh   MAL   y es el que el consumidor se queda, porque el último gana
 
     No se ve con `TestStream` avanzando el watermark a infinito, porque dispara un solo pane.
     Se ve en producción, que es donde importa.
 
     Una etapa con estado no tiene ese problema: `process` corre **una vez por elemento**, no
     una vez por pane. Y al emitir el valor absoluto de la celda —no un incremento— el destino
-    es un *upsert* puro, que es exactamente lo que el contrato pide (`contratos.md` §2.1).
+    es un *upsert* puro, que es exactamente lo que el contrato pide (`contratos.md` sección 2.1).
 
     **Lo que no se reparte.** Un intervalo que cruza un borde y dura más que
     `separacion_maxima_minutos` no se interpola: su energía no entra en `energia_kwh`, la celda

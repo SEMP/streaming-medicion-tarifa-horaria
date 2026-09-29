@@ -24,7 +24,7 @@ from .config import Ajustes
 def servicio_expansion_kafka():
     """Levanta el *expansion service* de KafkaIO.
 
-    ⚠️ **KafkaIO no es una librería Python.** Es una transformación *cross-language*: las
+    **Atención — KafkaIO no es una librería Python.** Es una transformación *cross-language*: las
     etapas de lectura y escritura las ejecuta el SDK **Java**, y este servicio es el puente.
 
     `PROCESS` hace que ese SDK corra como un proceso **dentro del TaskManager**, usando el

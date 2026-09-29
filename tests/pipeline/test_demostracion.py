@@ -13,7 +13,7 @@ def test_la_demostracion_termina_bien(capsys):
     """Sus propias verificaciones tienen que pasar: devuelve 0 o falla."""
     assert main() == 0
     salida = capsys.readouterr().out
-    assert "Los tres escenarios se comportaron como está documentado" in salida
+    assert "los tres escenarios se comportaron como está documentado" in salida
 
 
 def test_el_duplicado_no_mueve_las_celdas():
