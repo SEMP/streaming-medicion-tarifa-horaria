@@ -39,22 +39,25 @@ no toma decisiones de un texto muerto.
 
 ## 3. Los entregables, y de dónde sale cada uno
 
-El enunciado pide cinco cosas. Ninguna se escribe de cero: se **arman** con lo que ya está.
+**El aula pide cinco entregables.** Ninguno se escribe de cero: se **arman** con lo que ya
+está. Estado al 29/09:
 
-| Entregable | Estado | De dónde sale |
+| Entregable que pide el aula | Estado | Dónde está |
 |---|---|---|
-| Enlace al repositorio | ✅ | — |
-| [`tecnico/documento.md`](tecnico/documento.md) | 🚧 esqueleto con dueño por sección · se compila con `./tecnico/armar-pdf.sh` | los tres |
-| [`../README.md`](../README.md) reproducible | ✅ «Cómo levantarlo», con y sin Docker · detalle en [`infra/`](../infra/README.md) | Sergio |
-| **Documento técnico** | ⬜ | Ver la tabla de abajo |
-| **Diagrama de arquitectura** | ⬜ | `docs/diagramas/`, en SVG escrito a mano — ver §4 |
-| **Evidencia de pruebas y ejecución** | ⬜ | Salida de `pytest` y de la corrida end-to-end |
-| **Video breve** | ⬜ | Cada uno presenta su parte |
-| Integrantes y contribuciones | ✅ en el README | El historial de git lo respalda |
+| "Enlace al repositorio del proyecto" | ✅ | Este repositorio, público |
+| "Documento técnico y diagrama de arquitectura" | 🚧 **8 de 9 secciones** — falta la 8, contribuciones | [`tecnico/documento.md`](tecnico/documento.md), se compila con `./tecnico/armar-pdf.sh` · [`diagramas/arquitectura.svg`](diagramas/arquitectura.svg) |
+| "Evidencia de pruebas y ejecución end-to-end" | ✅ | [`../evidencia/`](../evidencia/), una corrida completa con fecha y commit |
+| "Video breve o demostración en vivo" | 🔴 **sin grabar** | Guion en [`guion-video.md`](guion-video.md) |
+| "Integrantes y contribuciones principales" | 🔴 | §8 del documento — necesita a los tres |
 
-### El documento técnico ya está escrito en un 70 %, disperso
+Y en el repositorio, que el PDF pide aparte: código, [`README`](../README.md) reproducible
+con y sin Docker —detalle en [`infra/`](../infra/README.md)— y el simulador como mecanismo
+para generar los datos. **Los tres están.**
 
-El enunciado le pide cinco partes. Cada una tiene hoy su fuente:
+### El documento técnico y sus fuentes
+
+El enunciado pide **cinco contenidos**; nosotros los organizamos en **ocho secciones más un
+resumen**, que es decisión nuestra y no del enunciado. Cada contenido tiene su fuente:
 
 | Parte que pide el enunciado | Fuente |
 |---|---|
