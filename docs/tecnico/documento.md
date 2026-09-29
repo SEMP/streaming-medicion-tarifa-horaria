@@ -125,9 +125,6 @@ acceso al demonio de Docker. Está documentado en [`infra/README.md`](../../infr
 
 # 3. Contrato de eventos y topología de Kafka
 
-> Borrador escrito por Sergio a partir de [`contratos.md`](../contratos.md) §1–§2, que es de
-> Clara. Pendiente de su revisión.
-
 ## 3.1 El evento de entrada
 
 **Tópico** `medicion.lecturas.v1` · **clave** `medidor_id` · **4 particiones**.
@@ -240,8 +237,8 @@ segunda defensa aguas abajo, en la diferenciación: un contador no baja (§5.6).
 
 **Tópico** `medicion.consumo-franja.v1` · **clave** `medidor_id|fecha_local|franja`.
 
-La clave **es el contrato**: es estable a través de todos los panes de una misma celda, todos
-van a la misma partición, se leen en orden y el último gana. La semántica del consumidor es
+La clave **es el contrato**: es estable a través de todas las revisiones de una misma celda,
+todas van a la misma partición, se leen en orden y la última gana. La semántica del consumidor es
 **upsert, nunca insert**. No incluye `cabina_id` aunque el campo viaje en el valor, porque un
 medidor podría cambiar de cabina y la identidad del resultado no debe depender de eso.
 
@@ -262,15 +259,12 @@ casos; arriba de 120 está la cabina caída, con el 20 %. Entre medio hay 13 cas
 umbral va en ese valle, porque a cada lado hay un fenómeno distinto — y cortar más abajo
 marcaría indeterminado el 42 % de los cruces, casi todos rondas que funcionaron bien.
 
-Sobre la cobertura hay una decisión que vale contar: el borrador anterior proponía
-`intervalos_contados` contra `intervalos_esperados`, y **con readout eso no se puede calcular**.
-No hay grilla fija de medición, hay rondas continuas cuya duración depende del tamaño de la
-cabina, así que no existe un número de intervalos «esperados».
+La cobertura se mide en **minutos** y no en cantidad de intervalos, que sería la forma
+habitual. Con *readout* ese número no existe: no hay grilla fija de medición sino rondas
+continuas cuya duración depende del tamaño de la cabina, así que no hay un total de intervalos
+«esperados» contra el cual comparar.
 
 # 4. Tiempo de evento, ventanas y datos tardíos
-
-> Borrador escrito por Sergio a partir de [`contratos.md`](../contratos.md) §2.4 y de las
-> decisiones 5, 6 y 8, material de Clara. Pendiente de su revisión.
 
 ## 4.1 Cuál es el tiempo de evento, y quién lo pone
 
@@ -331,7 +325,7 @@ Lo que la ventana sí aporta sin trigger:
 | `FixedWindows(1 día, desplazada 3 h)` | Da el `window.end` contra el que se programan los timers, y alinea el día al calendario local |
 | `allowed_lateness = 36 h` | Fija cuándo expira el estado por medidor, que es lo que acota la memoria |
 
-**El efecto práctico es mejor que el de un pane temprano cada 60 segundos:** la salida se emite
+**El efecto práctico es mejor que el de un disparo periódico:** la salida se emite
 **por cada lectura que cambia una celda**. El tablero no espera a un reloj, se mueve cuando hay
 información nueva — y cuando no la hay, no escribe nada.
 
@@ -341,10 +335,11 @@ demorar la corrección unos minutos — algo que a la facturación no le cambia 
 factura días después. Se elige la versión por evento **para que la corrección sea visible en la
 demostración**, y queda declarado como límite conocido.
 
-**Ningún pane anuncia que es el último.** Después del último tardío simplemente no se emite
-nada. La finalidad la deduce el consumidor cuando su reloj pasa `fin_de_ventana + 36 h`, y por
-eso hay dos lectores del mismo tópico con patrones distintos: el tablero lee todos los panes y
-muestra un valor que cambia; la facturación lee una sola vez, pasado ese horizonte.
+**Nada anuncia que una revisión es la última.** Después del último tardío simplemente no se
+emite más. La finalidad la deduce el consumidor cuando su reloj pasa `fin_de_ventana + 36 h`, y
+por eso hay dos lectores del mismo tópico con patrones distintos: el tablero lee todas las
+revisiones y muestra un valor que cambia; la facturación lee una sola vez, pasado ese
+horizonte.
 
 ## 4.5 La validación va antes del watermark
 
@@ -360,8 +355,14 @@ máquina corre el pipeline.
 ## 4.6 El error de atribución, que es el resultado central
 
 ```
-error_atribucion_pct = separacion_maxima_minutos / duracion_franja_minutos
+error_atribucion = separacion_maxima_minutos / duracion_franja_minutos
 ```
+
+**No es un campo del mensaje: lo calcula el consumidor.** El pipeline emite
+`separacion_maxima_minutos`, que es el numerador; el denominador es la duración de la franja,
+que sale del calendario tarifario y no del evento. Ponerlo en el mensaje obligaría a que el
+pipeline y el consumidor estuvieran de acuerdo sobre qué calendario rige en cada fecha, que es
+justamente lo que la decisión de dejar el calendario en configuración evita.
 
 Con la franja `punta` de 4 h del calendario de ejemplo y una separación máxima de 38 min, da
 **15,9 %**. El número es distinto para cada medidor, porque depende del tamaño de su cabina, y
