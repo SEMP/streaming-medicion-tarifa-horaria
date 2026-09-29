@@ -311,7 +311,7 @@ No es coincidencia: si el estado expirara antes, un tardío legítimo volvería 
 ## 4.4 Triggers, panes y acumulación
 
 **El pipeline no configura triggers, y conviene explicar por qué**, porque es consecuencia
-directa de la corrección de sección 5.4.
+directa de la corrección de la sección 5.4.
 
 Los triggers disparan en un `GroupByKey` o un `Combine`. Cuando las dos etapas de agregación
 se fusionaron en una sola con estado —para que dejaran de contar doble—, **dejó de haber
@@ -543,7 +543,7 @@ cubierta por la suite: si se rompe, el video que la muestra deja de ser reproduc
 | Simulador | 34 | Determinismo por semilla, inyección de fallas, curva de consumo |
 | Franjas | 29 | Validación del calendario, atribución, reparto por borde, conservación de la energía |
 | `TestStream` | 10 | Duplicado, desorden, contador que retrocede, cuarentena, orden de las etapas |
-| Demostración | 3 | Que la evidencia de sección 6.1 siga saliendo como está escrita acá |
+| Demostración | 3 | Que la evidencia de la sección 6.1 siga saliendo como está escrita acá |
 
 Las de `TestStream` son las que no se pueden escribir de otra forma: el comportamiento tardío
 depende de dónde está el watermark, y con un reloj real habría que esperar y el resultado
@@ -565,7 +565,7 @@ acepta el trabajo, que los bytes entran y salen. Sin lógica de dominio de por m
 `pipeline.extremo_a_extremo` responde la pregunta que ninguna de las otras responde: **¿la
 lógica da lo mismo cuando la ejecuta Flink?** No es retórica. El runner portable serializa las
 funciones y el estado hacia procesos que no comparten memoria con el que arma el pipeline, y
-hay cosas que andan en `DirectRunner` y no allá. Siembra las mismas cinco lecturas de sección 6.1 y
+hay cosas que andan en `DirectRunner` y no allá. Siembra las mismas cinco lecturas de la sección 6.1 y
 exige el mismo resultado:
 
 ```
@@ -636,7 +636,7 @@ escritura por lectura. En producción convendría agrupar los disparos tardíos,
 demorar la corrección unos minutos — algo que a la facturación no le cambia nada. Se eligió la
 versión por evento **para que la corrección sea visible en la demostración**.
 
-**Fuera de las 36 horas no hay deduplicación**, como se explica en sección 5.5.
+**Fuera de las 36 horas no hay deduplicación**, como se explica en la sección 5.5.
 
 ## 7.3 Posibles mejoras
 
