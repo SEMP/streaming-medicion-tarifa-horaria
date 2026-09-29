@@ -1,7 +1,37 @@
 ## Resumen
 
-⚠️ PENDIENTE · *los tres, al final* — Media página. Qué problema se resuelve, qué se
-construyó y cuál es el resultado medible. Se escribe **último**, cuando los números ya están.
+Una distribuidora eléctrica necesita **cobrar la energía a precio distinto según la hora**.
+Para eso hace falta saber cuánto consumió cada cliente **en cada franja tarifaria**, y ese
+dato hoy no existe — no por falta de sistemas, sino por una restricción física: los medidores
+de una cabina comparten un bus RS-485 y se leen **en secuencia**, así que una ronda completa
+tarda entre 6 y 60 minutos y **una lectura casi nunca cae sobre el borde de una franja**.
+
+Construimos un pipeline de streaming que produce ese dato: **Kafka → Beam sobre Flink →
+Kafka**, con un simulador que ocupa el lugar del concentrador e **inyecta fallas a propósito**
+—pedidos corridos, cabinas caídas, tramas truncadas, duplicados y ráfagas tardías—. El
+pipeline trabaja en **tiempo de evento**, deduplica con estado por medidor, diferencia el
+contador acumulado en consumos por intervalo, reparte cada intervalo entre las franjas que
+toca y escribe un resultado **idempotente** por celda `medidor|fecha|franja`.
+
+**El resultado no es solo el consumo: es el consumo con su margen de error.** Como los
+intervalos cruzan bordes de franja siempre, hay que repartir suponiendo potencia constante, y
+cada celda declara cuánto de ella se midió y cuánto se estimó. En la demostración, una lectura
+tardía que cae justo sobre el borde revela que la interpolación se había equivocado en
+**0,100 kWh sobre 5,500** — sin que el total cambie, porque medir con más detalle no crea ni
+destruye energía.
+
+De ahí sale la conclusión que el sistema habilita y que no estaba en la consigna: como la
+separación entre lecturas la fija la duración de la ronda, y la ronda la fija sobre todo **la
+tasa de fallas** y no la velocidad del enlace, **para cobrar por franja horaria conviene más
+mejorar la confiabilidad de la recolección que acelerarla**. Es una decisión de inversión, y
+este pipeline la puede medir.
+
+Lo respaldan **89 pruebas** —incluidas las de `TestStream`, que son las únicas que permiten
+probar comportamiento tardío de forma determinista— y una corrida completa sobre Kafka y
+Flink que reproduce exactamente el mismo resultado que el runner local. Dos errores de doble
+conteo aparecieron en el camino, y ninguno de los dos se habría visto con datos ideales: es
+el argumento del enunciado —una corrida feliz no es evidencia— comprobado sobre nuestro propio
+código.
 
 ---
 
