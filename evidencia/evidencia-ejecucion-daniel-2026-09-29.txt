@@ -1,0 +1,260 @@
+Evidencia de ejecución — Daniel Ramírez
+Proyecto: streaming-medicion-tarifa-horaria
+Generada en una segunda máquina para validación de reproducibilidad
+
+================================================================
+1. Fecha y versión probada
+================================================================
+Fecha: 2026-09-29T12:18:03-03:00
+Commit: 6521be10e166adc03f672cf5fc82a72ec25e7398
+Branch: main
+
+================================================================
+2. Entorno
+================================================================
+$ uname -a
+Linux noopoiesis 6.18.33.2-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Thu Jun 18 21:54:43 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+
+$ uv --version
+uv 0.12.20 (x86_64-unknown-linux-gnu)
+
+$ uv run python --version
+Python 3.12.3
+
+$ docker --version
+Docker version 29.8.0, build 88096ef
+
+$ docker compose version
+Docker Compose version v5.5.1
+
+================================================================
+3. Estado del stack antes del E2E
+================================================================
+NAME                                        IMAGE                                     COMMAND                  SERVICE           CREATED          STATUS                    PORTS
+medicion-tarifa-horaria-beam-job-server-1   apache/beam_flink1.19_job_server:2.74.0   "./flink-job-server.…"   beam-job-server   44 minutes ago   Up 44 minutes             0.0.0.0:8099->8099/tcp, [::]:8099->8099/tcp
+medicion-tarifa-horaria-jobmanager-1        medicion-tarifa-horaria-jobmanager        "/docker-entrypoint.…"   jobmanager        44 minutes ago   Up 44 minutes             0.0.0.0:8081->8081/tcp, [::]:8081->8081/tcp
+medicion-tarifa-horaria-kafka-1             apache/kafka:4.1.1                        "/__cacert_entrypoin…"   kafka             44 minutes ago   Up 44 minutes (healthy)   0.0.0.0:29092->29092/tcp, [::]:29092->29092/tcp
+medicion-tarifa-horaria-taskmanager-1       medicion-tarifa-horaria-taskmanager       "/docker-entrypoint.…"   taskmanager       44 minutes ago   Up 44 minutes             6123/tcp, 8081/tcp
+medicion-tarifa-horaria-taskmanager-2       medicion-tarifa-horaria-taskmanager       "/docker-entrypoint.…"   taskmanager       44 minutes ago   Up 44 minutes             6123/tcp, 8081/tcp
+
+================================================================
+4. Recorrido completo Kafka + Beam + Flink
+================================================================
+$ docker compose -f infra/docker-compose.yml --profile e2e run --rm -T extremo-a-extremo
+
+ Container medicion-tarifa-horaria-kafka-1 Running 
+ Container medicion-tarifa-horaria-beam-job-server-1 Running 
+ Container medicion-tarifa-horaria-taskmanager-1 Running 
+ Container medicion-tarifa-horaria-taskmanager-2 Running 
+ Container medicion-tarifa-horaria-jobmanager-1 Running 
+ Container medicion-tarifa-horaria-kafka-1 Waiting 
+ Container medicion-tarifa-horaria-kafka-1 Healthy 
+ Container medicion-tarifa-horaria-kafka-init-1 Starting 
+ Container medicion-tarifa-horaria-kafka-init-1 Started 
+ Container medicion-tarifa-horaria-kafka-init-1 Waiting 
+ Container medicion-tarifa-horaria-kafka-init-1 Exited 
+ Container medicion-tarifa-horaria-extremo-a-extremo-run-6c0ee18b7ff5 Creating 
+ Container medicion-tarifa-horaria-extremo-a-extremo-run-6c0ee18b7ff5 Created 
+2026-09-29 15:18:18,896 sembradas 5 lecturas en medicion.lecturas.e2e
+2026-09-29 15:18:18,941 ventana diaria desplazada 10800 s para alinear con la medianoche de America/Asuncion
+2026-09-29 15:18:18,948 Using cached job server jar from https://repo.maven.apache.org/maven2/org/apache/beam/beam-sdks-java-io-expansion-service/2.74.0/beam-sdks-java-io-expansion-service-2.74.0.jar
+2026-09-29 15:18:18,948 Starting a JAR-based expansion service from JAR /app/.apache_beam/cache/jars/beam-sdks-java-io-expansion-service-2.74.0.jar 
+2026-09-29 15:18:18,949 Starting service with ['java' '-jar' '/app/.apache_beam/cache/jars/beam-sdks-java-io-expansion-service-2.74.0.jar' '39589' '--filesToStage=/app/.apache_beam/cache/jars/beam-sdks-java-io-expansion-service-2.74.0.jar' '--alsoStartLoopbackWorker' '--defaultEnvironmentType=PROCESS' '--defaultEnvironmentConfig={"command":"/opt/apache/beam/boot"}']
+2026-09-29 15:18:19,212 SLF4J(W): Class path contains multiple SLF4J providers.
+2026-09-29 15:18:19,212 SLF4J(W): Found provider [org.slf4j.jul.JULServiceProvider@7eda2dbb]
+2026-09-29 15:18:19,212 SLF4J(W): Found provider [ch.qos.logback.classic.spi.LogbackServiceProvider@6576fe71]
+2026-09-29 15:18:19,212 SLF4J(W): See https://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+2026-09-29 15:18:19,220 SLF4J(I): Actual provider is of type [org.slf4j.jul.JULServiceProvider@7eda2dbb]
+2026-09-29 15:18:19,257 Starting expansion service at localhost:39589
+2026-09-29 15:18:20,352 Sep 29, 2026 3:18:20 PM org.apache.beam.sdk.expansion.service.ExpansionService loadRegisteredTransforms
+2026-09-29 15:18:20,352 INFO: Registering external transforms: [beam:transform:org.apache.beam:kafka_write:v2, beam:transform:org.apache.beam:kafka_read_with_metadata:v2, beam:transform:org.apache.beam:kafka_write:v1, beam:transform:combine_grouped_values:v1, beam:schematransform:org.apache.beam:iceberg_read:v1, beam:transform:combine_globally:v1, beam:external:java:generate_sequence:v1, beam:transform:org.apache.beam:kinesis_read_data:v2, beam:transform:redistribute_by_key:v1, beam:transform:window_into:v1, beam:schematransform:org.apache.beam:kafka_read:v1, beam:schematransform:org.apache.beam:kafka_write:v1, beam:schematransform:org.apache.beam:iceberg_cdc_read:v1, beam:transform:combine_per_key:v1, beam:transform:org.apache.beam:kafka_read_with_metadata:v1, beam:transform:group_by_key:v1, beam:transform:org.apache.beam:kinesis_write:v2, beam:transform:group_into_batches:v1, beam:transform:group_into_batches_with_sharded_key:v1, beam:transform:create_view:v1, beam:transform:teststream:v1, beam:transform:sdf_process_keyed_elements:v1, beam:schematransform:org.apache.beam:iceberg_write:v1, beam:transform:impulse:v1, beam:transform:flatten:v1, beam:schematransform:org.apache.beam:tfrecord_read:v1, beam:transform:write_files:v1, beam:runners_core:transforms:splittable_process:v1, beam:schematransform:org.apache.beam:tfrecord_write:v1, beam:transform:org.apache.beam:kafka_write_with_headers:v1, beam:transform:org.apache.beam:kafka_read_without_metadata:v1, beam:transform:managed:v1, beam:transform:redistribute_arbitrarily:v1, beam:transform:reshuffle:v1]
+2026-09-29 15:18:20,365 
+2026-09-29 15:18:20,365 Registered transforms:
+2026-09-29 15:18:20,365 	beam:transform:org.apache.beam:kafka_write:v2: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@630cb4a4
+2026-09-29 15:18:20,365 	beam:transform:org.apache.beam:kafka_read_with_metadata:v2: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@636e8cc
+2026-09-29 15:18:20,365 	beam:transform:org.apache.beam:kafka_write:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForBuilder@f79a760
+2026-09-29 15:18:20,365 	beam:transform:combine_grouped_values:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@14f5da2c
+2026-09-29 15:18:20,365 	beam:schematransform:org.apache.beam:iceberg_read:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@12dae582
+2026-09-29 15:18:20,365 	beam:transform:combine_globally:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@239b0f9d
+2026-09-29 15:18:20,365 	beam:external:java:generate_sequence:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForBuilder@619bfe29
+2026-09-29 15:18:20,365 	beam:transform:org.apache.beam:kinesis_read_data:v2: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForBuilder@5b057c8c
+2026-09-29 15:18:20,365 	beam:transform:redistribute_by_key:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@1eb6749b
+2026-09-29 15:18:20,365 	beam:transform:window_into:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@652a7737
+2026-09-29 15:18:20,365 	beam:schematransform:org.apache.beam:kafka_read:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@5b7ea70d
+2026-09-29 15:18:20,365 	beam:schematransform:org.apache.beam:kafka_write:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@2bef51f2
+2026-09-29 15:18:20,365 	beam:schematransform:org.apache.beam:iceberg_cdc_read:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@650eab8
+2026-09-29 15:18:20,365 	beam:transform:combine_per_key:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@30f5a68a
+2026-09-29 15:18:20,365 	beam:transform:org.apache.beam:kafka_read_with_metadata:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForBuilder@1e1d3956
+2026-09-29 15:18:20,365 	beam:transform:group_by_key:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@4f2c9ba6
+2026-09-29 15:18:20,365 	beam:transform:org.apache.beam:kinesis_write:v2: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForBuilder@4e28bdd1
+2026-09-29 15:18:20,365 	beam:transform:group_into_batches:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@53f48368
+2026-09-29 15:18:20,365 	beam:transform:group_into_batches_with_sharded_key:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@24d4d7c9
+2026-09-29 15:18:20,365 	beam:transform:create_view:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@f0e995e
+2026-09-29 15:18:20,365 	beam:transform:teststream:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@4c37b5b
+2026-09-29 15:18:20,365 	beam:transform:sdf_process_keyed_elements:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@73db4768
+2026-09-29 15:18:20,365 	beam:schematransform:org.apache.beam:iceberg_write:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@71b3bc45
+2026-09-29 15:18:20,365 	beam:transform:impulse:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@a8c1f44
+2026-09-29 15:18:20,365 	beam:transform:flatten:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@150ab4ed
+2026-09-29 15:18:20,365 	beam:schematransform:org.apache.beam:tfrecord_read:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@3c435123
+2026-09-29 15:18:20,365 	beam:transform:write_files:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@50fe837a
+2026-09-29 15:18:20,365 	beam:runners_core:transforms:splittable_process:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@3a62c01e
+2026-09-29 15:18:20,365 	beam:schematransform:org.apache.beam:tfrecord_write:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@7a8fa663
+2026-09-29 15:18:20,365 	beam:transform:org.apache.beam:kafka_write_with_headers:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForBuilder@5ce33a58
+2026-09-29 15:18:20,365 	beam:transform:org.apache.beam:kafka_read_without_metadata:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForBuilder@78a287ed
+2026-09-29 15:18:20,365 	beam:transform:managed:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@546ccad7
+2026-09-29 15:18:20,365 	beam:transform:redistribute_arbitrarily:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@5357c287
+2026-09-29 15:18:20,365 	beam:transform:reshuffle:v1: org.apache.beam.sdk.expansion.service.ExpansionService$TransformProviderForPayloadTranslator@1623134f
+2026-09-29 15:18:20,365 
+2026-09-29 15:18:20,366 Registered SchemaTransformProviders:
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:yaml:filter-java:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:yaml:flatten:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:iceberg_read:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:yaml:map_to_fields-java:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:aws:sqs_read:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:yaml:log_for_testing:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:iceberg_write:v1
+2026-09-29 15:18:20,366 	beam:test_schematransform:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:kafka_read:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:kafka_write:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:tfrecord_read:v1
+2026-09-29 15:18:20,366 	beam:schematransform:iceberg_add_files:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:tfrecord_write:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:yaml:window_into_strategy:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:iceberg_cdc_read:v1
+2026-09-29 15:18:20,366 	beam:transform:managed:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:generate_sequence:v1
+2026-09-29 15:18:20,366 	beam:schematransform:org.apache.beam:yaml:explode:v1
+2026-09-29 15:18:21,583 Sep 29, 2026 3:18:21 PM org.apache.beam.sdk.expansion.service.ExpansionService expand
+2026-09-29 15:18:21,583 INFO: Expanding 'LeerLecturas' with URN 'beam:transform:org.apache.beam:kafka_read_without_metadata:v1'
+2026-09-29 15:18:22,558 Sep 29, 2026 3:18:22 PM org.apache.beam.sdk.expansion.service.ExpansionService payloadToConfig
+2026-09-29 15:18:22,558 WARNING: Configuration class 'org.apache.beam.sdk.io.kafka.KafkaIO$Read$External$Configuration' has no schema registered. Attempting to construct with setter approach.
+2026-09-29 15:18:22,681 Sep 29, 2026 3:18:22 PM org.apache.beam.sdk.expansion.service.ExpansionService payloadToConfig
+2026-09-29 15:18:22,681 WARNING: Configuration class 'org.apache.beam.sdk.io.kafka.KafkaIO$Read$External$Configuration' has no schema registered. Attempting to construct with setter approach.
+2026-09-29 15:18:22,821 Sep 29, 2026 3:18:22 PM org.apache.beam.sdk.coders.SerializableCoder checkEqualsMethodDefined
+2026-09-29 15:18:22,821 WARNING: Can't verify serialized elements of type Shard have well defined equals method. This may produce incorrect results on some PipelineRunner implementations
+2026-09-29 15:18:27,747 Converting string literal type hint to Any: "tuple[bytes, bytes]"
+2026-09-29 15:18:27,748 Converting string literal type hint to Any: "tuple[bytes, bytes]"
+2026-09-29 15:18:27,749 Converting string literal type hint to Any: "tuple[bytes, bytes]"
+2026-09-29 15:18:27,749 Converting string literal type hint to Any: "tuple[bytes, bytes]"
+2026-09-29 15:18:27,749 Converting string literal type hint to Any: "tuple[bytes, bytes]"
+2026-09-29 15:18:27,751 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,752 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,752 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,752 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,752 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,758 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,759 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,760 Key coder FastPrimitivesCoder for transform <ParDo(PTransform) label=[ParDo(DeduplicarLecturas)]> with stateful DoFn may not be deterministic. This may cause incorrect behavior for complex key types. Consider adding an input type hint for this transform.
+2026-09-29 15:18:27,760 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,761 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,761 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,763 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,764 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,767 Key coder FastPrimitivesCoder for transform <ParDo(PTransform) label=[ParDo(DiferenciarContador)]> with stateful DoFn may not be deterministic. This may cause incorrect behavior for complex key types. Consider adding an input type hint for this transform.
+2026-09-29 15:18:27,767 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,768 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,768 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,773 Converting string literal type hint to Any: "tuple[str, Consumo]"
+2026-09-29 15:18:27,775 Key coder FastPrimitivesCoder for transform <ParDo(PTransform) label=[Celdas]> with stateful DoFn may not be deterministic. This may cause incorrect behavior for complex key types. Consider adding an input type hint for this transform.
+2026-09-29 15:18:27,775 Converting string literal type hint to Any: "tuple[str, Consumo]"
+2026-09-29 15:18:27,775 Converting string literal type hint to Any: "tuple[str, Consumo]"
+2026-09-29 15:18:27,775 Converting string literal type hint to Any: "tuple[str, dict]"
+2026-09-29 15:18:27,775 Converting string literal type hint to Any: "tuple[bytes, bytes]"
+2026-09-29 15:18:27,796 Converting string literal type hint to Any: "dict"
+2026-09-29 15:18:27,797 Converting string literal type hint to Any: "tuple[bytes, bytes]"
+2026-09-29 15:18:27,845 Using cached job server jar from https://repo.maven.apache.org/maven2/org/apache/beam/beam-sdks-java-io-expansion-service/2.74.0/beam-sdks-java-io-expansion-service-2.74.0.jar
+2026-09-29 15:18:27,845 Starting a JAR-based expansion service from JAR /app/.apache_beam/cache/jars/beam-sdks-java-io-expansion-service-2.74.0.jar 
+2026-09-29 15:18:27,907 Sep 29, 2026 3:18:27 PM org.apache.beam.sdk.expansion.service.ExpansionService expand
+2026-09-29 15:18:27,907 INFO: Expanding 'EscribirConsumo' with URN 'beam:transform:org.apache.beam:kafka_write:v1'
+2026-09-29 15:18:28,681 Sep 29, 2026 3:18:28 PM org.apache.beam.sdk.expansion.service.ExpansionService payloadToConfig
+2026-09-29 15:18:28,681 WARNING: Configuration class 'org.apache.beam.sdk.io.kafka.KafkaIO$Write$External$Configuration' has no schema registered. Attempting to construct with setter approach.
+2026-09-29 15:18:28,690 Sep 29, 2026 3:18:28 PM org.apache.beam.sdk.expansion.service.ExpansionService payloadToConfig
+2026-09-29 15:18:28,690 WARNING: Configuration class 'org.apache.beam.sdk.io.kafka.KafkaIO$Write$External$Configuration' has no schema registered. Attempting to construct with setter approach.
+2026-09-29 15:18:31,119 Using cached job server jar from https://repo.maven.apache.org/maven2/org/apache/beam/beam-sdks-java-io-expansion-service/2.74.0/beam-sdks-java-io-expansion-service-2.74.0.jar
+2026-09-29 15:18:31,119 Starting a JAR-based expansion service from JAR /app/.apache_beam/cache/jars/beam-sdks-java-io-expansion-service-2.74.0.jar 
+2026-09-29 15:18:31,125 Sep 29, 2026 3:18:31 PM org.apache.beam.sdk.expansion.service.ExpansionService expand
+2026-09-29 15:18:31,125 INFO: Expanding 'EscribirCuarentena' with URN 'beam:transform:org.apache.beam:kafka_write:v1'
+2026-09-29 15:18:31,892 Sep 29, 2026 3:18:31 PM org.apache.beam.sdk.expansion.service.ExpansionService payloadToConfig
+2026-09-29 15:18:31,892 WARNING: Configuration class 'org.apache.beam.sdk.io.kafka.KafkaIO$Write$External$Configuration' has no schema registered. Attempting to construct with setter approach.
+2026-09-29 15:18:31,901 Sep 29, 2026 3:18:31 PM org.apache.beam.sdk.expansion.service.ExpansionService payloadToConfig
+2026-09-29 15:18:31,901 WARNING: Configuration class 'org.apache.beam.sdk.io.kafka.KafkaIO$Write$External$Configuration' has no schema registered. Attempting to construct with setter approach.
+2026-09-29 15:18:42,818 Job state changed to STOPPED
+2026-09-29 15:18:42,819 Job state changed to STARTING
+2026-09-29 15:18:42,820 Job state changed to RUNNING
+2026-09-29 15:20:19,850 Job state changed to DONE
+
+  celda                                   kWh   esperado  origen
+  MED-0042|2026-09-25|punta             3.100      3.100  medido ✔
+  MED-0042|2026-09-25|resto             2.400      2.400  medido ✔
+  TOTAL                                 5.500      5.500
+
+  ✅ Flink y Kafka dan el mismo resultado que la demostración con DirectRunner.
+     El duplicado no sumó, la tardía corrigió el reparto, y el total se conserva.
+
+
+Código de salida E2E: 0
+
+================================================================
+5. Tópicos Kafka después del E2E
+================================================================
+__consumer_offsets
+medicion.consumo-franja.e2e
+medicion.consumo-franja.v1
+medicion.cuarentena.e2e
+medicion.cuarentena.v1
+medicion.lecturas.e2e
+medicion.lecturas.v1
+
+================================================================
+6. Offsets de la prueba E2E
+================================================================
+
+--- medicion.lecturas.e2e ---
+medicion.lecturas.e2e:0:15
+medicion.lecturas.e2e:1:0
+
+--- medicion.consumo-franja.e2e ---
+medicion.consumo-franja.e2e:0:0
+medicion.consumo-franja.e2e:1:15
+
+--- medicion.cuarentena.e2e ---
+medicion.cuarentena.e2e:0:0
+medicion.cuarentena.e2e:1:0
+
+================================================================
+7. Salida materializada en Kafka
+================================================================
+MED-0042|2026-09-25|resto	{"energia_kwh": 1.5, "minutos_cubiertos": 15.0, "minutos_indeterminados": 0.0, "interpolada": false, "indeterminada": false, "separacion_maxima_minutos": 15.0, "cabina_id": "CAB-07", "intervalos_usados": 1}
+MED-0042|2026-09-25|resto	{"energia_kwh": 2.3, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": true, "indeterminada": false, "separacion_maxima_minutos": 25.0, "cabina_id": "CAB-07", "intervalos_usados": 2}
+MED-0042|2026-09-25|punta	{"energia_kwh": 3.2, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": true, "indeterminada": false, "separacion_maxima_minutos": 25.0, "cabina_id": "CAB-07", "intervalos_usados": 1}
+MED-0042|2026-09-25|resto	{"energia_kwh": 2.4, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": false, "indeterminada": false, "separacion_maxima_minutos": 15.0, "cabina_id": "CAB-07", "intervalos_usados": 2}
+MED-0042|2026-09-25|punta	{"energia_kwh": 3.1, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": false, "indeterminada": false, "separacion_maxima_minutos": 20.0, "cabina_id": "CAB-07", "intervalos_usados": 1}
+MED-0042|2026-09-25|resto	{"energia_kwh": 1.5, "minutos_cubiertos": 15.0, "minutos_indeterminados": 0.0, "interpolada": false, "indeterminada": false, "separacion_maxima_minutos": 15.0, "cabina_id": "CAB-07", "intervalos_usados": 1}
+MED-0042|2026-09-25|resto	{"energia_kwh": 2.3, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": true, "indeterminada": false, "separacion_maxima_minutos": 25.0, "cabina_id": "CAB-07", "intervalos_usados": 2}
+MED-0042|2026-09-25|punta	{"energia_kwh": 3.2, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": true, "indeterminada": false, "separacion_maxima_minutos": 25.0, "cabina_id": "CAB-07", "intervalos_usados": 1}
+MED-0042|2026-09-25|resto	{"energia_kwh": 2.4, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": false, "indeterminada": false, "separacion_maxima_minutos": 15.0, "cabina_id": "CAB-07", "intervalos_usados": 2}
+MED-0042|2026-09-25|punta	{"energia_kwh": 3.1, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": false, "indeterminada": false, "separacion_maxima_minutos": 20.0, "cabina_id": "CAB-07", "intervalos_usados": 1}
+MED-0042|2026-09-25|resto	{"energia_kwh": 1.5, "minutos_cubiertos": 15.0, "minutos_indeterminados": 0.0, "interpolada": false, "indeterminada": false, "separacion_maxima_minutos": 15.0, "cabina_id": "CAB-07", "intervalos_usados": 1}
+MED-0042|2026-09-25|resto	{"energia_kwh": 2.3, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": true, "indeterminada": false, "separacion_maxima_minutos": 25.0, "cabina_id": "CAB-07", "intervalos_usados": 2}
+MED-0042|2026-09-25|punta	{"energia_kwh": 3.2, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": true, "indeterminada": false, "separacion_maxima_minutos": 25.0, "cabina_id": "CAB-07", "intervalos_usados": 1}
+MED-0042|2026-09-25|resto	{"energia_kwh": 2.4, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": false, "indeterminada": false, "separacion_maxima_minutos": 15.0, "cabina_id": "CAB-07", "intervalos_usados": 2}
+MED-0042|2026-09-25|punta	{"energia_kwh": 3.1, "minutos_cubiertos": 20.0, "minutos_indeterminados": 0.0, "interpolada": false, "indeterminada": false, "separacion_maxima_minutos": 20.0, "cabina_id": "CAB-07", "intervalos_usados": 1}
+[2026-09-29 15:20:43,043] ERROR Error processing message, terminating consumer process:  (org.apache.kafka.tools.consumer.ConsoleConsumer)
+org.apache.kafka.common.errors.TimeoutException: null
+Processed a total of 15 messages
+
+================================================================
+8. Observación de reproducibilidad
+================================================================
+La ejecución E2E se realizó en una máquina distinta a la utilizada
+originalmente por el equipo, mediante Windows + WSL2 Ubuntu 24.04
++ Docker Desktop.
+
+En el host WSL, 'uv run pytest' presentó previamente un segmentation
+fault durante la colección. La ejecución E2E encapsulada en Docker,
+Kafka, Beam y Flink sí completó correctamente.
+
+================================================================
+FIN DE EVIDENCIA
+================================================================
+Fecha final: 2026-09-29T12:20:43-03:00

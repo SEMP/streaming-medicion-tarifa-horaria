@@ -18,6 +18,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 import apache_beam as beam
 from apache_beam.typehints import KV
@@ -159,9 +160,18 @@ def cadena(
         parseadas = crudas | "Parsear" >> beam.FlatMap(parsear).with_outputs(
             CUARENTENA, main="ok"
         )
-        marcadas = parseadas.ok | "MarcarTiempo" >> beam.FlatMap(
-            marcar_tiempo_de_evento
-        ).with_outputs(CUARENTENA, main="ok")
+        marcadas = (
+            parseadas.ok
+            | "MarcarTiempo" >> beam.FlatMap(marcar_tiempo_de_evento).with_outputs(
+                CUARENTENA, main="ok"
+            )
+        )
+        # El type hint de la clave no es decorativo: sin él Beam elige un coder genérico y
+        # advierte que puede no ser determinista, que sobre un estado por clave significa que
+        # dos claves iguales podrían no encontrarse. Con `str` el coder es estable.
+        con_clave = marcadas.ok | "TiparClave" >> beam.Map(lambda kv: kv).with_output_types(
+            KV[str, Any]
+        )
 
         # **Sin trigger, y no es un olvido.** Los triggers disparan en un `GroupByKey` o un
         # `Combine`, y acá no hay ninguno: la agregación por celda la hace `CeldasVigentes`,
@@ -174,7 +184,7 @@ def cadena(
         #
         # El efecto práctico es que la salida se emite **por lectura que cambia una celda**,
         # no cada N segundos: más reactivo que el pane temprano que reemplaza.
-        ventaneadas = marcadas.ok | "VentanaDiaria" >> beam.WindowInto(
+        ventaneadas = con_clave | "VentanaDiaria" >> beam.WindowInto(
             beam.window.FixedWindows(DIA_SEGUNDOS, offset=desplazamiento),
             allowed_lateness=LATENCIA_PERMITIDA_SEGUNDOS,
         )
@@ -188,7 +198,9 @@ def cadena(
 
         celdas = (
             consumos.ok
-            | "ClavearPorMedidor" >> beam.Map(lambda c: (c.medidor_id, c))
+            | "ClavearPorMedidor" >> beam.Map(
+                lambda c: (c.medidor_id, c)
+            ).with_output_types(KV[str, Any])
             | "Celdas" >> beam.ParDo(CeldasVigentes(cal))
             | "ABytes" >> beam.Map(a_bytes).with_output_types(KV[bytes, bytes])
         )

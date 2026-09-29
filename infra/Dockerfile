@@ -15,13 +15,21 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+# La imagen de ejecución va sin dependencias de desarrollo, que es lo que la mantiene
+# liviana. El servicio `pruebas` la construye con CON_DEV=1 para tener pytest adentro:
+# hace falta porque en WSL2 se vio un segmentation fault de `uv run pytest` en el host, y
+# correr la suite dentro del contenedor lo evita.
+ARG CON_DEV=0
+
 COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen --no-dev --no-install-project
+RUN if [ "$CON_DEV" = "1" ]; then uv sync --frozen --no-install-project; \
+    else uv sync --frozen --no-dev --no-install-project; fi
 
 COPY simulador ./simulador
 COPY pipeline ./pipeline
 COPY config ./config
-RUN uv sync --frozen --no-dev
+RUN if [ "$CON_DEV" = "1" ]; then uv sync --frozen; else uv sync --frozen --no-dev; fi
 
 # Se cachea el JAR del expansion service durante el build. Sin esto, el primer pipeline
 # que arranque se queda esperando una descarga de Maven, y en una demo eso parece que el

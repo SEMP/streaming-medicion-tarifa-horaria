@@ -97,6 +97,16 @@ uv run pytest                                    # las pruebas
 uv run simulador --cabinas 8 --salida datos/lecturas.jsonl
 ```
 
+**Las pruebas, sin depender del Python del host:**
+
+```bash
+docker compose -f infra/docker-compose.yml --profile pruebas run --rm -T pruebas
+```
+
+Es la única imagen que se construye con las dependencias de desarrollo. Existe porque en WSL2
+se vio un *segmentation fault* de `uv run pytest` durante la colección; adentro del contenedor
+la misma suite pasa.
+
 **La demostración**, que es la que hay que mirar primero. Narra los tres escenarios
 —lecturas normales, un duplicado y una lectura tardía— sobre un solo medidor, y muestra
 qué cambia en la tabla de salida después de cada uno. No necesita Docker:
@@ -148,8 +158,11 @@ estas escenas suman 9 min 45 s.
 ./evidencia/generar-evidencia.sh
 ```
 
-Deja [`evidencia/evidencia-ejecucion.txt`](evidencia/evidencia-ejecucion.txt) con una corrida
-completa y fechada: entorno, las pruebas, la demostración de los tres escenarios, el stack
+Hay **dos corridas, en dos máquinas distintas** — ver [`evidencia/LEEME.md`](evidencia/LEEME.md).
+La de Daniel valida el recorrido en Windows + WSL2 + Docker Desktop y da los mismos números.
+
+El script deja [`evidencia/evidencia-ejecucion.txt`](evidencia/evidencia-ejecucion.txt) con una
+corrida completa y fechada: entorno, las pruebas, la demostración de los tres escenarios, el stack
 levantándose, los tópicos creados, la prueba de humo, el recorrido sobre Flink, cuántos
 mensajes quedaron en cada tópico y las celdas de salida tal como las lee el consumidor.
 

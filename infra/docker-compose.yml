@@ -186,6 +186,27 @@ services:
     command: ["/app/.venv/bin/python", "-m", "pipeline.extremo_a_extremo"]
     restart: "no"
 
+  pruebas:
+    <<: *app
+    profiles: ["pruebas"]
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      args:
+        CON_DEV: "1"        # la única imagen que trae pytest
+    # Sin `depends_on`: la suite corre con DirectRunner y no toca Kafka ni Flink. Existe
+    # para que las pruebas se puedan correr sin depender del Python del host — en WSL2 se
+    # vio un segmentation fault de `uv run pytest` durante la colección, y adentro del
+    # contenedor no ocurre.
+    volumes:
+      - ../simulador:/app/simulador
+      - ../pipeline:/app/pipeline
+      - ../config:/app/config
+      - ../datos:/app/datos
+      - ../tests:/app/tests      # la imagen no los trae: se montan para correr los locales
+    command: ["/app/.venv/bin/python", "-m", "pytest", "-q"]
+    restart: "no"
+
   humo:
     <<: *app
     profiles: ["humo"]
