@@ -84,88 +84,81 @@ Cada carpeta con vida propia tiene el suyo, y todos se alcanzan desde acá:
 
 ## Estado
 
-En curso · **En construcción**, pero ya corre de punta a punta: el simulador produce lecturas, el
-stack de Kafka + Flink las procesa y salen por el tópico de destino. Lo que falta son las
-transformaciones del dominio — el pipeline hoy hace *passthrough*.
+**El sistema corre de punta a punta.** El simulador produce lecturas con fallas inyectadas a
+propósito, Kafka las transporta, el pipeline sobre Flink las deduplica, diferencia el contador
+y las atribuye a su franja, y el resultado sale por el tópico derivado.
 
 | Componente | Estado |
 |---|---|
-| Decisiones de diseño | Listo · [`docs/decisiones-de-diseno.md`](docs/decisiones-de-diseno.md) · 11 decisiones |
-| Dominio | Listo · [`docs/dominio-medicion.md`](docs/dominio-medicion.md) · calibrado con mediciones reales |
+| Decisiones de diseño | Listo · [`docs/decisiones-de-diseno.md`](docs/decisiones-de-diseno.md) · 13 decisiones |
+| Dominio | Listo · [`docs/dominio-medicion.md`](docs/dominio-medicion.md) |
 | Simulador | Listo · [`simulador/`](simulador/) · dos escenarios, fallas deterministas |
-| **Infraestructura** | Listo · [`infra/`](infra/) · Kafka + Flink + job server, con `KafkaIO` andando |
-| Configuración de franjas | En curso · ejemplo en `config/`; falta el cargador y su validación |
-| Pipeline | En curso · esqueleto cableado; faltan las transformaciones del dominio |
-| Pruebas | En curso · 34 del simulador; faltan las del pipeline |
-| Documento técnico | pendiente |
+| Infraestructura | Listo · [`infra/`](infra/) · Kafka + Flink + job server, con `KafkaIO` andando |
+| Configuración de franjas | Listo · cargador con validación de cobertura y reparto por borde |
+| Pipeline | Listo · parseo, cuarentena, ventana, deduplicación, diferenciación y celdas |
+| Pruebas | Listo · **89**, incluidas las de `TestStream` para el comportamiento tardío |
+| Evidencia de ejecución | Listo · [`evidencia/`](evidencia/) · dos corridas, en dos máquinas |
+| Documento técnico | Listo · [`docs/tecnico/`](docs/tecnico/documento.md) · 11 páginas |
+| Video | **Pendiente** · guion en [`docs/guion-video.md`](docs/guion-video.md) |
 
 ## Cómo levantarlo
 
-**Sin Docker**, para trabajar en la lógica sin esperar a nadie:
+### Prerrequisitos
+
+Para el camino con Docker, que es el recomendado:
+
+- **Docker Engine con el plugin Compose v2.** El comando es `docker compose`, con espacio, no
+  `docker-compose`. Verificalo con `docker compose version`.
+- **git**, para clonar.
+- **Unos 8 GB de RAM libres.** El stack consume 3,1 GB en reposo y llega a 3,6 GB mientras
+  corre un trabajo, medido con `docker stats`; el resto es margen para el sistema.
+- **Paciencia la primera vez.** La construcción de las imágenes descarga varios cientos de MB
+  —incluido el runtime de Java para KafkaIO— y tarda unos minutos. No está colgado.
+
+No hace falta tener Python instalado: el camino con Docker no lo usa.
+
+---
+
+### Camino A — con Docker (recomendado)
+
+Los cuatro pasos, en orden. **No bajar el stack hasta el final.**
+
+**1. Iniciar el entorno**
 
 ```bash
-uv sync                                          # crea .venv e instala dependencias
-uv run pytest                                    # las pruebas
-uv run simulador --cabinas 8 --salida datos/lecturas.jsonl
-```
-
-**Las pruebas, sin depender del Python del host:**
-
-```bash
-docker compose -f infra/docker-compose.yml --profile pruebas run --rm -T pruebas
-```
-
-Es la única imagen que se construye con las dependencias de desarrollo. Existe porque en WSL2
-se vio un *segmentation fault* de `uv run pytest` durante la colección; adentro del contenedor
-la misma suite pasa.
-
-**La demostración**, que es la que hay que mirar primero. Narra los tres escenarios
-—lecturas normales, un duplicado y una lectura tardía— sobre un solo medidor, y muestra
-qué cambia en la tabla de salida después de cada uno. No necesita Docker:
-
-```bash
-uv run python -m pipeline.demostracion
-```
-
-Corre con `DirectRunner` y `TestStream`, así que el tiempo se controla y **la salida es
-idéntica en cualquier máquina**. Es lo que la vuelve evidencia y no anécdota.
-
-**Con el stack completo** — Kafka, Flink y el job server de Beam:
-
-```bash
-docker compose -f infra/docker-compose.yml up -d          # levantar
-docker compose -f infra/docker-compose.yml --profile demo up   # simulador + pipeline
-docker compose -f infra/docker-compose.yml down -v         # bajar y limpiar
+docker compose -f infra/docker-compose.yml up -d
 ```
 
 La interfaz de Flink queda en <http://localhost:8081> y Kafka en `localhost:29092`.
-Detalles y resolución de problemas en [`infra/README.md`](infra/README.md).
 
-**Prueba de humo**, que verifica el cableado —que KafkaIO levanta y los bytes entran y
-salen— con un *passthrough*, sin lógica de dominio de por medio:
+**2. Producir eventos y procesarlos**
 
 ```bash
-docker compose -f infra/docker-compose.yml --profile humo run --rm -T humo
+docker compose -f infra/docker-compose.yml --profile demo up
 ```
 
-**Verificación de punta a punta**, que siembra las mismas cinco lecturas de la demostración
-y exige el mismo resultado, pero ejecutado por Flink:
+Levanta el simulador y el pipeline juntos: el simulador publica lecturas en
+`medicion.lecturas.v1` y el pipeline las consume.
+
+**3. Ejecutar el pipeline de punta a punta, con verificación**
 
 ```bash
-docker compose -f infra/docker-compose.yml --profile e2e run --rm -T extremo-a-extremo
+docker compose -f infra/docker-compose.yml --profile e2e run --rm extremo-a-extremo
 ```
 
-Usa tópicos propios (`medicion.*.e2e`) para que cada corrida sea independiente de la
-anterior, y devuelve código de salida.
+Siembra cinco lecturas —con un duplicado y una tardía—, las procesa sobre Flink y **compara el
+resultado contra el esperado**. Devuelve código de salida, así que sirve como prueba.
 
-**Replay**, que va después del anterior: relee `medicion.lecturas.e2e` desde el offset 0 con
-un grupo nuevo, sin sembrar, y verifica que converja a las mismas celdas:
+Y el replay, que muestra la idempotencia sobre el stack real:
 
 ```bash
-docker compose -f infra/docker-compose.yml --profile e2e run --rm -T repeticion
+docker compose -f infra/docker-compose.yml --profile e2e run --rm repeticion
 ```
 
-**Ver la salida**, que es lo que el pipeline produce y el tablero consumiría:
+Relee el mismo tópico desde el offset 0 con otro grupo de consumidor. Da las mismas dos celdas:
+reprocesar no duplica ni corrige, converge.
+
+**4. Observar la salida**
 
 ```bash
 docker compose -f infra/docker-compose.yml exec kafka \
@@ -174,13 +167,71 @@ docker compose -f infra/docker-compose.yml exec kafka \
   --timeout-ms 10000
 ```
 
-Cada línea es una celda `medidor|fecha|franja` con su consumo. Una clave repetida **no es un
+Cada línea es una celda `medidor|fecha|franja` con su consumo. **Una clave repetida no es un
 error**: es una revisión posterior del mismo resultado, y vale la última — el consumidor hace
-*upsert*. Al terminar, la herramienta corta con un `TimeoutException`, que tampoco es un
-error: es el `--timeout-ms` venciendo después de leer todo.
+*upsert*. Al terminar, la herramienta corta con un `TimeoutException`, que **tampoco es un
+error**: es el `--timeout-ms` venciendo después de leer todo.
 
 Para ver lo que el pipeline no pudo procesar, el mismo comando sobre
 `medicion.cuarentena.v1`. Cada registro lleva su motivo.
+
+**Opcional — la prueba de humo y la suite**
+
+```bash
+docker compose -f infra/docker-compose.yml --profile humo run --rm humo
+docker compose -f infra/docker-compose.yml --profile pruebas run --rm pruebas
+```
+
+La primera verifica el cableado con un *passthrough*, sin lógica de dominio: separa «el
+pipeline está mal» de «la infraestructura está mal». La segunda corre las 89 pruebas dentro del
+contenedor, sin depender del Python del host.
+
+**5. Bajar y limpiar** — recién acá, cuando ya no haga falta nada de lo anterior:
+
+```bash
+docker compose -f infra/docker-compose.yml --profile demo --profile humo \
+  --profile e2e --profile pruebas down -v
+```
+
+---
+
+### Camino B — con uv (opcional, para desarrollo)
+
+**No levanta Kafka ni Flink.** Sirve para las pruebas, para generar lecturas a un archivo y
+para la demostración, que corre con `DirectRunner`.
+
+Instalar `uv`, que no necesita permisos de administrador:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Tampoco hace falta Python instalado: el proyecto pide `>=3.12,<3.13` y **`uv` descarga el
+intérprete solo**. Si la máquina trae otra versión, no importa.
+
+```bash
+uv sync                                          # crea .venv e instala dependencias
+uv run pytest                                    # las 89 pruebas
+uv run python -m pipeline.demostracion           # los tres escenarios, en 2 segundos
+uv run simulador --cabinas 8 --salida datos/lecturas.jsonl
+```
+
+**La demostración es lo primero que conviene mirar.** Narra los tres escenarios —lecturas
+normales, un duplicado y una tardía— sobre un solo medidor, y muestra qué cambia en la tabla de
+salida después de cada uno. Corre con `DirectRunner` y `TestStream`, así que el tiempo se
+controla y **la salida es idéntica en cualquier máquina**.
+
+> Hoy **no tiene versión con Docker**. Quien siga solo el camino A puede verla igual en la
+> evidencia capturada, en [`evidencia/evidencia-ejecucion.txt`](evidencia/evidencia-ejecucion.txt).
+
+### Lo que existe en los dos caminos
+
+| Qué | Con Docker | Con uv |
+|---|---|---|
+| Las 89 pruebas | `--profile pruebas run --rm pruebas` | `uv run pytest` |
+| Generar lecturas a un archivo | — | `uv run simulador --cabinas 8 --salida datos/lecturas.jsonl` |
+
+El resto no es equivalente: el camino A levanta el sistema real y el B corre lógica aislada.
 
 **Si algo no arranca**, la resolución de problemas está en
 [`infra/README.md`](infra/README.md).
