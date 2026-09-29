@@ -121,7 +121,7 @@
   <text x="596" y="512" font-size="9.5" fill="#4a5568">instante inválido, sin offset o futuro · OBIS repetido · sin 15.8.0</text>
   <text x="596" y="526" font-size="9.5" fill="#4a5568">trama truncada · contador que retrocede (reseteo del equipo)</text>
   <text x="596" y="546" font-size="9.5" font-weight="700" fill="#c53030">calidad = checksum_no_verificado NO va acá: el dato está completo</text>
-  <text x="596" y="560" font-size="9.5" fill="#742a2a">es el 66 % del tráfico: descartarlo tiraría dos tercios de la muestra</text>
+  <text x="596" y="560" font-size="9.5" fill="#742a2a">es ~2/3 del tráfico: descartarlo tiraría casi toda la muestra</text>
   <text x="596" y="573" font-size="9.5" fill="#4a5568">key: medidor_id · retención 30 días · el volumen es una señal operativa</text>
 
   <!-- ============================================ NOTA: EL PROBLEMA DE FONDO ============================================ -->
