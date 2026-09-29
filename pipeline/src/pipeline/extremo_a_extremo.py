@@ -11,6 +11,13 @@ y no allá — un objeto que no viaja, un estado que el runner implementa distin
 Esto siembra **las mismas cinco lecturas** de la demostración y exige **el mismo resultado**.
 
     docker compose -f infra/docker-compose.yml --profile e2e run --rm -T extremo-a-extremo
+
+Con `--replay` no siembra nada: **relee el tópico de entrada desde el offset 0**, con un
+`group.id` nuevo y por lo tanto sin estado previo, y escribe a un tópico de salida propio.
+Es la idempotencia sobre el stack real: el mismo log, procesado de nuevo desde cero, tiene
+que converger a las mismas dos celdas. Se corre después del recorrido normal:
+
+    docker compose -f infra/docker-compose.yml --profile e2e run --rm -T repeticion
 """
 
 from __future__ import annotations
@@ -80,13 +87,40 @@ def sembrar(ajustes: Ajustes) -> int:
     return enviadas
 
 
-def correr_pipeline(ajustes: Ajustes, cuantas: int) -> None:
+def contar_entrada(ajustes: Ajustes) -> int:
+    """Cuántos records hay en el tópico de entrada, sumando todas sus particiones.
+
+    El replay no sabe cuántas lecturas sembró el recorrido anterior —puede haber corrido más
+    de una vez—, y `max_registros` tiene que coincidir con lo que hay, o el pipeline no
+    termina.
+    """
+    from confluent_kafka import Consumer, TopicPartition
+
+    consumidor = Consumer(
+        {"bootstrap.servers": ajustes.servidores_kafka, "group.id": "g-e2e-contador"}
+    )
+    try:
+        particiones = consumidor.list_topics(ajustes.topico_lecturas, timeout=10).topics[
+            ajustes.topico_lecturas
+        ].partitions
+        total = 0
+        for numero in particiones:
+            bajo, alto = consumidor.get_watermark_offsets(
+                TopicPartition(ajustes.topico_lecturas, numero), timeout=10
+            )
+            total += alto - bajo
+    finally:
+        consumidor.close()
+    return total
+
+
+def correr_pipeline(ajustes: Ajustes, cuantas: int, *, grupo: str = "g-e2e") -> None:
     calendario = cargar_calendario(ajustes.config_franjas)
     with beam.Pipeline(options=opciones(ajustes, nombre="e2e", streaming=False)) as pipeline:
         construir(
             pipeline,
             ajustes,
-            grupo="g-e2e",
+            grupo=grupo,
             transformaciones=cadena(ajustes, calendario),
             max_registros=cuantas,
         )
@@ -130,12 +164,24 @@ def leer_celdas(ajustes: Ajustes) -> dict[str, dict]:
     return tabla
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", stream=sys.stdout)
     ajustes = Ajustes.desde_entorno()
+    replay = "--replay" in (sys.argv[1:] if argv is None else argv)
 
-    enviadas = sembrar(ajustes)
-    correr_pipeline(ajustes, enviadas)
+    if replay:
+        # Grupo nuevo: sin offsets confirmados, `auto.offset.reset=earliest` lo manda al
+        # offset 0. Y un trabajo nuevo de Flink arranca sin estado de deduplicación.
+        cuantas = contar_entrada(ajustes)
+        grupo = f"g-e2e-replay-{int(time.time())}"
+        log.info("replay: %d records de %s, grupo %s", cuantas, ajustes.topico_lecturas, grupo)
+        if cuantas == 0:
+            log.error("MAL el tópico de entrada está vacío: correr antes extremo-a-extremo")
+            return 1
+        correr_pipeline(ajustes, cuantas, grupo=grupo)
+    else:
+        enviadas = sembrar(ajustes)
+        correr_pipeline(ajustes, enviadas)
     tabla = leer_celdas(ajustes)
 
     print(f"\n  {'celda':<34} {'kWh':>8}  {'esperado':>9}  origen")
@@ -165,6 +211,12 @@ def main() -> int:
             log.error("MAL %s", p)
         return 1
 
+    if replay:
+        print(
+            "\n  BIEN: releer el log desde el offset 0, con estado nuevo, converge a las mismas\n"
+            "     celdas. Reprocesar es inocuo: la salida es idempotente sobre el stack real.\n"
+        )
+        return 0
     print(
         "\n  BIEN: Flink y Kafka dan el mismo resultado que la demostración con DirectRunner.\n"
         "     El duplicado no sumó, la tardía corrigió el reparto, y el total se conserva.\n"

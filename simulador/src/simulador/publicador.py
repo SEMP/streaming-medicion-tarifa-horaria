@@ -30,7 +30,20 @@ def publicar(
     """
     from confluent_kafka import Producer
 
-    productor = Producer({"bootstrap.servers": servidores, "linger.ms": 50})
+    # Las garantías del tramo concentrador → Kafka se declaran, no se heredan: el documento
+    # técnico (sección 5.5) se apoya en ellas. Este cliente es librdkafka, no el de Java, y
+    # en librdkafka la idempotencia viene APAGADA por defecto. Con ella, un reintento interno
+    # del productor no duplica ni reordena dentro de la partición — y el orden por medidor es
+    # lo que necesita la diferenciación. El duplicado del dominio (volver a publicar la misma
+    # lectura) es otro `produce()` y sí llega: ese lo resuelve la deduplicación.
+    productor = Producer(
+        {
+            "bootstrap.servers": servidores,
+            "linger.ms": 50,
+            "acks": "all",
+            "enable.idempotence": True,
+        }
+    )
     enviadas = 0
 
     def informar(error, _registro):

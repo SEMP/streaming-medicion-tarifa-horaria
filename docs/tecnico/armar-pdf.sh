@@ -8,6 +8,13 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# Fecha fija para que el PDF sea REPRODUCIBLE. Sin esto, typst le estampa la hora de
+# compilación y cada corrida produce bytes distintos aunque el documento no haya cambiado:
+# el archivo aparece modificado en git sin que nadie lo tocara, y deja de poder verificarse
+# que el PDF versionado corresponde al documento.md que está al lado.
+# Se puede sobreescribir desde afuera: SOURCE_DATE_EPOCH=... ./armar-pdf.sh
+export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-1759000000}"
+
 pandoc documento.md -t typst -o cuerpo.typ
 
 python3 - <<'PY'

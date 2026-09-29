@@ -81,7 +81,9 @@ services:
         # Doble signo de peso a propósito: Compose interpola las variables del host antes
         # de que bash vea el script, y con uno solo la variable del bucle se expandiría a
         # nada. Vale también para los comentarios, que Compose no distingue del código.
-        for t in lecturas consumo-franja cuarentena; do
+        # Los -replay son la salida de la repetición: releer la entrada y escribir aparte
+        # permite comparar las celdas del replay solas, sin mezclarlas con las primeras.
+        for t in lecturas consumo-franja cuarentena consumo-franja-replay cuarentena-replay; do
           /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists \
             --topic medicion.$$t.e2e --partitions 2 --replication-factor 1
         done
@@ -184,6 +186,24 @@ services:
       beam-job-server:
         condition: service_started
     command: ["/app/.venv/bin/python", "-m", "pipeline.extremo_a_extremo"]
+    restart: "no"
+
+  # Relee medicion.lecturas.e2e desde el offset 0 con un grupo nuevo, sin sembrar. Va
+  # después de extremo-a-extremo: es la prueba de que reprocesar el log converge.
+  repeticion:
+    <<: *app
+    profiles: ["e2e"]
+    environment:
+      <<: *entorno
+      TOPICO_LECTURAS: medicion.lecturas.e2e
+      TOPICO_CONSUMO: medicion.consumo-franja-replay.e2e
+      TOPICO_CUARENTENA: medicion.cuarentena-replay.e2e
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      beam-job-server:
+        condition: service_started
+    command: ["/app/.venv/bin/python", "-m", "pipeline.extremo_a_extremo", "--replay"]
     restart: "no"
 
   pruebas:
