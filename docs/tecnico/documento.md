@@ -73,7 +73,7 @@ Dos consumidores del mismo tópico, con necesidades opuestas:
 
 | | **Tablero operativo** | **Facturación** |
 |---|---|---|
-| Qué lee | Todos los panes de cada celda | Un solo valor por celda |
+| Qué lee | Todas las revisiones de cada celda | Un solo valor por celda |
 | Cuándo | Continuamente | Pasado `ventana_fin + 36 h` |
 | Qué tolera | Que el número cambie mientras la ventana no converge | Nada: necesita un valor estable |
 | Qué habilita | Ver la demanda por franja mientras el día transcurre | Emitir la factura con el precio correcto por franja |
@@ -293,7 +293,7 @@ es función pura del tiempo de evento, así que no necesita agrupamiento: se cal
 la clave**. Modelarla como ventana obligaría a redefinir el ventaneo cada vez que cambiara el
 calendario tarifario, y el calendario es configuración.
 
-## 4.3 Los 36 horas de lateness
+## 4.3 Las 36 horas de lateness
 
 | Alternativa | Por qué no |
 |---|---|
