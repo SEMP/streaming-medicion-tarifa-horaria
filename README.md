@@ -70,6 +70,18 @@ docs/         Documento técnico, diagrama de arquitectura y decisiones de dise�
 datos/        Datos de ejemplo generados por el simulador (no versionados).
 ```
 
+### Los otros README
+
+Cada carpeta con vida propia tiene el suyo, y todos se alcanzan desde acá:
+
+| Dónde | Para qué |
+|---|---|
+| [`infra/README.md`](infra/README.md) | Cómo está armado el stack, qué hace cada contenedor y resolución de problemas |
+| [`simulador/README.md`](simulador/README.md) | Qué genera el simulador, sus escenarios y cómo se le piden fallas |
+| [`docs/README.md`](docs/README.md) | Mapa de la documentación: qué documento es cada uno y en cuál escribir cada cosa |
+| [`evidencia/LEEME.md`](evidencia/LEEME.md) | Las dos corridas capturadas y cómo leerlas |
+| [`docs/planes/README.md`](docs/planes/README.md) | El reparto de trabajo del equipo. Es material de proceso, no de entrega |
+
 ## Estado
 
 En curso · **En construcción**, pero ya corre de punta a punta: el simulador produce lecturas, el
@@ -145,6 +157,26 @@ docker compose -f infra/docker-compose.yml --profile e2e run --rm -T extremo-a-e
 
 Usa tópicos propios (`medicion.*.e2e`) para que cada corrida sea independiente de la
 anterior, y devuelve código de salida.
+
+**Ver la salida**, que es lo que el pipeline produce y el tablero consumiría:
+
+```bash
+docker compose -f infra/docker-compose.yml exec kafka \
+  /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 \
+  --topic medicion.consumo-franja.v1 --from-beginning --property print.key=true \
+  --timeout-ms 10000
+```
+
+Cada línea es una celda `medidor|fecha|franja` con su consumo. Una clave repetida **no es un
+error**: es una revisión posterior del mismo resultado, y vale la última — el consumidor hace
+*upsert*. Al terminar, la herramienta corta con un `TimeoutException`, que tampoco es un
+error: es el `--timeout-ms` venciendo después de leer todo.
+
+Para ver lo que el pipeline no pudo procesar, el mismo comando sobre
+`medicion.cuarentena.v1`. Cada registro lleva su motivo.
+
+**Si algo no arranca**, la resolución de problemas está en
+[`infra/README.md`](infra/README.md).
 
 ## Demostración
 
