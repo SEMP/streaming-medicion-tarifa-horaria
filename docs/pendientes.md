@@ -52,6 +52,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 29/09 | — | **Para Clara:** tu hallazgo del `RUBRICA.md` eran **tres** afirmaciones sobre triggers, no una — también decía en dos lugares que el proyecto hace «triggers avanzados» como extensión opcional. Corregidas y pusheadas al repo de la materia, que es privado. Es justo el patrón que estás persiguiendo: un cambio en el código dejó tres documentos diciendo lo de antes |
 | 29/09 | — | **Daniel validó el recorrido en otra máquina** (WSL2 + Docker Desktop): mismos números. Encontró que `uv run pytest` da *segmentation fault* en su host → nuevo perfil `pruebas` que corre la suite dentro del contenedor |
 | 28/09 | — | **Decisión 13 aplicada**: umbral en 90 min, celda `indeterminada` con `minutos_indeterminados`. Verificado sobre Flink. 89 pruebas. ⚠️ **Diverge de `contratos.md` §2.3** (conserva la energía buena en lugar de anular la celda): anotado allá para Clara |
 | 27/09 | — | **Guion del video** en [`guion-video.md`](guion-video.md) |
