@@ -316,17 +316,30 @@ No es coincidencia: si el estado expirara antes, un tardío legítimo volvería 
 
 ## 4.4 Triggers, panes y acumulación
 
-| Parámetro | Valor | Por qué |
-|---|---|---|
-| Trigger temprano | `AfterProcessingTime(60 s)` | El tablero tiene que moverse. Más rápido no compra nada: una ronda dura de 20 a 40 min, así que antes de 60 s rara vez hay información nueva |
-| Trigger tardío | `AfterCount(1)` | Cada llegada tardía **corrige dinero**, y hace visible el pane correctivo |
-| Acumulación | `ACCUMULATING` | Cada pane es la revisión completa de la celda y reemplaza al anterior |
+**El pipeline no configura triggers, y conviene explicar por qué**, porque es consecuencia
+directa de la corrección de §5.4.
 
-**Lo que se resigna en el trigger tardío:** un pane por evento significa que la ráfaga de una
-cabina que vuelve de una caída produce una escritura por lectura. En producción convendría
-agrupar los disparos tardíos con `AfterProcessingTime`, a costa de demorar la corrección unos
-minutos — algo que a la facturación no le cambia nada, porque se factura días después. Se elige
-la versión por evento **para que la corrección sea visible en la demostración**.
+Los triggers disparan en un `GroupByKey` o un `Combine`. Cuando las dos etapas de agregación
+se fusionaron en una sola con estado —para que dejaran de contar doble—, **dejó de haber
+agregación en el grafo**: lo que queda son `ParDo` encadenados. Un trigger configurado ahí no
+se dispararía nunca, y dejarlo escrito sugeriría un comportamiento que no ocurre.
+
+Lo que la ventana sí aporta sin trigger:
+
+| Qué | Para qué |
+|---|---|
+| `FixedWindows(1 día, desplazada 3 h)` | Da el `window.end` contra el que se programan los timers, y alinea el día al calendario local |
+| `allowed_lateness = 36 h` | Fija cuándo expira el estado por medidor, que es lo que acota la memoria |
+
+**El efecto práctico es mejor que el de un pane temprano cada 60 segundos:** la salida se emite
+**por cada lectura que cambia una celda**. El tablero no espera a un reloj, se mueve cuando hay
+información nueva — y cuando no la hay, no escribe nada.
+
+**Lo que se resigna:** emitir por llegada significa que la ráfaga de una cabina que vuelve de
+una caída produce una escritura por lectura. En producción convendría agrupar esos disparos y
+demorar la corrección unos minutos — algo que a la facturación no le cambia nada, porque se
+factura días después. Se elige la versión por evento **para que la corrección sea visible en la
+demostración**, y queda declarado como límite conocido.
 
 **Ningún pane anuncia que es el último.** Después del último tardío simplemente no se emite
 nada. La finalidad la deduce el consumidor cuando su reloj pasa `fin_de_ventana + 36 h`, y por

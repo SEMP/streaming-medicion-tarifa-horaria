@@ -20,7 +20,6 @@ from dataclasses import dataclass
 from datetime import datetime
 
 import apache_beam as beam
-from apache_beam.transforms import trigger
 from apache_beam.typehints import KV
 
 from .config import Ajustes
@@ -164,11 +163,20 @@ def cadena(
             marcar_tiempo_de_evento
         ).with_outputs(CUARENTENA, main="ok")
 
+        # **Sin trigger, y no es un olvido.** Los triggers disparan en un `GroupByKey` o un
+        # `Combine`, y acá no hay ninguno: la agregación por celda la hace `CeldasVigentes`,
+        # que es un `ParDo` con estado. Ver la decisión 12 — se llegó a eso porque encadenar
+        # dos agregaciones bajo `ACCUMULATING` contaba doble.
+        #
+        # Configurar un trigger igual sería peor que no hacerlo: sugiere un comportamiento
+        # que no ocurre. Lo que la ventana sí aporta es el `window.end` contra el que se
+        # programan los timers, y la `allowed_lateness`, que fija cuándo expira el estado.
+        #
+        # El efecto práctico es que la salida se emite **por lectura que cambia una celda**,
+        # no cada N segundos: más reactivo que el pane temprano que reemplaza.
         ventaneadas = marcadas.ok | "VentanaDiaria" >> beam.WindowInto(
             beam.window.FixedWindows(DIA_SEGUNDOS, offset=desplazamiento),
-            trigger=trigger.AfterWatermark(late=trigger.AfterCount(1)),
             allowed_lateness=LATENCIA_PERMITIDA_SEGUNDOS,
-            accumulation_mode=trigger.AccumulationMode.ACCUMULATING,
         )
 
         deduplicadas = ventaneadas | "Deduplicar" >> beam.ParDo(

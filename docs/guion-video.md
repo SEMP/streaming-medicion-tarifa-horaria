@@ -8,9 +8,17 @@ quede implícita**:
 | Video breve del pipeline end-to-end | Escenas 4 y 5 |
 | Evidencia visible de normales, duplicados y tardíos | Escena 3, y otra vez en la 5 |
 | Caso de uso, arquitectura, decisiones y resultados | Escenas 1, 2 y 6 |
+| | |
+| **Para la defensa** | Clara escribió una versión extendida con el fondo conceptual de cada escena y las preguntas probables del profesor, con su respuesta. Está en su repositorio, en `TPF/guion_video_detallado.md` |
 | Integrantes y contribuciones | Escena 7 |
 
-**Duración objetivo: 9 minutos.** Es «breve» sin apurar lo que importa.
+**Duración: 9 min 45 s**, que es lo que suman las siete escenas —60 + 90 + 150 + 45 + 120 + 90
++ 30 segundos—. Antes decía «9 minutos» y no cerraba; lo detectó Clara al contrastar el guion
+con el reloj.
+
+Se aceptan los 45 segundos de más en lugar de recortar. Las dos escenas largas son la 3 y la
+5, y son **la evidencia**: recortarlas sería sacar justo lo que el criterio 6 puntúa. Si hubiera
+que ganar tiempo, sale de la 2 y la 6, que son explicación y no demostración.
 
 **Hablan los tres.** No es adorno: el criterio pide contribuciones por persona, y que cada uno
 explique su parte es la forma más creíble de mostrarlas. Cada escena dice quién habla.

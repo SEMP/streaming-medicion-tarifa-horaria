@@ -368,6 +368,19 @@ en el corpus medido va de 16 min (p50) a **249 min** en el peor caso — una cab
 | **Trigger tardío** | `AfterCount(1)` — un pane por cada tardío | Cada llegada tardía **corrige dinero**. Y hace visible el pane correctivo, que es la evidencia que pide el criterio 6 |
 | **Acumulación** | `ACCUMULATING` | Cada pane es la revisión completa de la celda y reemplaza al anterior. Es lo que hace que el *upsert* del consumidor sea correcto |
 
+> ⚠️ **Corregido el 29/09 (Sergio), a partir de tu revisión del guion.** Tenías razón en que
+> el código no tiene el trigger temprano — pero el motivo es más de fondo: **el pipeline no
+> tiene ningún trigger, y no puede tenerlo**. Los triggers disparan en un `GroupByKey` o un
+> `Combine`, y al fusionar las dos agregaciones en `CeldasVigentes` para que dejaran de contar
+> doble ([decisión 12](decisiones-de-diseno.md)), dejó de haber agregación en el grafo.
+>
+> Lo verifiqué sacando la configuración de trigger de `cadena.py`: las 89 pruebas y la
+> demostración dan **exactamente lo mismo**. Era inerte.
+>
+> La tabla de arriba describe el diseño anterior. Lo que ocurre hoy es que **la salida se emite
+> por cada lectura que cambia una celda**, que es más reactivo que un pane cada 60 s. Dejo la
+> tabla como registro de lo que se había decidido; si preferís reescribirla, es tuya.
+
 **Lo que se resigna en el trigger tardío:** un pane por evento tardío significa que la ráfaga
 de una cabina que vuelve de una caída produce una escritura por lectura. En producción
 convendría agrupar los disparos tardíos con `AfterProcessingTime`, a costa de demorar la
