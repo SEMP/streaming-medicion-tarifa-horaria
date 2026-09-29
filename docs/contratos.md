@@ -171,13 +171,10 @@ que el validador tiene que hacer cumplir: los códigos OBIS son únicos dentro d
 | `checksum_no_verificado` | La trama llegó entera pero no se pudo verificar su carácter de control | **Procesa**, y lo cuenta. Es del orden de **dos tercios** del tráfico: rechazarlo tiraría casi toda la muestra |
 | `truncada` | La trama se cortó | **Cuarentena** |
 
-⚠️ La propuesta anterior enumeraba `ok | estimado | sin_sincronizar`, que eran los valores del
-modelo de perfil de carga. Estos son los del readout, verificados contra el corpus.
-
-> **Corregido el 26/09 (Sergio):** acá decía 48 %, que contradecía el 66 % de la tabla de
-> arriba. Medido sobre el simulador con 8 cabinas y semilla 2026: **63,2 % checksum, 36,1 %
-> `ok`, 0,7 % truncada**. La proporción depende de qué modelos de equipo toque el sorteo del
-> parque, así que lo defendible es «del orden de dos tercios» y no un número exacto.
+Los tres valores están verificados contra el corpus. Medido con 8 cabinas y semilla 2026:
+**63,2 % `checksum_no_verificado`, 36,1 % `ok`, 0,7 % `truncada`**. La proporción depende de qué
+modelos de equipo toque el sorteo del parque, así que lo defendible es «del orden de dos
+tercios» y no un número exacto.
 
 **`truncada` no alcanza como defensa**, y es el punto fino: una trama cortada en medio de un
 número —`014380.81` → `01438`— sigue siendo un número válido y el simulador no siempre la
@@ -271,92 +268,105 @@ abajo lo manda igual a cuarentena, y porque la divergencia queda contada y visib
 
 # 2. Contrato del registro de salida
 
-**Tópico:** `medicion.consumo-franja.v1` · **Clave:** `medidor_id|fecha_local|franja`
+**Tópico:** `medicion.consumo-franja.v1`
 
+**La identidad va en la clave del mensaje, no en el valor.** La clave es la cadena
+`medidor_id|fecha_local|franja`; el valor trae solo lo que se calculó:
+
+```
+clave:  MED-0042|2026-09-25|resto
+```
 ```json
 {
-  "schema_version": 1,
-  "medidor_id": "MED-0002-000",
-  "cabina_id": "CAB-0002",
-  "fecha_local": "2026-09-22",
-  "franja": "punta",
-  "zona_horaria": "America/Asuncion",
-  "energia_kwh": 3.184,
-  "lecturas_usadas": 14,
-  "cobertura_pct": 100.0,
-  "separacion_max_minutos": 38.2,
-  "error_atribucion_pct": 15.9,
-  "interpolado": true,
-  "indeterminado": false,
-  "es_provisional": true,
-  "pane_index": 2,
-  "pane_timing": "LATE",
-  "ventana_inicio": "2026-09-22T00:00:00-03:00",
-  "ventana_fin": "2026-09-23T00:00:00-03:00",
-  "watermark_at_emission": "2026-09-22T22:30:00-03:00",
-  "emitted_at": "2026-09-23T02:15:11.804-03:00"
+  "energia_kwh": 2.4,
+  "minutos_cubiertos": 20.0,
+  "minutos_indeterminados": 0.0,
+  "interpolada": false,
+  "indeterminada": false,
+  "separacion_maxima_minutos": 15.0,
+  "cabina_id": "CAB-07",
+  "intervalos_usados": 2
 }
 ```
 
+Que la identidad viva en la clave no es un detalle de serialización: es lo que hace que todas
+las revisiones de una celda caigan en la misma partición, se lean en orden y el *upsert* del
+consumidor sea determinista. Repetir esos tres campos en el valor sería redundante y abriría la
+posibilidad de que discrepen.
+
+| Campo | Qué es |
+|---|---|
+| `energia_kwh` | La energía atribuida a esta celda, sumando los trozos de cada intervalo vigente que cae en ella |
+| `minutos_cubiertos` | Cuántos minutos de la franja quedaron efectivamente cubiertos por intervalos |
+| `minutos_indeterminados` | Cuántos quedaron sin cubrir porque el intervalo que los cruzaba superaba el umbral de §2.3 |
+| `interpolada` | `true` si algún trozo salió de repartir un intervalo que cruzaba un borde, en lugar de una lectura que cayera sobre él |
+| `indeterminada` | `true` si al menos un cruce superó el umbral y su energía **no** se repartió |
+| `separacion_maxima_minutos` | La separación del intervalo más largo que aportó a esta celda. Es la cota del error de atribución — ver §2.3 |
+| `cabina_id` | Diagnóstico: la duración de la ronda, y por lo tanto el error, es propiedad de la cabina |
+| `intervalos_usados` | Cuántos intervalos aportaron energía a la celda |
+
+Los campos salen de `CeldasVigentes._recalcular`, en
+`pipeline/src/pipeline/transformaciones.py`.
+
 ## 2.1 La clave es el contrato
 
-`medidor_id|fecha_local|franja` es **estable a través de todos los panes de la misma celda**.
-Todos van a la misma partición, se leen en orden, y **el último gana**. La semántica del
-consumidor es **upsert, nunca insert**: eso es lo que hace que recalcular una ventana
-*reemplace* su valor en lugar de sumar otro.
+`medidor_id|fecha_local|franja` es **estable a través de todas las revisiones de la misma
+celda**. Todas van a la misma partición, se leen en orden, y **la última gana**. La semántica
+del consumidor es **upsert, nunca insert**.
 
 La clave **no incluye `cabina_id`**, aunque el campo viaje en el valor: un medidor podría
 cambiar de cabina y la identidad del resultado no debe depender de eso.
 
-> ⚠️ **Lo que el upsert NO resuelve** (Sergio, 25/09). Opera sobre la **celda**, así que
-> reescribirla es inocuo — pero los intervalos superados que llegan a la agregación **caen
-> dentro de esa misma celda** y se suman igual. Una lectura tardía duplicaba el consumo de su
-> intervalo. La corrección está en `CeldasVigentes`, que reemplaza a la agregación:
-> [decisión 12](decisiones-de-diseno.md). Afecta a cómo se arma la agregación, por eso queda
-> anotado acá.
+⚠️ **El upsert no alcanza por sí solo, y conviene tenerlo claro.** Opera sobre la celda, así
+que reescribirla es inocuo — pero si a la celda llegaran a la vez un intervalo y las dos
+mitades que lo reemplazan, los tres caen **dentro de la misma celda** y se sumarían igual. Por
+eso quién sigue vigente lo decide `CeldasVigentes` **antes** de sumar, y no el destino
+([decisión 12](decisiones-de-diseno.md)).
 
-## 2.2 Cobertura, en lugar de «intervalos esperados»
+## 2.2 Cobertura: distinguir «consumió poco» de «falta un pedazo»
 
-El borrador anterior proponía `intervalos_contados` contra `intervalos_esperados`. **Con
-readout eso no se puede calcular**: no hay grilla fija de medición, hay rondas continuas cuya
-duración depende del tamaño de la cabina, así que no existe un número de intervalos
-«esperados».
+Un total bajo puede significar dos cosas muy distintas, y la salida tiene que permitir
+separarlas: que el cliente consumió poco, o que todavía no llegó toda la información de esa
+franja.
 
-Se reemplaza por **`cobertura_pct`**: qué porcentaje de la duración de la franja quedó
-efectivamente cubierto por pares de lecturas. Cumple la misma función —distinguir «consumió
-poco» de «todavía no llegó todo»— y sí es calculable. `lecturas_usadas` lo acompaña como dato
-de diagnóstico.
+Por eso van `minutos_cubiertos` y `minutos_indeterminados`. El consumidor los contrasta contra
+la duración de la franja —que sale del calendario, no del mensaje— y sabe cuánto de la celda
+está respaldado por mediciones.
+
+**No se declara un número de intervalos «esperados»**, que sería la forma habitual de decir lo
+mismo: con *readout* no hay grilla fija de medición sino rondas continuas cuya duración depende
+del tamaño de la cabina, así que ese número no existe. La cobertura se mide en minutos, que sí
+es calculable.
 
 ## 2.3 Cada registro declara su propia incertidumbre
 
-Lo exige la decisión 5, y es el campo que hace honesta a la salida.
+Lo exige la decisión 5. El dato que lo permite es **`separacion_maxima_minutos`**: cuanto más
+largo es el intervalo que cruzó el borde, más se pudo equivocar el reparto.
+
+El error máximo de atribución **lo calcula el consumidor**, porque necesita la duración de la
+franja, que está en el calendario y no en el mensaje:
 
 ```
-error_atribucion_pct = separacion_max_minutos / duracion_franja_minutos
+error_atribucion = separacion_maxima_minutos / duracion_franja_minutos
 ```
 
-Con la franja punta de 4 h del calendario de ejemplo y una separación máxima de 38 min, da
-15,9 %. **El número es distinto para cada medidor** porque depende del tamaño de su cabina, y
-en el corpus medido va de 16 min (p50) a **249 min** en el peor caso — una cabina caída.
+Con la franja `punta` de 4 h del calendario de ejemplo y una separación de 38 min da 15,9 %.
+**El número es distinto para cada medidor**, porque depende del tamaño de su cabina: en el
+corpus medido va de 16 min en la mediana a **249 min** en el peor caso, una cabina caída.
 
-- `interpolado`: si el valor de algún borde se obtuvo interpolando entre las dos lecturas que
-  lo rodean, en lugar de una lectura que cayera en el borde.
-- `indeterminado`: si la separación superó el límite tolerado y el valor **no se inventó**.
-  Cuando es `true`, `energia_kwh` es `null`.
+Los dos marcadores que acompañan:
 
-> **Cerrado el 27/09 (Sergio):** el límite quedó en **90 minutos**, elegido donde la
-> distribución de los cruces se parte en dos → [decisión 13](decisiones-de-diseno.md). Está
-> implementado en `CeldasVigentes`.
->
-> ⚠️ **Y con una divergencia respecto de lo escrito arriba, que conviene discutir.** Acá decía
-> que con `indeterminado = true`, `energia_kwh` es `null`. La implementación **conserva la
-> energía de los intervalos buenos de la celda** y suma aparte `minutos_indeterminados`.
->
-> El motivo: una celda puede tener veinte intervalos sanos y un cruce impresentable. Anular la
-> celda entera tiraría los veinte. Y distinguir «consumió poco» de «falta un pedazo» es
-> exactamente para lo que existe la cobertura de §2.2 — `null` hace esa distinción imposible.
-> Si preferís el `null`, se cambia en una línea, pero creo que este camino es más fiel al
-> resto del diseño: declarar la incertidumbre en lugar de esconder el dato.
+- **`interpolada`** — algún trozo de la celda salió de repartir un intervalo que cruzaba un
+  borde, en lugar de una lectura que cayera sobre él. Es la diferencia entre un dato estimado y
+  uno medido, y el consumidor tiene derecho a distinguirlos.
+- **`indeterminada`** — al menos un cruce superó el umbral tolerado, hoy **90 minutos**
+  ([decisión 13](decisiones-de-diseno.md)), y su energía **no se repartió**.
+
+**Cuando `indeterminada` es `true`, `energia_kwh` no se anula.** Se conservan los intervalos
+sanos de la celda y los minutos del cruce impresentable se suman aparte, en
+`minutos_indeterminados`. Una celda puede tener veinte intervalos buenos y un cruce malo:
+anularla entera tiraría los veinte, y haría imposible la distinción que §2.2 existe para
+permitir. La incertidumbre se declara, no se esconde el dato.
 
 ## 2.4 La política temporal
 
@@ -386,9 +396,8 @@ fusionaron en `CeldasVigentes` porque encadenarlas bajo un modo acumulativo **co
 (decisión 12). Al sacar las agregaciones para arreglar ese error, el trigger quedó huérfano:
 seguía configurado, pero ya no tenía dónde dispararse.
 
-Estuvo escrito en `cadena.py` hasta el 29/09 y **era inerte**. Se verificó sacándolo: las 89
-pruebas y la demostración dan exactamente lo mismo. Dejarlo sugería un comportamiento que no
-ocurre, que es lo que el criterio 5 castiga.
+Que es inerte no es una deducción: se verificó quitando la configuración de trigger que el
+pipeline tenía escrita, y las 89 pruebas y la demostración dieron exactamente lo mismo.
 
 **De la configuración de ventana, lo que sí trabaja:**
 
@@ -406,7 +415,7 @@ cambiaron**, comparando contra la tabla anterior. O sea que el resultado se publ
 lectura que cambia algo**, sin esperar ningún reloj, y cuando no hay novedad no se escribe
 nada.
 
-En la práctica es más reactivo que el pane cada 60 s que este documento prometía antes.
+En la práctica es más reactivo que un pane periódico: no hay latencia de espera de reloj.
 
 ⚠️ **Y corrige un argumento que estaba mal en la versión anterior:** el *upsert* del consumidor
 **no** es correcto «porque el modo es `ACCUMULATING`». Es correcto porque **`CeldasVigentes`
