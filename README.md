@@ -158,6 +158,13 @@ docker compose -f infra/docker-compose.yml --profile e2e run --rm -T extremo-a-e
 Usa tópicos propios (`medicion.*.e2e`) para que cada corrida sea independiente de la
 anterior, y devuelve código de salida.
 
+**Replay**, que va después del anterior: relee `medicion.lecturas.e2e` desde el offset 0 con
+un grupo nuevo, sin sembrar, y verifica que converja a las mismas celdas:
+
+```bash
+docker compose -f infra/docker-compose.yml --profile e2e run --rm -T repeticion
+```
+
 **Ver la salida**, que es lo que el pipeline produce y el tablero consumiría:
 
 ```bash

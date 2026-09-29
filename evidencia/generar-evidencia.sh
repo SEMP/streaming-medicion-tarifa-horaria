@@ -66,9 +66,13 @@ correr $COMPOSE --profile humo run --rm -T humo
 titulo "7. Recorrido completo con la lógica, sobre Flink"
 correr $COMPOSE --profile e2e run --rm -T extremo-a-extremo
 
+titulo "7b. Replay: releer la entrada desde el offset 0, con un grupo nuevo"
+correr $COMPOSE --profile e2e run --rm -T repeticion
+
 titulo "8. Qué quedó en los tópicos"
 # Producción y consumo observables: cuántos mensajes entraron y cuántos salieron.
-for t in medicion.lecturas.e2e medicion.consumo-franja.e2e medicion.cuarentena.e2e; do
+for t in medicion.lecturas.e2e medicion.consumo-franja.e2e medicion.cuarentena.e2e \
+         medicion.consumo-franja-replay.e2e medicion.cuarentena-replay.e2e; do
   correr $COMPOSE exec -T kafka /opt/kafka/bin/kafka-get-offsets.sh \
     --bootstrap-server kafka:9092 --topic "$t"
 done

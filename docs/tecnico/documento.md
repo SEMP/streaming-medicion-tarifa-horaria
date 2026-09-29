@@ -468,7 +468,7 @@ Declarado por tramo, sin sobreprometer:
 
 | Tramo | Garantía | Por qué |
 |---|---|---|
-| Concentrador → Kafka | **Al menos una vez** | El productor reintenta ante un fallo de publicación; puede duplicar |
+| Concentrador → Kafka | **Al menos una vez** | El productor declara `acks=all` e idempotencia: lo confirmado está en todas las réplicas, y sus reintentos internos no duplican ni reordenan. El que duplica es el reintento de publicación de la sección 5.1, que es otro envío |
 | Dentro del pipeline | **Efectivamente una vez** dentro del horizonte de 36 h | Deduplicación con estado por clave, respaldada por el checkpointing de Flink |
 | Pipeline → salida | **Efectivamente una vez** en el efecto observable | El *upsert* por clave estable hace que reescribir sea inocuo |
 
@@ -585,6 +585,22 @@ Usa tópicos propios (`medicion.*.e2e`) para que cada corrida sea independiente:
 de producción hacía que leyera lo que había dejado la prueba anterior. Comandos en
 [`infra/README.md`](../../infra/README.md).
 
+**Y el replay, que es la idempotencia sobre el stack real.** Después del recorrido, el servicio
+`repeticion` relee el tópico de entrada **desde el offset 0**, con un `group.id` nuevo y un
+trabajo de Flink sin estado previo, y escribe a un tópico de salida propio para que sus celdas
+se lean solas. Sin sembrar nada: el mismo log, procesado otra vez desde cero.
+
+```
+  celda                                   kWh   esperado  origen
+  MED-0042|2026-09-25|punta             3.100      3.100  medido OK
+  MED-0042|2026-09-25|resto             2.400      2.400  medido OK
+  TOTAL                                 5.500      5.500
+```
+
+Converge a las mismas dos celdas, con la cuarentena vacía. La demostración de la sección 6.1
+ya hacía un replay con estado nuevo en cada acto, pero con `DirectRunner`; esto lo repite con
+KafkaIO y Flink, que es donde el reprocesamiento pasa de verdad.
+
 ## 6.4 Un error que solo una prueba podía encontrar
 
 Vale la pena contarlo porque es el argumento del enunciado comprobado sobre el propio código.
@@ -637,6 +653,14 @@ demorar la corrección unos minutos — algo que a la facturación no le cambia 
 versión por evento **para que la corrección sea visible en la demostración**.
 
 **Fuera de las 36 horas no hay deduplicación**, como se explica en la sección 5.5.
+
+**El consumidor confirma offsets por su cuenta.** `ReadFromKafka` corre con
+`enable.auto.commit=true`, y ese commit periódico no espera a que el elemento termine de
+procesarse. Mientras Flink restaure desde su checkpoint no importa, porque los offsets que
+valen son los del checkpoint. Pero un trabajo relanzado **sin** checkpoint arranca desde el
+último offset confirmado, que puede estar por delante de lo procesado, y ahí el tramo de
+entrada deja de ser «al menos una vez». La corrección es `commit_offset_in_finalize=True`, que
+confirma recién al cerrar el checkpoint; no se aplicó para no tocar un recorrido ya verificado.
 
 ## 7.3 Posibles mejoras
 

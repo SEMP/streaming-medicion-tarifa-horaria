@@ -51,6 +51,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 29/09 | `e2c5efe` | **Replay sobre Kafka y Flink**: el servicio `repeticion` relee la entrada desde el offset 0 con grupo nuevo y converge a las mismas celdas (documento sección 6.3). El productor del simulador declara `acks=all` e idempotencia (sección 5.5), y `enable.auto.commit` queda como límite conocido (sección 7.2) |
 | 29/09 | — | **P9 cerrado: el equipo es de tres.** No se suma un cuarto integrante |
 | 29/09 | `33fbe76` | **PDF del documento técnico regenerado**, que había quedado tres commits atrás del `.md`. Atención: requiere **pandoc y las fuentes Liberation**: sin ellas Typst cae a otra tipografía en los títulos y el mismo fuente da un PDF distinto según quién compile. Verificar con `pdffonts` |
 | 29/09 | `4290862` | **Secciones 3 y 4 del documento técnico revisadas** y marcas de borrador retiradas. Tres correcciones: sección 3.6 y sección 4.4 se contradecían sobre los panes, sección 3.6 contaba el borrador anterior, y sección 4.6 presentaba `error_atribucion_pct` como campo del mensaje cuando lo calcula el consumidor |

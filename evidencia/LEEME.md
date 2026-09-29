@@ -5,7 +5,7 @@ hace verificable la reproducibilidad, en lugar de afirmarla.
 
 | Archivo | Quién | Qué cubre |
 |---|---|---|
-| [`evidencia-ejecucion.txt`](evidencia-ejecucion.txt) | Sergio | Corrida completa: pruebas, demostración, stack, tópicos, humo, recorrido sobre Flink, offsets y salida. Se regenera con [`generar-evidencia.sh`](generar-evidencia.sh) |
+| [`evidencia-ejecucion.txt`](evidencia-ejecucion.txt) | Sergio | Corrida completa: pruebas, demostración, stack, tópicos, humo, recorrido sobre Flink, replay desde el offset 0, offsets y salida. Se regenera con [`generar-evidencia.sh`](generar-evidencia.sh) |
 | [`evidencia-ejecucion-daniel-2026-09-29.txt`](evidencia-ejecucion-daniel-2026-09-29.txt) | Daniel | **Validación independiente** del recorrido end-to-end en otra máquina: Windows + WSL2 Ubuntu 24.04 + Docker Desktop |
 
 ## Qué probó la segunda máquina
