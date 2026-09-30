@@ -1,0 +1,86 @@
+# Tablero del consumo por franja
+
+El último eslabón del ciclo del dato: **producir → procesar → analizar**. Lee el tópico
+derivado `medicion.consumo-franja.v1` y reconstruye la vista actual.
+
+```bash
+uv run --with marimo marimo run tablero/tablero.py     # verlo
+uv run --with marimo marimo edit tablero/tablero.py    # tocarlo
+```
+
+No hace falta instalar nada: `--with marimo` lo resuelve en el momento y **no toca el entorno
+del proyecto ni la imagen de Docker**, que no tienen por qué cargar con una dependencia de
+visualización.
+
+Necesita el stack levantado y datos en el tópico:
+
+```bash
+docker compose -f infra/docker-compose.yml up -d
+docker compose -f infra/docker-compose.yml --profile demo up simulador pipeline
+```
+
+**Ojo con qué perfil corriste**, porque no todos escriben al mismo lugar. El perfil `demo`
+—simulador y pipeline— usa los tópicos `.v1`, que son los que el tablero lee por defecto. El
+recorrido `e2e` usa tópicos propios terminados en `.e2e`, aislados a propósito para no
+ensuciar los de la demostración. Para mirar el resultado de ese recorrido hay que apuntar el
+tablero ahí:
+
+```bash
+TOPICO_CONSUMO=medicion.consumo-franja.e2e \
+TOPICO_CUARENTENA=medicion.cuarentena.e2e \
+  uv run --with marimo marimo run tablero/tablero.py
+```
+
+## Qué demuestra, además de mostrar números
+
+Es una extensión opcional: la arquitectura que pide el enunciado termina en el tópico
+derivado. Existe porque hay tres propiedades del contrato que solo se ven del lado del
+consumidor.
+
+**1. El consumidor hace *upsert*, nunca suma.** La clave `medidor|fecha|franja` identifica una
+celda, y cada mensaje con esa clave reemplaza al anterior. Verificado sobre el recorrido
+completo: **5 mensajes colapsan en 2 celdas**, con 3,100 kWh en `punta` y 2,400 en `resto` —
+exactamente lo que el recorrido declara como esperado. Los tres mensajes de más son las
+revisiones que publicó cada lectura que cambió algo; si el tablero sumara, el total sería más
+del doble.
+
+**2. Releer desde el principio converge a la misma vista.** Cada actualización vuelve a leer el
+tópico entero desde el offset 0, con una asignación de particiones nueva y sin confirmar
+offsets. Es caro a propósito: es la propiedad de idempotencia que el proyecto declara,
+ejecutándose a la vista en lugar de afirmarse en un documento.
+
+**3. El error de atribución lo calcula el consumidor.** El mensaje trae el numerador,
+`separacion_maxima_minutos`. El denominador es la duración de la franja, que vive en el
+calendario tarifario y **no** en el evento — por eso el tablero carga `config/franjas.toml` con
+el mismo `cargar_calendario` que usa el pipeline. Está explicado en `docs/contratos.md`,
+sección 2.3: ponerlo en el mensaje obligaría a que pipeline y consumidor coincidan sobre qué
+calendario rige en cada fecha.
+
+## Lo que el tablero rechaza, y por qué lo dice
+
+Valida el contrato de salida antes de aceptar un mensaje: clave de tres partes y un
+`energia_kwh` en el cuerpo. Lo que no lo cumple **se cuenta y se informa**, no se descarta en
+silencio.
+
+No es paranoia: la **prueba de humo escribe en este mismo tópico** haciendo *passthrough* de
+lecturas crudas, claveadas solo por medidor. Si se mezclan con las celdas aparecen filas sin
+fecha ni franja, y el total pierde sentido. Cuando eso pasa, el tablero lo avisa y recomienda
+arrancar con el tópico limpio:
+
+```bash
+docker compose -f infra/docker-compose.yml down -v
+```
+
+## Configuración
+
+Todo por variables de entorno, con el mismo valor por defecto que el resto del proyecto:
+
+| Variable | Por defecto |
+|---|---|
+| `KAFKA_BOOTSTRAP_SERVERS` | `localhost:29092` |
+| `TOPICO_CONSUMO` | `medicion.consumo-franja.v1` |
+| `TOPICO_CUARENTENA` | `medicion.cuarentena.v1` |
+| `CONFIG_FRANJAS` | `config/franjas.example.toml` |
+
+El notebook importa `pipeline.franjas`, así que hay que correrlo desde la raíz del repositorio
+o con `PYTHONPATH=pipeline/src`.

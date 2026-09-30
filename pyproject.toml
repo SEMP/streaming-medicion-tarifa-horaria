@@ -52,3 +52,6 @@ select = ["E", "F", "I", "UP", "B"]
 # es así como el runner descubre qué estado y qué temporizadores usa un DoFn. B008 marca eso
 # como error, pero acá no hay alternativa.
 "pipeline/src/pipeline/transformaciones.py" = ["B008"]
+# En un notebook de marimo, una expresión suelta al final de una celda **es** su salida:
+# así se declara qué se renderiza. B018 la lee como código muerto y no lo es.
+"tablero/*.py" = ["B018"]

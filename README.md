@@ -65,6 +65,8 @@ pipeline/     Pipeline Beam: lectura con KafkaIO, validación, asignación de fr
               agregación incremental por clave y salida idempotente.
 config/       Calendario de franjas e intervalo de medición. Configurables, validados.
 infra/        docker-compose: Kafka, Flink, job server de Beam.
+tablero/      Consumidor en marimo: lee el tópico derivado y reconstruye la vista
+              actual con upsert por clave. Extensión opcional.
 tests/        Pruebas unitarias y de pipeline con TestStream.
 docs/         Documento técnico, diagrama de arquitectura y decisiones de diseño.
 datos/        Datos de ejemplo generados por el simulador (no versionados).
@@ -78,6 +80,7 @@ Cada carpeta con vida propia tiene el suyo, y todos se alcanzan desde acá:
 |---|---|
 | [`infra/README.md`](infra/README.md) | Cómo está armado el stack, qué hace cada contenedor y resolución de problemas |
 | [`simulador/README.md`](simulador/README.md) | Qué genera el simulador, sus escenarios y cómo se le piden fallas |
+| [`tablero/README.md`](tablero/README.md) | El consumidor en marimo: cómo levantarlo y qué tres propiedades del contrato demuestra |
 | [`docs/README.md`](docs/README.md) | Mapa de la documentación: qué documento es cada uno y en cuál escribir cada cosa |
 | [`evidencia/LEEME.md`](evidencia/LEEME.md) | Las dos corridas capturadas y cómo leerlas |
 | [`docs/planes/README.md`](docs/planes/README.md) | El reparto de trabajo del equipo. Es material de proceso, no de entrega |

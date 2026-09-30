@@ -1,0 +1,139 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.25.0",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "ca151f32d64a857af89c2f7c4630c647",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"consumo-por-franja-tarifaria\">Consumo por franja tarifaria</h1>\n<span class=\"paragraph\">Lee el t\u00f3pico derivado y reconstruye la vista actual haciendo <em>upsert</em> por clave.\n<strong>No suma</strong>: cada mensaje reemplaza a la celda que identifica.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "4f72c15a71aabc65b05a7c935d494d3a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "0cf4d6c1ba3651f0fc6fe92dfc370d16",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "04f980e31da69977b1006921ba9cdda6",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='9689c337-1968-c441-ea57-1636925d12e3'><marimo-refresh data-initial-value='&quot;&quot;' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eReleer el t\u00f3pico cada&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-options='[&quot;5s&quot;,&quot;15s&quot;,&quot;30s&quot;,&quot;1m&quot;]' data-default-interval='&quot;15s&quot;'></marimo-refresh></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "79dc744a4d95fc85acd731d2a70df73f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "0d6286e915239c7993728313c654d201",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>1170 celdas</strong> reconstruidas a partir de <strong>20825 mensajes</strong>. La diferencia son las revisiones sucesivas: cada lectura tard\u00eda que corrige una celda publica un mensaje nuevo con la misma clave, y el <em>upsert</em> se queda con el \u00faltimo.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "5d1bf00186fe163b6adab8cb3af5e557",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='SFPL-0' random-id='29ef7671-1e30-1920-1ce2-952427ee29d7'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;medidor&#92;&quot;:&#92;&quot;MED-0000-000&#92;&quot;,&#92;&quot;fecha&#92;&quot;:&#92;&quot;2026-09-30&#92;&quot;,&#92;&quot;franja&#92;&quot;:&#92;&quot;punta&#92;&quot;,&#92;&quot;kWh&#92;&quot;:6.226,&#92;&quot;calidad&#92;&quot;:&#92;&quot;interpolada&#92;&quot;,&#92;&quot;error atribuci\u00f3n&#92;&quot;:&#92;&quot;6.5 %&#92;&quot;,&#92;&quot;separaci\u00f3n m\u00e1x (min)&#92;&quot;:15.583333333333334,&#92;&quot;min cubiertos&#92;&quot;:217.85,&#92;&quot;min indeterminados&#92;&quot;:0.0,&#92;&quot;intervalos&#92;&quot;:28,&#92;&quot;cabina&#92;&quot;:&#92;&quot;CAB-0000&#92;&quot;},{&#92;&quot;medidor&#92;&quot;:&#92;&quot;MED-0000-000&#92;&quot;,&#92;&quot;fecha&#92;&quot;:&#92;&quot;2026-09-30&#92;&quot;,&#92;&quot;franja&#92;&quot;:&#92;&quot;resto&#92;&quot;,&#92;&quot;kWh&#92;&quot;:6.479,&#92;&quot;calidad&#92;&quot;:&#92;&quot;interpolada&#92;&quot;,&#92;&quot;error atribuci\u00f3n&#92;&quot;:&#92;&quot;5.9 %&#92;&quot;,&#92;&quot;separaci\u00f3n m\u00e1x (min)&#92;&quot;:46.36666666666667,&#92;&quot;min cubiertos&#92;&quot;:653.9333333333335,&#92;&quot;min indeterminados&#92;&quot;:0.0,&#92;&quot;intervalos&#92;&quot;:94,&#92;&quot;cabina&#92;&quot;:&#92;&quot;CAB-0000&#92;&quot;},{&#92;&quot;medidor&#92;&quot;:&#92;&quot;MED-0000-000&#92;&quot;,&#92;&quot;fecha&#92;&quot;:&#92;&quot;2026-09-30&#92;&quot;,&#92;&quot;franja&#92;&quot;:&#92;&quot;valle&#92;&quot;,&#92;&quot;kWh&#92;&quot;:2.085,&#92;&quot;calidad&#92;&quot;:&#92;&quot;interpolada&#92;&quot;,&#92;&quot;error atribuci\u00f3n&#92;&quot;:&#92;&quot;11.2 %&#92;&quot;,&#92;&quot;separaci\u00f3n m\u00e1x (min)&#92;&quot;:46.86666666666667,&#92;&quot;min cubiertos&#92;&quot;:419.75,&#92;&quot;min indeterminados&#92;&quot;:0.0,&#92;&quot;intervalos&#92;&quot;:56,&#92;&quot;cabina&#92;&quot;:&#92;&quot;CAB-0000&#92;&quot;},{&#92;&quot;medidor&#92;&quot;:&#92;&quot;MED-0000-001&#92;&quot;,&#92;&quot;fecha&#92;&quot;:&#92;&quot;&#92;&quot;,&#92;&quot;franja&#92;&quot;:&#92;&quot;&#92;&quot;,&#92;&quot;kWh&#92;&quot;:0.0,&#92;&quot;calidad&#92;&quot;:&#92;&quot;medida&#92;&quot;,&#92;&quot;error atribuci\u00f3n&#92;&quot;:&#92;&quot;\u2014&#92;&quot;,&#92;&quot;separaci\u00f3n m\u00e1x (min)&#92;&quot;:0.0,&#92;&quot;min cubiertos&#92;&quot;:0.0,&#92;&quot;min indeterminados&#92;&quot;:0.0,&#92;&quot;intervalos&#92;&quot;:0,&#92;&quot;cabina&#92;&quot;:&#92;&quot;CAB-0000&#92;&quot;},{&#92;&quot;medidor&#92;&quot;:&#92;&quot;MED-0000-001&#92;&quot;,&#92;&quot;fecha&#92;&quot;:&#92;&quot;2026-09-30&#92;&quot;,&#92;&quot;franja&#92;&quot;:&#92;&quot;punta&#92;&quot;,&#92;&quot;kWh&#92;&quot;:3.392,&#92;&quot;calidad&#92;&quot;:&#92;&quot;interpolada&#92;&quot;,&#92;&quot;error atribuci\u00f3n&#92;&quot;:&#92;&quot;6.1 %&#92;&quot;,&#92;&quot;separaci\u00f3n m\u00e1x (min)&#92;&quot;:14.7,&#92;&quot;min cubiertos&#92;&quot;:130.76666666666668,&#92;&quot;min indeterminados&#92;&quot;:0.0,&#92;&quot;intervalos&#92;&quot;:18,&#92;&quot;cabina&#92;&quot;:&#92;&quot;CAB-0000&#92;&quot;},{&#92;&quot;medidor&#92;&quot;:&#92;&quot;MED-0000-001&#92;&quot;,&#92;&quot;fecha&#92;&quot;:&#92;&quot;2026-09-30&#92;&quot;,&#92;&quot;franja&#92;&quot;:&#92;&quot;resto&#92;&quot;,&#92;&quot;kWh&#92;&quot;:5.85,&#92;&quot;calidad&#92;&quot;:&#92;&quot;interpolada&#92;&quot;,&#92;&quot;error atribuci\u00f3n&#92;&quot;:&#92;&quot;6.0 %&#92;&quot;,&#92;&quot;separaci\u00f3n m\u00e1x (min)&#92;&quot;:46.416666666666664,&#92;&quot;min cubiertos&#92;&quot;:659.9999999999997,&#92;&quot;min indeterminados&#92;&quot;:0.0,&#92;&quot;intervalos&#92;&quot;:93,&#92;&quot;cabina&#92;&quot;:&#92;&quot;CAB-0000&#92;&quot;},{&#92;&quot;medidor&#92;&quot;:&#92;&quot;MED-0000-001&#92;&quot;,&#92;&quot;fecha&#92;&quot;:&#92;&quot;2026-09-30&#92;&quot;,&#92;&quot;franja&#92;&quot;:&#92;&quot;valle&#92;&quot;,&#92;&quot;kWh&#92;&quot;:12131.417,&#92;&quot;calidad&#92;&quot;:&#92;&quot;interpolada&#92;&quot;,&#92;&quot;error atribuci\u00f3n&#92;&quot;:&#92;&quot;11.2 %&#92;&quot;,&#92;&quot;separaci\u00f3n m\u00e1x (min)&#92;&quot;:46.93333333333333,&#92;&quot;min cubiertos&#92;&quot;:410.4166666666667,&#92;&quot;min indeterminados&#92;&quot;:0.0,&#92;&quot;intervalos&#92;&quot;:56,&#92;&quot;cabina&#92;&quot;:&#92;&quot;CAB-0000&#92;&quot;},{&#92;&quot;medidor&#92;&quot;:&#92;&quot;MED-0000-002&#92;&quot;,&#92;&quot;fecha&#92;&quot;:&#92;&quot;2026-09-30&#92;&quot;,&#92;&quot;franja&#92;&quot;:&#92;&quot;punta&#92;&quot;,&#92;&quot;kWh&#92;&quot;:4.075,&#92;&quot;calidad&#92;&quot;:&#92;&quot;interpolada&#92;&quot;,&#92;&quot;error atribuci\u00f3n&#92;&quot;:&#92;&quot;6.1 %&#92;&quot;,&#92;&quot;separaci\u00f3n m\u00e1x (min)&#92;&quot;:14.683333333333334,&#92;&quot;min cubiertos&#92;&quot;:218.4333333333333,&#92;&quot;min indeterminados&#92;&quot;:0.0,&#92;&quot;intervalos&#92;&quot;:29,&#92;&quot;cabina&#92;&quot;:&#92;&quot;CAB-0000&#92;&quot;},{&#92;&quot;medidor&#92;&quot;:&#92;&quot;MED-0000-002&#92;&quot;,&#92;&quot;fecha&#92;&quot;:&#92;&quot;2026-09-30&#92;&quot;,&#92;&quot;franja&#92;&quot;:&#92;&quot;resto&#92;&quot;,&#92;&quot;kWh&#92;&quot;:4.16,&#92;&quot;calidad&#92;&quot;:&#92;&quot;interpolada&#92;&quot;,&#92;&quot;error atribuci\u00f3n&#92;&quot;:&#92;&quot;6.0 %&#92;&quot;,&#92;&quot;separaci\u00f3n m\u00e1x (min)&#92;&quot;:46.43333333333333,&#92;&quot;min cubiertos&#92;&quot;:659.9999999999999,&#92;&quot;min indeterminados&#92;&quot;:0.0,&#92;&quot;intervalos&#92;&quot;:96,&#92;&quot;cabina&#92;&quot;:&#92;&quot;CAB-0000&#92;&quot;},{&#92;&quot;medidor&#92;&quot;:&#92;&quot;MED-0000-002&#92;&quot;,&#92;&quot;fecha&#92;&quot;:&#92;&quot;2026-09-30&#92;&quot;,&#92;&quot;franja&#92;&quot;:&#92;&quot;valle&#92;&quot;,&#92;&quot;kWh&#92;&quot;:1.36,&#92;&quot;calidad&#92;&quot;:&#92;&quot;interpolada&#92;&quot;,&#92;&quot;error atribuci\u00f3n&#92;&quot;:&#92;&quot;11.2 %&#92;&quot;,&#92;&quot;separaci\u00f3n m\u00e1x (min)&#92;&quot;:46.916666666666664,&#92;&quot;min cubiertos&#92;&quot;:419.13333333333344,&#92;&quot;min indeterminados&#92;&quot;:0.0,&#92;&quot;intervalos&#92;&quot;:54,&#92;&quot;cabina&#92;&quot;:&#92;&quot;CAB-0000&#92;&quot;}]&quot;' data-total-rows='1170' data-total-columns='11' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-show-filters='false' data-show-download='true' data-show-search='true' data-show-column-summaries='true' data-show-data-types='true' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-hidden-columns='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "425e699d82ccb3f31f28951efc591b7c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><div class=\"language-text highlight\"><pre><span></span><code>    ## Energ\u00eda por franja\n\n    | franja | kWh | |\n    |---|---:|---|\n    | resto | 667808.701 | \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588 |\n</code></pre></div>\n<span class=\"paragraph\">| valle | 629435.479 | \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588 |\n| punta | 370203.853 | \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588 |\n|  |    0.000 | \u2588 |\n        | <strong>total</strong> | <strong>1667448.033</strong> | |</span>\n<div class=\"language-gdscript highlight\"><pre><span></span><code><span class=\"w\">    </span><span class=\"c1\">## Cu\u00e1nto se puede confiar</span>\n\n<span class=\"w\">    </span><span class=\"o\">**</span><span class=\"mi\">36</span><span class=\"o\">**</span><span class=\"w\"> </span><span class=\"n\">medidas</span><span class=\"w\"> </span><span class=\"err\">\u00b7</span><span class=\"w\"> </span><span class=\"o\">**</span><span class=\"mi\">759</span><span class=\"o\">**</span><span class=\"w\"> </span><span class=\"n\">interpoladas</span><span class=\"w\"> </span><span class=\"err\">\u00b7</span><span class=\"w\"> </span><span class=\"o\">**</span><span class=\"mi\">375</span><span class=\"o\">**</span>\n<span class=\"w\">    </span><span class=\"n\">indeterminadas</span><span class=\"o\">.</span><span class=\"w\"> </span><span class=\"n\">Separaci\u00f3n</span><span class=\"w\"> </span><span class=\"n\">m\u00e1xima</span><span class=\"w\"> </span><span class=\"n\">observada</span><span class=\"p\">:</span><span class=\"w\"> </span><span class=\"o\">**</span><span class=\"mf\">882.2</span><span class=\"w\"> </span><span class=\"nb\">min</span><span class=\"o\">**.</span>\n\n<span class=\"w\">    </span><span class=\"n\">Una</span><span class=\"w\"> </span><span class=\"n\">celda</span><span class=\"w\"> </span><span class=\"o\">*</span><span class=\"n\">medida</span><span class=\"o\">*</span><span class=\"w\"> </span><span class=\"n\">tuvo</span><span class=\"w\"> </span><span class=\"n\">lecturas</span><span class=\"w\"> </span><span class=\"n\">sobre</span><span class=\"w\"> </span><span class=\"n\">los</span><span class=\"w\"> </span><span class=\"n\">bordes</span><span class=\"w\"> </span><span class=\"n\">de</span><span class=\"w\"> </span><span class=\"n\">su</span><span class=\"w\"> </span><span class=\"n\">franja</span><span class=\"o\">.</span><span class=\"w\"> </span><span class=\"n\">Una</span><span class=\"w\"> </span><span class=\"o\">*</span><span class=\"n\">interpolada</span><span class=\"o\">*</span>\n<span class=\"w\">    </span><span class=\"n\">no</span><span class=\"p\">,</span><span class=\"w\"> </span><span class=\"n\">y</span><span class=\"w\"> </span><span class=\"n\">su</span><span class=\"w\"> </span><span class=\"n\">energ\u00eda</span><span class=\"w\"> </span><span class=\"n\">se</span><span class=\"w\"> </span><span class=\"n\">reparti\u00f3</span><span class=\"w\"> </span><span class=\"n\">suponiendo</span><span class=\"w\"> </span><span class=\"n\">potencia</span><span class=\"w\"> </span><span class=\"n\">constante</span><span class=\"w\"> </span><span class=\"err\">\u2014</span><span class=\"w\"> </span><span class=\"n\">de</span><span class=\"w\"> </span><span class=\"n\">ah\u00ed</span><span class=\"w\"> </span><span class=\"n\">el</span><span class=\"w\"> </span><span class=\"n\">error</span><span class=\"w\"> </span><span class=\"n\">de</span>\n<span class=\"w\">    </span><span class=\"n\">atribuci\u00f3n</span><span class=\"o\">.</span><span class=\"w\"> </span><span class=\"n\">Una</span><span class=\"w\"> </span><span class=\"o\">*</span><span class=\"n\">indeterminada</span><span class=\"o\">*</span><span class=\"w\"> </span><span class=\"n\">tuvo</span><span class=\"w\"> </span><span class=\"n\">un</span><span class=\"w\"> </span><span class=\"n\">cruce</span><span class=\"w\"> </span><span class=\"n\">que</span><span class=\"w\"> </span><span class=\"n\">super\u00f3</span><span class=\"w\"> </span><span class=\"n\">el</span><span class=\"w\"> </span><span class=\"n\">umbral</span><span class=\"w\"> </span><span class=\"n\">tolerado</span><span class=\"w\"> </span><span class=\"n\">y</span><span class=\"w\"> </span><span class=\"n\">esa</span>\n<span class=\"w\">    </span><span class=\"n\">parte</span><span class=\"w\"> </span><span class=\"o\">**</span><span class=\"n\">no</span><span class=\"w\"> </span><span class=\"n\">se</span><span class=\"w\"> </span><span class=\"n\">reparti\u00f3</span><span class=\"o\">**</span><span class=\"p\">:</span><span class=\"w\"> </span><span class=\"n\">el</span><span class=\"w\"> </span><span class=\"n\">dato</span><span class=\"w\"> </span><span class=\"n\">se</span><span class=\"w\"> </span><span class=\"n\">declara</span><span class=\"w\"> </span><span class=\"n\">incompleto</span><span class=\"w\"> </span><span class=\"n\">en</span><span class=\"w\"> </span><span class=\"n\">lugar</span><span class=\"w\"> </span><span class=\"n\">de</span><span class=\"w\"> </span><span class=\"n\">inventarse</span><span class=\"o\">.</span>\n</code></pre></div></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "5ba56d7aba3dbd210741150aac62a17a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"cuarentena\">Cuarentena</h2>\n<table>\n<thead>\n<tr>\n<th>motivo</th>\n<th style=\"text-align: right;\">mensajes</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>contador_retrocede</code></td>\n<td style=\"text-align: right;\">136</td>\n</tr>\n</tbody>\n</table>\n<span class=\"paragraph\">Nada se descarta en silencio: lo que el pipeline no puede procesar sale por su\npropio t\u00f3pico, con el motivo. Su volumen es una se\u00f1al operativa \u2014 si sube, el\nproblema est\u00e1 en la red o en los equipos, no en el c\u00e1lculo.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
