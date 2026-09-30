@@ -91,12 +91,28 @@ def leer_lecturas(
 def escribir(coleccion: beam.PCollection, ajustes: Ajustes, topico: str, *, etiqueta: str):
     """Escribe una colección de pares (clave, valor) en bytes a un tópico.
 
-    La **clave importa**: es lo que manda todos los panes de una misma celda a la misma
-    partición, de modo que se lean en orden y el último gane. Sin eso, el *upsert* del
+    La **clave importa**: es lo que manda todas las revisiones de una misma celda a la misma
+    partición, de modo que se lean en orden y la última gane. Sin eso, el *upsert* del
     consumidor no sería determinista.
+
+    **Las garantías se declaran, no se heredan.** `acks=all` y la idempotencia van escritas
+    aunque el cliente Java de Kafka las traiga por defecto desde la 3.0: lo que la tabla de
+    garantías del documento afirma sobre este tramo tiene que poder auditarse en el código, y
+    un default puede cambiar con una actualización del cliente. Es la misma razón por la que
+    el publicador del simulador las declara — allá además hacen falta, porque librdkafka trae
+    la idempotencia apagada.
+
+    Lo que aportan acá: con `acks=1` un broker que confirma y se cae antes de replicar pierde
+    esa escritura. Perder una revisión intermedia de una celda es inocuo —la siguiente la
+    reemplaza—, pero perder **la última** deja al consumidor con un valor viejo y sin forma de
+    saberlo.
     """
     return coleccion | f"Escribir{etiqueta}" >> WriteToKafka(
-        producer_config={"bootstrap.servers": ajustes.servidores_kafka},
+        producer_config={
+            "bootstrap.servers": ajustes.servidores_kafka,
+            "acks": "all",
+            "enable.idempotence": "true",
+        },
         topic=topico,
         expansion_service=servicio_expansion_kafka(),
     )
