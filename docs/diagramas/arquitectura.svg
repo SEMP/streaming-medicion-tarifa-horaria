@@ -47,7 +47,7 @@
   <line x1="536" y1="162" x2="580" y2="162" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
 
   <!-- ============================================ PIPELINE ============================================ -->
-  <rect x="582" y="92" width="330" height="330" rx="8" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.8"/>
+  <rect x="582" y="92" width="330" height="344" rx="8" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.8"/>
   <text x="596" y="86" font-size="12" font-weight="700" fill="#2b6cb0" letter-spacing="1">PIPELINE — Apache Beam sobre Flink</text>
 
   <rect x="598" y="106" width="298" height="34" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="1.2"/>
@@ -72,9 +72,10 @@
   <text x="608" y="330" font-size="9.5" font-style="italic" fill="#2c5282">interpola cuando el intervalo cruza un borde</text>
   <text x="608" y="345" font-size="9.5" font-style="italic" fill="#c53030">fusionadas a propósito: encadenarlas contaba doble</text>
 
-  <text x="598" y="384" font-size="9.5" fill="#2c5282">ventana diaria local · lateness 36 h · sin trigger: no hay GroupByKey</text>
-  <text x="598" y="398" font-size="9.5" fill="#2c5282">se emite por lectura que cambia una celda, no cada N segundos</text>
-  <text x="598" y="412" font-size="9.5" fill="#2c5282">KafkaIO corre el SDK Java en modo PROCESS dentro del TaskManager</text>
+  <text x="598" y="384" font-size="9.5" fill="#2c5282">ventana diaria local · lateness 36 h</text>
+  <text x="598" y="398" font-size="9.5" fill="#2c5282">sin trigger: no hay GroupByKey en el grafo</text>
+  <text x="598" y="412" font-size="9.5" fill="#2c5282">se emite por lectura que cambia una celda, no cada N s</text>
+  <text x="598" y="426" font-size="9.5" fill="#2c5282">KafkaIO: SDK Java en modo PROCESS, en el TaskManager</text>
 
   <line x1="912" y1="200" x2="956" y2="200" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
 
@@ -111,8 +112,8 @@
   <text x="1274" y="291" font-size="9.5" font-style="italic" fill="#22543d">el corte es días después</text>
 
   <!-- ============================================ CUARENTENA ============================================ -->
-  <line x1="747" y1="422" x2="747" y2="470" stroke="#c53030" stroke-width="1.6" marker-end="url(#fl-rojo)"/>
-  <text x="757" y="450" font-size="9.5" fill="#c53030">lo que no se puede procesar</text>
+  <line x1="747" y1="436" x2="747" y2="470" stroke="#c53030" stroke-width="1.6" marker-end="url(#fl-rojo)"/>
+  <text x="757" y="457" font-size="9.5" fill="#c53030">lo que no se puede procesar</text>
 
   <rect x="582" y="472" width="392" height="106" rx="6" fill="#fff5f5" stroke="#c53030" stroke-width="1.6" stroke-dasharray="5 3"/>
   <text x="596" y="493" font-size="11.5" font-weight="700" fill="#742a2a">medicion.cuarentena.v1 — nada se descarta en silencio</text>
