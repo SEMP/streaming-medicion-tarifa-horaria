@@ -52,7 +52,7 @@
 
   <rect x="598" y="106" width="298" height="34" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="1.2"/>
   <text x="608" y="121" font-size="11" font-weight="700" fill="#1a202c">1 · Validar</text>
-  <text x="608" y="134" font-size="9.5" fill="#4a5568">contrato, instante, OBIS único · salida lateral</text>
+  <text x="608" y="134" font-size="9.5" fill="#4a5568">JSON, medidor, instante con huso · salida lateral</text>
 
   <rect x="598" y="150" width="298" height="46" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="1.2"/>
   <text x="608" y="165" font-size="11" font-weight="700" fill="#1a202c">2 · Deduplicar</text>
@@ -64,19 +64,17 @@
   <text x="608" y="234" font-size="9.5" fill="#4a5568">consumo = lectura(n) − lectura(n−1)</text>
   <text x="608" y="246" font-size="9.5" font-style="italic" fill="#2c5282">guarda lecturas: una tardía parte su intervalo</text>
 
-  <rect x="598" y="262" width="298" height="46" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="1.2"/>
-  <text x="608" y="277" font-size="11" font-weight="700" fill="#1a202c">4 · Atribuir franja</text>
-  <text x="608" y="290" font-size="9.5" fill="#4a5568">función pura del tiempo de evento + zona</text>
-  <text x="608" y="302" font-size="9.5" font-style="italic" fill="#2c5282">interpola cuando el intervalo cruza un borde</text>
+  <rect x="598" y="262" width="298" height="96" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="1.2"/>
+  <text x="608" y="277" font-size="11" font-weight="700" fill="#1a202c">4 · Celdas vigentes</text>
+  <text x="608" y="291" font-size="9.5" fill="#4a5568">atribuye la franja y agrega, en una sola etapa</text>
+  <text x="608" y="304" font-size="9.5" fill="#4a5568">ParDo con estado · clave: medidor | fecha | franja</text>
+  <text x="608" y="317" font-size="9.5" font-style="italic" fill="#2c5282">la franja es función pura del tiempo de evento + zona</text>
+  <text x="608" y="330" font-size="9.5" font-style="italic" fill="#2c5282">interpola cuando el intervalo cruza un borde</text>
+  <text x="608" y="345" font-size="9.5" font-style="italic" fill="#c53030">fusionadas a propósito: encadenarlas contaba doble</text>
 
-  <rect x="598" y="318" width="298" height="46" rx="4" fill="#ffffff" stroke="#2b6cb0" stroke-width="1.2"/>
-  <text x="608" y="333" font-size="11" font-weight="700" fill="#1a202c">5 · Agregar</text>
-  <text x="608" y="346" font-size="9.5" fill="#4a5568">CombinePerKey · ventana diaria local</text>
-  <text x="608" y="358" font-size="9.5" font-style="italic" fill="#2c5282">clave: medidor | fecha | franja</text>
-
-  <text x="598" y="384" font-size="9.5" fill="#2c5282">lateness 36 h · acumulativo · early por tiempo de proc. · un pane por tardío</text>
-  <text x="598" y="400" font-size="9.5" fill="#2c5282">KafkaIO corre el SDK Java en modo PROCESS dentro del TaskManager</text>
-  <text x="598" y="414" font-size="9.5" fill="#2c5282">checkpointing cada 30 s: el estado por medidor no puede perderse</text>
+  <text x="598" y="384" font-size="9.5" fill="#2c5282">ventana diaria local · lateness 36 h · sin trigger: no hay GroupByKey</text>
+  <text x="598" y="398" font-size="9.5" fill="#2c5282">se emite por lectura que cambia una celda, no cada N segundos</text>
+  <text x="598" y="412" font-size="9.5" fill="#2c5282">KafkaIO corre el SDK Java en modo PROCESS · checkpoints cada 30 s</text>
 
   <line x1="912" y1="200" x2="956" y2="200" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
 
@@ -90,7 +88,7 @@
   <text x="984" y="168" font-size="10" fill="#4a5568">key: medidor|fecha|franja</text>
   <text x="984" y="183" font-size="10" fill="#4a5568">compact,delete · 90 días</text>
   <text x="984" y="203" font-size="9.5" font-style="italic" fill="#744210">clave estable ⇒ el consumidor</text>
-  <text x="984" y="216" font-size="9.5" font-style="italic" fill="#744210">hace upsert y el último pane gana</text>
+  <text x="984" y="216" font-size="9.5" font-style="italic" fill="#744210">hace upsert y la última revisión gana</text>
   <text x="984" y="229" font-size="9.5" font-style="italic" fill="#744210">cada registro declara su error</text>
 
   <line x1="1214" y1="150" x2="1258" y2="150" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
@@ -100,10 +98,10 @@
 
   <rect x="1262" y="100" width="194" height="90" rx="6" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
   <text x="1274" y="121" font-size="12" font-weight="700" fill="#1a202c">Tablero operativo</text>
-  <text x="1274" y="139" font-size="10" fill="#22543d">lee todos los panes</text>
+  <text x="1274" y="139" font-size="10" fill="#22543d">lee todas las revisiones</text>
   <text x="1274" y="155" font-size="10" fill="#4a5568">el valor cambia mientras</text>
   <text x="1274" y="169" font-size="10" fill="#4a5568">la ventana no converge</text>
-  <text x="1274" y="184" font-size="9.5" font-style="italic" fill="#22543d">usa es_provisional</text>
+  <text x="1274" y="184" font-size="9.5" font-style="italic" fill="#22543d">implementado en marimo: tablero/</text>
 
   <rect x="1262" y="206" width="194" height="90" rx="6" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
   <text x="1274" y="227" font-size="12" font-weight="700" fill="#1a202c">Facturación</text>
@@ -118,8 +116,8 @@
 
   <rect x="582" y="472" width="392" height="106" rx="6" fill="#fff5f5" stroke="#c53030" stroke-width="1.6" stroke-dasharray="5 3"/>
   <text x="596" y="493" font-size="11.5" font-weight="700" fill="#742a2a">medicion.cuarentena.v1 — nada se descarta en silencio</text>
-  <text x="596" y="512" font-size="9.5" fill="#4a5568">instante inválido, sin offset o futuro · OBIS repetido · sin 15.8.0</text>
-  <text x="596" y="526" font-size="9.5" fill="#4a5568">trama truncada · contador que retrocede (reseteo del equipo)</text>
+  <text x="596" y="512" font-size="9.5" fill="#4a5568">json_invalido · sin_medidor_id · instante_invalido · instante_sin_huso</text>
+  <text x="596" y="526" font-size="9.5" fill="#4a5568">sin_registro_util (sin 15.8.0) · contador_retrocede (reseteo del equipo)</text>
   <text x="596" y="546" font-size="9.5" font-weight="700" fill="#c53030">calidad = checksum_no_verificado NO va acá: el dato está completo</text>
   <text x="596" y="560" font-size="9.5" fill="#742a2a">es ~2/3 del tráfico: descartarlo tiraría casi toda la muestra</text>
   <text x="596" y="573" font-size="9.5" fill="#4a5568">key: medidor_id · retención 30 días · el volumen es una señal operativa</text>
