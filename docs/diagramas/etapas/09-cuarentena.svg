@@ -33,7 +33,7 @@
   <rect x="830" y="117" width="310" height="86" rx="7" fill="#fff5f5" stroke="#c53030" stroke-width="1.6"/>
   <text x="844" y="143" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#c53030" font-weight="600" text-anchor="start">Tópico medicion.cuarentena.v1</text>
   <text x="844" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">{&quot;motivo&quot;: ..., &quot;lectura&quot;: ...}</text>
-  <text x="844" y="189" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">contador por motivo en Flink</text>
+  <text x="844" y="189" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">un contador de Beam por motivo</text>
   <line x1="790" y1="143" x2="821" y2="143" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
   <line x1="390" y1="143" x2="421" y2="143" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
   <text x="40" y="352" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">pipeline/src/pipeline/cadena.py:243 (JuntarCuarentena)</text>

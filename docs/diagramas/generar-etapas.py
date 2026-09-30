@@ -281,8 +281,8 @@ ETAPAS = [
                 "distribución: separacion_minutos",
             ],
             ESTADO,
-            "La separación entre lecturas es la cota del error de atribución: como "
-            "distribución, la interfaz de Flink la muestra sin leer la salida.",
+            "La separación entre lecturas es la cota del error de atribución. Se consulta "
+            "por la API de métricas de Beam: hoy no se ve en la interfaz de Flink.",
         ),
         salidas=[
             Caja(
@@ -431,7 +431,7 @@ ETAPAS = [
         salidas=[
             Caja(
                 "Tópico medicion.cuarentena.v1",
-                ['{"motivo": ..., "lectura": ...}', "contador por motivo en Flink"],
+                ['{"motivo": ..., "lectura": ...}', "un contador de Beam por motivo"],
                 ALERTA,
             )
         ],
