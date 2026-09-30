@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 374" width="1180" height="374" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/>
+    </marker>
+  </defs>
+    <rect width="1180" height="374" fill="#ffffff"/>
+  <text x="40" y="42" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="21" fill="#1a202c" font-weight="600" text-anchor="start">09. Cuarentena: la salida lateral</text>
+  <text x="40" y="66" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">Cuatro etapas mandan acá. Su volumen es una señal operativa: si sube en una zona, el problema es la cobertura de red y no el</text>
+  <text x="40" y="83" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">pipeline.</text>
+    <text x="40" y="107" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">ENTRADA</text>
+  <text x="430" y="107" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#744210" font-weight="700" text-anchor="start">PROCESO</text>
+  <text x="830" y="107" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">SALIDA</text>
+    <rect x="40" y="117" width="350" height="180" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
+  <text x="54" y="143" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#2c5282" font-weight="600" text-anchor="start">Cuatro salidas etiquetadas</text>
+  <text x="54" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">Parsear      -&gt; 2 motivos</text>
+  <text x="54" y="189" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">MarcarTiempo -&gt; 2 motivos</text>
+  <text x="54" y="208" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">Deduplicar   -&gt; 1 motivo</text>
+  <text x="54" y="227" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">Diferenciar  -&gt; 2 motivos</text>
+  <text x="54" y="251" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">Las dos primeras salen antes de ventanear, así que</text>
+  <text x="54" y="267" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">están en la ventana global; las dos con estado, en</text>
+  <text x="54" y="283" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">la diaria.</text>
+  <rect x="430" y="117" width="360" height="199" rx="7" fill="#fffbeb" stroke="#b7791f" stroke-width="1.6"/>
+  <text x="444" y="143" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#744210" font-weight="600" text-anchor="start">Re-ventanear + Flatten</text>
+  <text x="444" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">1. las ventaneadas vuelven</text>
+  <text x="444" y="189" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   a GlobalWindows</text>
+  <text x="444" y="208" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">2. Flatten de las cuatro</text>
+  <text x="444" y="227" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">3. clave = medidor, o vacía</text>
+  <text x="444" y="246" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   si no se lo pudo leer</text>
+  <text x="444" y="270" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">Flatten exige el mismo ventaneo en todas las</text>
+  <text x="444" y="286" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">entradas: sin el paso 1 el pipeline no se</text>
+  <text x="444" y="302" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">construye.</text>
+  <rect x="830" y="117" width="310" height="86" rx="7" fill="#fff5f5" stroke="#c53030" stroke-width="1.6"/>
+  <text x="844" y="143" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#c53030" font-weight="600" text-anchor="start">Tópico medicion.cuarentena.v1</text>
+  <text x="844" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">{&quot;motivo&quot;: ..., &quot;lectura&quot;: ...}</text>
+  <text x="844" y="189" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">contador por motivo en Flink</text>
+  <line x1="790" y1="143" x2="821" y2="143" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <line x1="390" y1="143" x2="421" y2="143" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <text x="40" y="352" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">pipeline/src/pipeline/cadena.py:243 (JuntarCuarentena)</text>
+</svg>

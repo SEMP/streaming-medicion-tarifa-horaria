@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 589" width="1180" height="589" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/>
+    </marker>
+  </defs>
+    <rect width="1180" height="589" fill="#ffffff"/>
+  <text x="40" y="42" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="21" fill="#1a202c" font-weight="600" text-anchor="start">06. Diferenciar el contador acumulado</text>
+  <text x="40" y="66" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">El medidor informa un acumulado; el consumo es la resta entre lecturas consecutivas. Cada lectura forma como mucho dos intervalos:</text>
+  <text x="40" y="83" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">con la anterior y con la siguiente.</text>
+    <text x="40" y="107" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">ENTRADA</text>
+  <text x="430" y="107" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#744210" font-weight="700" text-anchor="start">PROCESO</text>
+  <text x="830" y="107" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">SALIDA</text>
+    <rect x="40" y="117" width="350" height="86" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
+  <text x="54" y="143" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#2c5282" font-weight="600" text-anchor="start">Lecturas únicas</text>
+  <text x="54" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">KV[str, Any]</text>
+  <text x="54" y="189" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">registro OBIS 15.8.0</text>
+  <rect x="430" y="117" width="360" height="218" rx="7" fill="#fffbeb" stroke="#b7791f" stroke-width="1.6"/>
+  <text x="444" y="143" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#744210" font-weight="600" text-anchor="start">ParDo(DiferenciarContador)</text>
+  <text x="444" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">1. busca el registro 15.8.0</text>
+  <text x="444" y="189" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">2. guarda (instante, valor, cabina)</text>
+  <text x="444" y="208" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">3. ordena todas las del estado</text>
+  <text x="444" y="227" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">4. arma los dos intervalos</text>
+  <text x="444" y="246" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   vecinos de esta lectura</text>
+  <text x="444" y="265" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">5. delta = v_hasta - v_desde</text>
+  <text x="444" y="289" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">Recalcular contra el estado ordenado es lo que</text>
+  <text x="444" y="305" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">permite que una lectura tardía parta un intervalo</text>
+  <text x="444" y="321" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">ya emitido.</text>
+  <rect x="430" y="351" width="360" height="180" rx="7" fill="#faf5ff" stroke="#6b46c1" stroke-width="1.6"/>
+  <text x="444" y="377" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#553c9a" font-weight="600" text-anchor="start">Estado por clave y ventana</text>
+  <text x="444" y="404" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">LECTURAS : BagState(str)</text>
+  <text x="444" y="423" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">EXPIRA   : Timer(WATERMARK)</text>
+  <text x="444" y="442" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">          window.end + 36 h</text>
+  <text x="444" y="461" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">distribución: separacion_minutos</text>
+  <text x="444" y="485" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">La separación entre lecturas es la cota del error</text>
+  <text x="444" y="501" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">de atribución: como distribución, la interfaz de</text>
+  <text x="444" y="517" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">Flink la muestra sin leer la salida.</text>
+  <line x1="610" y1="335" x2="610" y2="351" stroke="#6b46c1" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <rect x="830" y="117" width="310" height="124" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="844" y="143" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#22543d" font-weight="600" text-anchor="start">Consumo por intervalo</text>
+  <text x="844" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">Consumo(medidor, cabina,</text>
+  <text x="844" y="189" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  desde, hasta,</text>
+  <text x="844" y="208" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  energia_kwh,</text>
+  <text x="844" y="227" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  separacion_minutos)</text>
+  <line x1="790" y1="143" x2="821" y2="143" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <rect x="830" y="257" width="310" height="142" rx="7" fill="#fff5f5" stroke="#c53030" stroke-width="1.6"/>
+  <text x="844" y="283" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#c53030" font-weight="600" text-anchor="start">Cuarentena</text>
+  <text x="844" y="310" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">sin_registro_util</text>
+  <text x="844" y="329" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">contador_retrocede</text>
+  <text x="844" y="353" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">Un delta negativo es un reseteo del</text>
+  <text x="844" y="369" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">contador: sin inyección remunerada, el</text>
+  <text x="844" y="385" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">acumulado no baja.</text>
+  <line x1="790" y1="283" x2="821" y2="283" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <line x1="390" y1="143" x2="421" y2="143" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <text x="40" y="567" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">pipeline/src/pipeline/transformaciones.py:124 (DiferenciarContador)</text>
+</svg>

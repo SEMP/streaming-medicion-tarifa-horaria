@@ -130,6 +130,11 @@ ramas de cuarentena** convergiendo en un solo tópico. Las cajas `LeerLecturas`,
 `EscribirConsumo` y `EscribirCuarentena` están cerradas a propósito: por dentro `KafkaIO`
 despliega una docena de pasos del SDK de Java que no dicen nada sobre este pipeline.
 
+Cada etapa por separado —con su entrada, su proceso, su estado, sus temporizadores y los
+motivos por los que manda algo a cuarentena— está en
+[`docs/diagramas/etapas/`](../diagramas/etapas/LEEME.md), una lámina por etapa. Las secciones
+5 y 6 explican las que tienen estado.
+
 ## 2.2 El detalle que condiciona el despliegue
 
 `KafkaIO` **no es una librería Python**: es una transformación *cross-language* cuyas etapas
