@@ -9,8 +9,10 @@ docker compose -f infra/docker-compose.yml logs -f      # mirar
 docker compose -f infra/docker-compose.yml down -v      # bajar y limpiar
 ```
 
-La interfaz de Flink queda en <http://localhost:8081>, y Kafka se alcanza desde el host en
-`localhost:29092`.
+La interfaz de Flink queda en <http://localhost:8081>. Kafka se alcanza desde el host en
+`localhost:29092`, que **no es una dirección para el navegador**: Kafka no habla HTTP, así que
+una pestaña apuntada ahí queda en blanco y parece caído estando arriba. Es el valor que toma
+`KAFKA_BOOTSTRAP_SERVERS` en un cliente.
 
 ## El problema que esto resuelve
 

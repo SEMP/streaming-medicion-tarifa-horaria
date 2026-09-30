@@ -148,7 +148,15 @@ la carpeta `infra/`.
 docker compose -f infra/docker-compose.yml up -d --build
 ```
 
-La interfaz de Flink queda en <http://localhost:8081> y Kafka en `localhost:29092`.
+La interfaz de Flink queda en <http://localhost:8081>, y responde apenas termina el `up -d`.
+Recién levantado el entorno no hay ningún trabajo en la lista: **eso es lo correcto**, porque
+el pipeline se lanza en el paso 2.
+
+> ⚠️ **`localhost:29092` no se abre en el navegador.** Es la dirección de Kafka, y Kafka no
+> habla HTTP: una pestaña apuntada ahí queda en blanco y parece que el servicio estuviera
+> caído, cuando está perfectamente arriba. Sirve para configurar un cliente —es el valor de
+> `KAFKA_BOOTSTRAP_SERVERS`, y lo que usa el tablero desde la máquina anfitriona—. Para ver
+> qué hay adentro se usa la CLI del contenedor, como en el paso 4.
 
 > El `--build` está a propósito. Sin él, Compose reutiliza las imágenes que ya existan, así
 > que **después de un `git pull` seguirías corriendo el código viejo** y parecería que la
