@@ -24,7 +24,6 @@ la última vez que hiciste `git pull`.
 | ~~**P4**~~ | ~~La «regla 1 — alineación a la grilla» quedó sin efecto~~ · Listo reescrita: con readout no hay grilla, los intervalos **siempre** cruzan bordes | Sergio | — | [config](../config/franjas.example.toml) |
 | ~~**P5**~~ | ~~Cómo se representa `CalendarioTarifario`~~ · Listo tabla de 1440 posiciones precomputada al cargar: construirla **es** la validación de cobertura | Sergio | — | `pipeline/franjas.py` |
 | ~~**P6**~~ | ~~Si `fecha_y_franja` valida el timestamp~~ · Listo **no**: un naive es error de programación y levanta excepción. La validación de datos va aguas arriba | Sergio | — | `pipeline/franjas.py` |
-| **P8** | Con qué se lista Daniel en la sección 8. Su plan original quedó superado: el área se implementó entre el 22 y el 27/09 → [puesta al día](planes/daniel-puesta-al-dia.md) | Los tres | La sección 8 | [planes/daniel-puesta-al-dia](planes/daniel-puesta-al-dia.md) |
 
 **P1 y P2 son las que tienen consecuencia económica**: las dos deciden a qué franja se atribuye
 energía que se factura a precio distinto. Las demás son de coordinación.
@@ -38,11 +37,9 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 | ~~Sergio~~ | ~~Reescribir la regla 1 de `config/franjas.example.toml`~~ · Listo ya estaba hecha: la regla 1 es «cobertura exacta del día» y el archivo explica qué dejó de exigir. La fila contradecía a P4 en la sección 1 | — |
 | ~~Daniel~~ | ~~Puede empezar las pruebas~~ · Listo 23 de franjas y **8 con `TestStream`**: duplicado, desorden, reseteo y el orden dedup→diferenciación | — |
 | ~~Clara~~ | ~~Esqueleto del pipeline con fuente conmutable~~ · Listo **superada**: el pipeline está construido y corre end-to-end sobre Flink, leyendo de Kafka | — |
-| Los tres | **Documento técnico**: el esqueleto está en [`tecnico/`](tecnico/documento.md) con dueño por sección y `Atención: PENDIENTE` donde falta. Se arma con `./docs/tecnico/armar-pdf.sh` | Queda **1 de 9**: la sección 8, contribuciones |
 | ~~Sergio~~ | ~~Diagrama de arquitectura~~ · Listo `docs/diagramas/arquitectura.svg`, incrustado en el documento en página apaisada | — |
 | ~~Clara~~ | ~~Revisar las secciones 3 y 4 del documento técnico~~ · Listo revisadas el 29/09, marcas de borrador retiradas | — |
 | ~~Clara~~ | ~~Aviso de colisión con `pipeline.demostracion`~~ · Listo **no hubo colisión**: no llegué a escribir la cadena, la implementó Sergio entera | — |
-| Los tres | **Sección 8**: contribuciones de cada uno | `git shortlog -sn --no-merges` lo respalda |
 | Los tres | **Video** — guion escrito en [`guion-video.md`](guion-video.md): 7 escenas con sus comandos y quién habla. Falta grabarlo. Atención: la cátedra **no fija duración**: pide «video breve» y nada más | Lo único que no se puede dejar para el último día |
 
 ## 3. Bitácora — qué se decidió y cuándo
