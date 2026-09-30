@@ -1,6 +1,6 @@
 """El arranque del pipeline, que es el punto de entrada del perfil `demo`.
 
-**Existe por un defecto que se escapó a las 89 pruebas.** `__main__.main()` llamaba
+**Existe por un defecto que se escapó a las 116 pruebas.** `__main__.main()` llamaba
 `calendario.nombres()` con paréntesis sobre una `@property`, y reventaba con
 `TypeError: 'tuple' object is not callable` **antes** de construir el pipeline. El resultado
 era que el perfil `demo` nunca escribía nada al tópico de salida.

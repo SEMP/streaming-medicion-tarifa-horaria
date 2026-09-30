@@ -31,7 +31,7 @@ un inyector que publica a mano un duplicado, una tardía o un reseteo y deja ver
 responde el pipeline.
 
 Lo respaldan **116 pruebas** —incluidas las de `TestStream`, que son las únicas que permiten
-probar comportamiento tardío de forma determinista— y **seis corridas completas sobre Kafka y
+probar comportamiento tardío de forma determinista— y **siete corridas completas sobre Kafka y
 Flink en cuatro máquinas**, que reproducen exactamente el mismo resultado que el runner local.
 Dos de ellas las hicieron personas que no escribieron el código, una de ellas **ajena al
 equipo** y siguiendo solo el `README.md`. Dos errores de doble conteo aparecieron en el
@@ -751,7 +751,7 @@ El duplicado no produjo ninguna revisión. La tardía mueve **0,200 kWh de `rest
 con el total quieto en 1,800 kWh, y las dos celdas pasan de *interpolada* a *medida*. Es el
 mismo fenómeno de la sección 6.1, ahora sobre el stack real y a pedido.
 
-## 6.6 Reproducibilidad: seis corridas, cuatro máquinas
+## 6.6 Reproducibilidad: siete corridas, cuatro máquinas
 
 | Corrida | Entorno | Qué aportó |
 |---|---|---|
@@ -760,7 +760,7 @@ mismo fenómeno de la sección 6.1, ahora sobre el stack real y a pedido.
 | Clara | Un tercer entorno | Recorrido completo, los dos replays y la suite dentro del contenedor |
 | Francisco, vueltas 2, 3 y 4 | Ubuntu 24.04, **persona ajena al equipo** | Siguiendo solo el `README.md` desde el `git clone`. La primera vuelta no quedó transcrita; sus correcciones están en el historial |
 
-Las seis dan **5,500 kWh**, con 2,400 en `resto` y 3,100 en `punta`, y la cuarentena vacía.
+Las siete dan **5,500 kWh**, con 2,400 en `resto` y 3,100 en `punta`, y la cuarentena vacía.
 Están en [`evidencia/`](../../evidencia/LEEME.md) con su fecha, su commit y las versiones del
 entorno.
 
@@ -836,11 +836,11 @@ resto venciendo por tiempo.
 La causa probable es concreta y está a una línea: `esqueleto.opciones` no le pasa
 `--checkpointing_interval` a Beam, y en Beam el checkpointing está **deshabilitado por
 defecto** — lo que diga `flink-conf.yaml` configura a Flink, no a los operadores que Beam
-genera. No se aplicó porque se detectó el mismo día de la entrega y habría invalidado las seis
+genera. No se aplicó porque se detectó el mismo día de la entrega y habría invalidado las siete
 corridas de evidencia ya tomadas; verificarlo de verdad exige repetirlas.
 
 Qué significa en la práctica: el pipeline procesa y emite correctamente —eso está verificado
-seis veces—, pero **si el trabajo se reinicia, el estado por medidor se pierde**. Las lecturas
+siete veces—, pero **si el trabajo se reinicia, el estado por medidor se pierde**. Las lecturas
 siguientes no tienen contra qué restarse hasta que llegue la próxima de cada medidor, y la
 deduplicación olvida lo que había visto. Para una demostración no cambia nada; para producción
 es lo primero que habría que cerrar.

@@ -83,7 +83,7 @@ Cada carpeta con vida propia tiene el suyo, y todos se alcanzan desde acá:
 | [`simulador/README.md`](simulador/README.md) | Qué genera el simulador, sus escenarios y cómo se le piden fallas |
 | [`tablero/README.md`](tablero/README.md) | El consumidor en marimo: cómo levantarlo y qué tres propiedades del contrato demuestra |
 | [`docs/README.md`](docs/README.md) | Mapa de la documentación: qué documento es cada uno y en cuál escribir cada cosa |
-| [`evidencia/LEEME.md`](evidencia/LEEME.md) | Las dos corridas capturadas y cómo leerlas |
+| [`evidencia/LEEME.md`](evidencia/LEEME.md) | Las siete corridas capturadas y cómo leerlas |
 | [`docs/planes/README.md`](docs/planes/README.md) | El reparto de trabajo del equipo. Es material de proceso, no de entrega |
 
 ## Estado
@@ -316,8 +316,8 @@ estas escenas suman 9 min 45 s.
 ./evidencia/generar-evidencia.sh
 ```
 
-Hay **dos corridas, en dos máquinas distintas** — ver [`evidencia/LEEME.md`](evidencia/LEEME.md).
-La de Daniel valida el recorrido en Windows + WSL2 + Docker Desktop y da los mismos números.
+Hay **siete corridas, en cuatro máquinas distintas** — ver [`evidencia/LEEME.md`](evidencia/LEEME.md).
+Las de Daniel validan el recorrido en Windows + WSL2 + Docker Desktop y dan los mismos números.
 
 El script deja [`evidencia/evidencia-ejecucion.txt`](evidencia/evidencia-ejecucion.txt) con una
 corrida completa y fechada: entorno, las pruebas, la demostración de los tres escenarios, el stack
