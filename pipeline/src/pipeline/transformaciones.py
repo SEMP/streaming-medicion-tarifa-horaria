@@ -18,6 +18,7 @@ from datetime import datetime
 
 import apache_beam as beam
 from apache_beam.coders import StrUtf8Coder
+from apache_beam.metrics import Metrics
 from apache_beam.transforms.timeutil import TimeDomain
 from apache_beam.transforms.userstate import (
     BagStateSpec,
@@ -102,7 +103,10 @@ class DeduplicarLecturas(beam.DoFn):
 
         if instante in vistos.read():
             # Ya lo vimos: no se emite. No es un error, es el caso que la deduplicación
-            # existe para atender, así que tampoco va a cuarentena.
+            # existe para atender, así que tampoco va a cuarentena — pero **sí se cuenta**:
+            # es la única forma de saber cuántos duplicados está absorbiendo el sistema, que
+            # de otro modo es trabajo invisible.
+            Metrics.counter("dedup", "duplicados_descartados").inc()
             return
 
         vistos.add(instante)
@@ -158,6 +162,7 @@ class DiferenciarContador(beam.DoFn):
             (r for r in payload.get("registros", []) if r.get("obis") == "15.8.0"), None
         )
         if registro is None:
+            Metrics.counter("cuarentena", "sin_registro_util").inc()
             yield beam.pvalue.TaggedOutput(
                 CUARENTENA, a_cuarentena(payload, "sin_registro_util")
             )
@@ -185,6 +190,7 @@ class DiferenciarContador(beam.DoFn):
             delta = v_hasta - v_desde
 
             if delta < 0:
+                Metrics.counter("cuarentena", "contador_retrocede").inc()
                 yield beam.pvalue.TaggedOutput(
                     CUARENTENA,
                     a_cuarentena(
@@ -198,6 +204,12 @@ class DiferenciarContador(beam.DoFn):
             minutos = (
                 datetime.fromisoformat(i_hasta) - datetime.fromisoformat(i_desde)
             ).total_seconds() / 60
+            # La separación entre lecturas es la cota del error de atribución, o sea **la
+            # métrica central del proyecto**. Como distribución, la interfaz de Flink muestra
+            # su mínimo, máximo y media sin que haya que leer la salida: si la media sube, las
+            # rondas se están alargando y el reparto por franja se vuelve más grueso.
+            Metrics.distribution("atribucion", "separacion_minutos").update(int(minutos))
+            Metrics.counter("diferenciacion", "consumos_emitidos").inc()
             yield Consumo(
                 medidor_id=medidor_id,
                 cabina_id=cab,
@@ -284,6 +296,9 @@ class CeldasVigentes(beam.DoFn):
         # idempotente— pero gasta ancho de banda del tópico y ruido en el tablero.
         for clave, valor in tabla.items():
             if anteriores.get(clave) != valor:
+                Metrics.counter("salida", "celdas_emitidas").inc()
+                if valor["indeterminada"]:
+                    Metrics.counter("salida", "celdas_indeterminadas").inc()
                 yield (clave, valor)
 
     def _recalcular(self, medidor: str, vigentes: dict) -> dict:

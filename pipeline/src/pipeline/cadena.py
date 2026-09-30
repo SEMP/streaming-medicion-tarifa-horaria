@@ -21,6 +21,7 @@ from datetime import datetime
 from typing import Any
 
 import apache_beam as beam
+from apache_beam.metrics import Metrics
 from apache_beam.typehints import KV
 
 from .config import Ajustes
@@ -34,6 +35,22 @@ from .transformaciones import (
 )
 
 log = logging.getLogger(__name__)
+
+CUARENTENADOS = Metrics.counter("cuarentena", "total")
+"""Contadores del *hot path*, visibles en la interfaz de Flink mientras el trabajo corre.
+
+El enunciado pide «logs o métricas suficientes para observar producción, consumo,
+procesamiento y errores». Los logs de un worker distribuido hay que ir a buscarlos a cada
+TaskManager; un contador se lee de un vistazo y es lo que permite responder «¿está entrando
+basura?» sin abrir un archivo. Se cuenta por **motivo**, porque el total no distingue un
+concentrador desincronizado de un tópico con mensajes de otro productor."""
+
+
+def _cuarentenar(motivo: str, registro: dict):
+    """Emite a la salida lateral y cuenta, en un solo lugar para que no se desincronicen."""
+    CUARENTENADOS.inc()
+    Metrics.counter("cuarentena", motivo).inc()
+    return beam.pvalue.TaggedOutput(CUARENTENA, registro)
 
 LATENCIA_PERMITIDA_SEGUNDOS = 36 * 3600
 """`contratos.md` sección 2.4."""
@@ -81,15 +98,15 @@ def parsear(registro: tuple[bytes, bytes]):
     try:
         payload = json.loads(valor.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
-        yield beam.pvalue.TaggedOutput(
-            CUARENTENA,
+        yield _cuarentenar(
+            "json_invalido",
             {"motivo": "json_invalido", "detalle": str(error), "bytes": repr(valor[:200])},
         )
         return
 
     medidor = payload.get("medidor_id") or (clave.decode("utf-8", "replace") if clave else "")
     if not medidor:
-        yield beam.pvalue.TaggedOutput(CUARENTENA, a_cuarentena(payload, "sin_medidor_id"))
+        yield _cuarentenar("sin_medidor_id", a_cuarentena(payload, "sin_medidor_id"))
         return
 
     yield (medidor, payload)
@@ -110,13 +127,13 @@ def marcar_tiempo_de_evento(elemento: tuple[str, dict]):
     try:
         momento = datetime.fromisoformat(crudo)  # type: ignore[arg-type]
     except (TypeError, ValueError):
-        yield beam.pvalue.TaggedOutput(CUARENTENA, a_cuarentena(payload, "instante_invalido"))
+        yield _cuarentenar("instante_invalido", a_cuarentena(payload, "instante_invalido"))
         return
 
     if momento.tzinfo is None:
         # Sin offset, el instante se interpretaría en la zona del proceso y la franja
         # atribuida dependería de en qué máquina corre el pipeline. Ver decisión 4.
-        yield beam.pvalue.TaggedOutput(CUARENTENA, a_cuarentena(payload, "instante_sin_huso"))
+        yield _cuarentenar("instante_sin_huso", a_cuarentena(payload, "instante_sin_huso"))
         return
 
     yield beam.window.TimestampedValue((medidor, payload), momento.timestamp())
