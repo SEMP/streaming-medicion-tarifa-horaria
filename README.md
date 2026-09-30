@@ -101,7 +101,7 @@ y las atribuye a su franja, y el resultado sale por el tópico derivado.
 | Configuración de franjas | Listo · cargador con validación de cobertura y reparto por borde |
 | Pipeline | Listo · parseo, cuarentena, ventana, deduplicación, diferenciación y celdas |
 | Pruebas | Listo · **89**, incluidas las de `TestStream` para el comportamiento tardío |
-| Evidencia de ejecución | Listo · [`evidencia/`](evidencia/) · cuatro corridas, en cuatro máquinas |
+| Evidencia de ejecución | Listo · [`evidencia/`](evidencia/) · cinco corridas, en cuatro máquinas |
 | Documento técnico | Listo · [`docs/tecnico/`](docs/tecnico/documento.md) · 11 páginas |
 | Video | **Pendiente** · guion en [`docs/guion-video.md`](docs/guion-video.md) |
 

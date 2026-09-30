@@ -1,6 +1,6 @@
 # Evidencia de ejecución
 
-Cuatro corridas, en **cuatro máquinas distintas**, dos de ellas hechas por personas que no
+Cinco corridas, en **cuatro máquinas distintas**, dos de ellas hechas por personas que no
 escribieron el código. Que el sistema dé lo mismo en todas es lo que hace verificable la
 reproducibilidad, en lugar de afirmarla.
 
@@ -10,6 +10,7 @@ reproducibilidad, en lugar de afirmarla.
 | [`evidencia-ejecucion-daniel-2026-09-29.txt`](evidencia-ejecucion-daniel-2026-09-29.txt) | Daniel | **Validación independiente** del recorrido end-to-end en otra máquina: Windows + WSL2 Ubuntu 24.04 + Docker Desktop |
 | [`evidencia-ejecucion-clara-2026-09-30.txt`](evidencia-ejecucion-clara-2026-09-30.txt) | Clara | Recorrido completo sobre un tercer entorno, incluidas las dos corridas de replay y la suite dentro del contenedor |
 | [`evidencia-ejecucion-francisco-2026-09-30.txt`](evidencia-ejecucion-francisco-2026-09-30.txt) | Francisco | **Verificación por una persona externa al equipo**, sin conocimiento previo del proyecto y siguiendo únicamente el `README.md` desde el `git clone` |
+| [`evidencia-ejecucion-francisco-2026-09-30-tercera-vuelta.txt`](evidencia-ejecucion-francisco-2026-09-30-tercera-vuelta.txt) | Francisco | Tercera vuelta, desde un clon nuevo. Es la que encontró que al job server le faltaba memoria |
 
 ## Qué probó la segunda máquina
 
@@ -40,9 +41,29 @@ README o en la configuración, y una de ellas era un error real del código: el 
 moría al arrancar porque se llamaba como método a una propiedad. **Las pruebas no lo habían
 visto**, porque cubrían un punto de entrada distinto del que usaba el README.
 
-La segunda vuelta, que es la que está en este directorio, salió limpia de punta a punta: los
-cinco pasos del Camino A, el recorrido sobre Flink, el replay, la prueba de humo con 40
-lecturas de entrada y 40 de salida, y las 92 pruebas en verde.
+La segunda vuelta salió limpia de punta a punta: los cinco pasos del Camino A, el recorrido
+sobre Flink, el replay, la prueba de humo con 40 lecturas de entrada y 40 de salida, y las
+pruebas en verde.
+
+## La tercera vuelta, y por qué conviene repetir aunque ya haya salido bien
+
+Desde un clon nuevo, la misma secuencia **murió en la prueba de humo** con un
+`_InactiveRpcError: Stream removed (Socket closed)` al enviar el trabajo. El traceback era el
+síntoma: `docker inspect` sobre el contenedor del job server dice `OOMKilled=true`, tres
+segundos antes de que muriera el pipeline arrastrado por el canal cerrado.
+
+No era la memoria de la máquina, sino el `mem_limit: 900m` del propio servicio. **El job server
+no libera entre trabajos**: recorriendo el Camino A llega a 1,3 GB para cuando toca la prueba
+de humo, que es el cuarto trabajo que sirve. Con 900 MB se quedaba en 857 y el pico de
+preparación de artefactos lo mataba — a veces sí y a veces no, que es la peor forma de fallar.
+
+**Y es el mismo patrón que el error del perfil `demo`**, por segunda vez: lo que prueba la
+automatización y lo que dice el README no son el mismo camino. `generar-evidencia.sh` levanta
+el stack **sin** el perfil `demo`, así que al llegar a la prueba de humo no hay ningún trabajo
+de streaming vivo. El README, en cambio, manda dejar el pipeline corriendo desde el paso 2.
+
+El límite pasó a 1800m y el Camino A completo se verificó de punta a punta: recorrido y replay
+en 5.500 kWh, humo 40/40, y el job server en 1,312 de 1,758 GB sin reinicios.
 
 ## Un detalle de lectura
 
