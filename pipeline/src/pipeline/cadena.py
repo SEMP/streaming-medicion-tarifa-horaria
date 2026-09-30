@@ -209,9 +209,16 @@ def cadena(
         deduplicadas = ventaneadas | "Deduplicar" >> beam.ParDo(
             DeduplicarLecturas()
         ).with_outputs(CUARENTENA, main="ok")
-        consumos = deduplicadas.ok | "Diferenciar" >> beam.ParDo(
-            DiferenciarContador()
-        ).with_outputs(CUARENTENA, main="ok")
+        # Una salida etiquetada pierde el type hint de la entrada, así que acá hay que
+        # volver a declararlo: si no, `DiferenciarContador` —que también tiene estado por
+        # clave— recibe una colección sin tipar y Beam vuelve al coder genérico.
+        consumos = (
+            deduplicadas.ok
+            | "RetiparClave" >> beam.Map(lambda kv: kv).with_output_types(KV[str, Any])
+            | "Diferenciar" >> beam.ParDo(DiferenciarContador()).with_outputs(
+                CUARENTENA, main="ok"
+            )
+        )
 
         celdas = (
             consumos.ok

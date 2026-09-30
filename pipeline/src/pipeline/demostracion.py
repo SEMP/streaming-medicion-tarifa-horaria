@@ -22,11 +22,13 @@ import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
 from apache_beam.testing.test_stream import TestStream
 from apache_beam.transforms import trigger
+from apache_beam.typehints import KV
 
 from .franjas import CalendarioTarifario, cargar_calendario
 from .transformaciones import (
@@ -149,13 +151,25 @@ def correr(lecturas: tuple[tuple[str, float], ...], cal: CalendarioTarifario) ->
                     allowed_lateness=36 * 3600,
                     accumulation_mode=trigger.AccumulationMode.ACCUMULATING,
                 )
+                # Los tres pasos con estado llevan el type hint de la clave. Sin él Beam
+                # elige un coder genérico y avisa que puede no ser determinista, que sobre
+                # un estado por clave significa que dos claves iguales podrían no
+                # encontrarse. Hay que repetirlo después de cada `with_outputs`, porque una
+                # salida etiquetada no arrastra el hint de su entrada.
+                | "TiparClave" >> beam.Map(lambda kv: kv).with_output_types(KV[str, Any])
                 | "Deduplicar" >> beam.ParDo(DeduplicarLecturas()).with_outputs(
                     CUARENTENA, main="ok"
                 )
             )
-            consumos = deduplicadas.ok | "Diferenciar" >> beam.ParDo(
-                DiferenciarContador()
-            ).with_outputs(CUARENTENA, main="ok")
+            consumos = (
+                deduplicadas.ok
+                | "RetiparClave" >> beam.Map(lambda kv: kv).with_output_types(
+                    KV[str, Any]
+                )
+                | "Diferenciar" >> beam.ParDo(DiferenciarContador()).with_outputs(
+                    CUARENTENA, main="ok"
+                )
+            )
 
             (
                 consumos.ok
@@ -168,7 +182,9 @@ def correr(lecturas: tuple[tuple[str, float], ...], cal: CalendarioTarifario) ->
             )
             (
                 consumos.ok
-                | "ClavearPorMedidor" >> beam.Map(lambda c: (c.medidor_id, c))
+                | "ClavearPorMedidor" >> beam.Map(
+                    lambda c: (c.medidor_id, c)
+                ).with_output_types(KV[str, Any])
                 | "Celdas" >> beam.ParDo(CeldasVigentes(cal))
                 | "GuardarCeldas" >> beam.Map(json.dumps)
                 | "EscribirCeldas" >> beam.io.WriteToText(salidas["celdas"])

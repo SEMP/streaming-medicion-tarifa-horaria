@@ -116,7 +116,21 @@ pisaría el valor correcto.
 es una señal operativa: si sube en una zona, el problema es la cobertura de red y no el
 pipeline.
 
-## 2.1 El detalle que condiciona el despliegue
+## 2.1 El grafo que corre de verdad
+
+El diagrama de arriba se mantiene a mano y muestra los componentes. El de abajo no: lo dibuja
+Beam a partir del mismo `construir` + `cadena` que se ejecuta en producción, con
+`uv run python -m pipeline.grafico`. Por eso no puede quedar desactualizado respecto del
+código, que es el riesgo de todo diagrama de pipeline.
+
+![Pasos del pipeline, dibujados desde el código](../diagramas/pipeline-dag.svg)
+
+Se lee de arriba hacia abajo: el camino principal a la izquierda y, a la derecha, **las cuatro
+ramas de cuarentena** convergiendo en un solo tópico. Las cajas `LeerLecturas`,
+`EscribirConsumo` y `EscribirCuarentena` están cerradas a propósito: por dentro `KafkaIO`
+despliega una docena de pasos del SDK de Java que no dicen nada sobre este pipeline.
+
+## 2.2 El detalle que condiciona el despliegue
 
 `KafkaIO` **no es una librería Python**: es una transformación *cross-language* cuyas etapas
 de lectura y escritura ejecuta el SDK de **Java**. La imagen de Flink empaqueta los dos SDK y

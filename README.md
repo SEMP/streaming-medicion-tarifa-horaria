@@ -68,7 +68,8 @@ infra/        docker-compose: Kafka, Flink, job server de Beam.
 tablero/      Consumidor en marimo: lee el tópico derivado y reconstruye la vista
               actual con upsert por clave. Extensión opcional.
 tests/        Pruebas unitarias y de pipeline con TestStream.
-docs/         Documento técnico, diagrama de arquitectura y decisiones de diseño.
+docs/         Documento técnico, diagramas y decisiones de diseño. El DAG del
+              pipeline se redibuja solo con `uv run python -m pipeline.grafico`.
 datos/        Datos de ejemplo generados por el simulador (no versionados).
 ```
 
