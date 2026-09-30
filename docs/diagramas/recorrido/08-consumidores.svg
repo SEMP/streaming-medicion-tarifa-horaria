@@ -1,33 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 708" width="1120" height="708" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 716" width="1120" height="716" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
   <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/></marker><marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/></marker></defs>
-  <rect width="1120" height="708" fill="#ffffff"/>
+  <rect width="1120" height="716" fill="#ffffff"/>
   <text x="40" y="44" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="21" fill="#1a202c" font-weight="600" text-anchor="start">08. Tablero y facturación</text>
   <text x="40" y="70" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#22543d" font-weight="600" text-anchor="start">Dos lectores del mismo log, con necesidades opuestas</text>
-  <rect x="40" y="110" width="1040" height="84" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
-  <text x="56" y="132" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA</text>
-  <text x="56" y="152" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">Los mensajes del tópico derivado,</text>
-  <text x="56" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">cinco revisiones para dos celdas</text>
-  <line x1="560" y1="196" x2="560" y2="214" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
-  <rect x="40" y="220" width="1040" height="138" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
-  <text x="56" y="242" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
-  <text x="56" y="262" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">El tablero relee desde el offset 0 y hace</text>
-  <text x="56" y="280" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">upsert por clave: el último gana, nunca suma.</text>
-  <text x="56" y="298" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start"></text>
-  <text x="56" y="316" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">La facturación lee una sola vez, pasado</text>
-  <text x="56" y="334" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">ventana_fin + 36 h, cuando ya convergió.</text>
-  <line x1="560" y1="360" x2="560" y2="378" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
-  <rect x="40" y="384" width="1040" height="156" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
-  <text x="56" y="406" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE</text>
-  <text x="56" y="426" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">MED-0042|2026-09-25|punta   3.100 kWh</text>
-  <text x="56" y="444" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">MED-0042|2026-09-25|resto   2.400 kWh</text>
-  <text x="56" y="462" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">TOTAL                       5.500 kWh</text>
-  <text x="56" y="480" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start"></text>
-  <text x="56" y="498" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">error de atribución = separacion_maxima</text>
-  <text x="56" y="516" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">                    / duración de la franja</text>
-  <text x="40" y="566" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#1a202c" font-weight="700" text-anchor="start">POR QUÉ</text>
-  <text x="40" y="592" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">Si el tablero sumara en vez de reemplazar, las cinco revisiones darían más del doble. El error de atribución lo</text>
-  <text x="40" y="610" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">calcula el consumidor y no el pipeline, porque el denominador es la duración de la franja, que vive en el calendario</text>
-  <text x="40" y="628" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">tarifario y no en el evento: ponerlo en el mensaje obligaría a que los dos coincidieran sobre qué calendario rige en</text>
-  <text x="40" y="646" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">cada fecha.</text>
-  <text x="40" y="680" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">tablero/tablero.py · docs/contratos.md sección 2.3</text>
+  <rect x="40" y="110" width="1040" height="102" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
+  <text x="56" y="132" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA — es la salida de la 07</text>
+  <text x="56" y="152" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">clave : b&#x27;MED-0042|2026-09-25|resto&#x27;</text>
+  <text x="56" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">valor : b&#x27;{&quot;energia_kwh&quot;: 1.5, &quot;interpolada&quot;:</text>
+  <text x="56" y="188" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">         false, ...}&#x27;</text>
+  <line x1="560" y1="214" x2="560" y2="232" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="40" y="238" width="1040" height="138" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="56" y="260" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
+  <text x="56" y="280" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">El tablero relee desde el offset 0 y hace upsert</text>
+  <text x="56" y="298" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">por clave: el último gana, nunca suma.</text>
+  <text x="56" y="316" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start"></text>
+  <text x="56" y="334" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">La facturación lee una sola vez, pasado</text>
+  <text x="56" y="352" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">ventana_fin + 36 h, cuando ya convergió.</text>
+  <line x1="560" y1="378" x2="560" y2="396" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="40" y="402" width="1040" height="146" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="56" y="424" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE</text>
+  <text x="56" y="444" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">MED-0042|2026-09-25|punta   3.100 kWh</text>
+  <text x="56" y="462" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">MED-0042|2026-09-25|resto   2.400 kWh</text>
+  <text x="56" y="480" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">TOTAL                       5.500 kWh</text>
+  <text x="56" y="502" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">error de atribución = separacion_maxima_minutos</text>
+  <text x="56" y="519" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">                    / duración de la franja</text>
+  <text x="40" y="574" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#1a202c" font-weight="700" text-anchor="start">POR QUÉ</text>
+  <text x="40" y="600" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">Las cinco revisiones que publicó el pipeline colapsan en dos celdas. Si el tablero sumara en vez de reemplazar, el</text>
+  <text x="40" y="618" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">total daría más del doble. El error de atribución lo calcula el consumidor y no el pipeline, porque el denominador es</text>
+  <text x="40" y="636" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">la duración de la franja, que vive en el calendario tarifario y no en el evento: ponerlo en el mensaje obligaría a que</text>
+  <text x="40" y="654" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">los dos coincidieran sobre qué calendario rige en cada fecha.</text>
+  <text x="40" y="688" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">tablero/tablero.py · docs/contratos.md sección 2.3</text>
 </svg>

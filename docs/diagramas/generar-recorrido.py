@@ -48,27 +48,35 @@ class Estacion:
     breve: str
     color: tuple[str, str, str]
     titular: str
-    entra: list[str]
     hace: list[str]
     sale: list[str]
     porque: str
     fuente: str
     forma: str                       # una línea, para la lámina del recorrido completo
+    extra: list[str] = field(default_factory=list)
+    """Contexto que acompaña a la salida pero **no viaja** a la estación siguiente."""
     cuarentena: list[str] = field(default_factory=list)
+    entra: list[str] = field(default_factory=list)
+    """Solo la estación 01 lo declara. Para el resto se deriva de la salida de la anterior,
+    que es lo que hace que el recorrido se pueda seguir sin cortes y que las dos no puedan
+    desincronizarse."""
+
+
+def encadenar(estaciones: list[Estacion]) -> None:
+    """La entrada de cada estación **es** la salida de la anterior, literalmente."""
+    for previa, actual in zip(estaciones[:-1], estaciones[1:], strict=True):
+        actual.entra = list(previa.sale)
 
 
 ESTACIONES = [
     Estacion(
         "01", "simulador", "Simulador", "Simulador", FUENTE_C,
         "El dato nace porque alguien lo pidió",
-        ["Nada. El medidor no transmite por su cuenta:",
-         "el concentrador pregunta, medidor por medidor,",
-         "sobre un bus RS-485 compartido."],
         ["1. El concentrador recorre la cabina en orden",
          "2. Pregunta el registro OBIS 15.8.0",
          "3. El medidor responde su CONTADOR ACUMULADO,",
          "   no el consumo del intervalo",
-         "4. Se arma la Lectura y se sella event_id"],
+         "4. Se arma la Lectura y se sella el event_id"],
         ['{',
          '  "schema_version": 1,',
          '  "event_id": "d4612d921b39e34a",',
@@ -86,82 +94,82 @@ ESTACIONES = [
         "mismo id, que es lo que lo hace reconocible como duplicado.",
         "simulador/src/simulador/evento.py:58 (Lectura) · valor real de Lectura.a_dict()",
         "Lectura con contador acumulado",
+        entra=["Nada. El medidor no transmite por su cuenta: el concentrador pregunta,",
+               "medidor por medidor, sobre un bus RS-485 compartido."],
     ),
     Estacion(
         "02", "topico-crudo", "medicion.lecturas.v1", "Tópico crudo", KAFKA_C,
         "El log crudo: lo que llegó, tal como llegó",
-        ["La Lectura serializada"],
         ["1. clave  = medidor_id, en bytes",
-         "2. valor  = el JSON entero, en bytes",
+         "2. valor  = ese mismo JSON, serializado en bytes",
          "3. Kafka elige partición por hash de la clave",
          "4. El productor va con acks=all e idempotencia"],
         ["clave : b'MED-0042'",
-         "valor : b'{\"schema_version\": 1, \"event_id\": ...}'",
-         "",
-         "4 particiones · retención 7 días · delete"],
+         "valor : b'{\"schema_version\": 1, \"event_id\":",
+         "         \"d4612d921b39e34a\", \"medidor_id\": ...}'"],
         "La clave es el medidor y no la cabina. Dos razones: de 1 a 199 medidores por cabina "
         "desbalancearía el reparto en un factor de 200, y la clave es lo que garantiza que las "
         "lecturas de un mismo medidor lleguen en orden — sin ese orden, restar dos lecturas "
         "consecutivas no tendría sentido.",
         "docs/contratos.md sección 1 · simulador/src/simulador/publicador.py:18",
         "clave=medidor · JSON",
+        extra=["4 particiones · retención 7 días · cleanup.policy = delete"],
     ),
     Estacion(
         "03", "entrada-al-pipeline", "Parsear y marcar el tiempo",
         "Parsear y marcar el tiempo", PIPE_C,
         "De bytes a un par con clave, y con el tiempo del dominio",
-        ["tuple[bytes, bytes]", "clave y valor tal como salieron de Kafka"],
-        ["1. json.loads del valor",
-         "2. medidor_id del cuerpo (la clave es respaldo)",
-         "3. Se lee instante_lectura y se exige su huso",
-         "4. Se sella como tiempo de EVENTO"],
-        ["('MED-0042', {...})",
-         "",
-         "TimestampedValue(",
+        ["1. json.loads del valor -> ('MED-0042', {...})",
+         "   el medidor sale del cuerpo; la clave es respaldo",
+         "2. Se lee instante_lectura y se exige su huso",
+         "3. Se sella como tiempo de EVENTO, no de llegada"],
+        ["TimestampedValue(",
          "  ('MED-0042', {...}),",
          "  timestamp = 1790369700",
-         ")   # 2026-09-25 17:55:00-03:00"],
+         ")"],
         "El record de Kafka trae cuándo se publicó; instante_lectura trae cuándo se midió. "
         "Entre los dos puede haber horas —una cabina que vuelve de una caída publica de golpe "
         "lo que fue juntando— y ventanear por el de publicación metería ese consumo en el día "
         "equivocado, que es dinero mal facturado.",
         "pipeline/src/pipeline/cadena.py:89 y :115",
         "('MED-0042', dict) con tiempo de evento",
-        ["json_invalido", "sin_medidor_id", "instante_invalido", "instante_sin_huso"],
+        extra=["1790369700 = 2026-09-25 17:55:00-03:00",
+               "{...} es el JSON de la estación 01, ya parseado a dict"],
+        cuarentena=["json_invalido", "sin_medidor_id", "instante_invalido", "instante_sin_huso"],
     ),
     Estacion(
         "04", "ventana-y-dedup", "Ventana diaria y deduplicación",
         "Ventana y deduplicación", PIPE_C,
         "El duplicado muere acá, antes de poder hacer daño",
-        ["TimestampedValue(('MED-0042', {...}))"],
         ["1. Cae en la ventana del día local",
          "   FixedWindows(24 h), desplazada -3 h",
          "2. ¿'2026-09-25T17:55:00-03:00' en VISTOS?",
          "   sí -> se cuenta y NO se emite",
          "   no -> se agrega y sigue",
          "3. Timer para expirar a window.end + 36 h"],
-        ["('MED-0042', {...})",
-         "",
-         "estado VISTOS del medidor:",
-         "  {'...T17:40:00-03:00',",
-         "   '...T17:55:00-03:00'}"],
+        ["TimestampedValue(",
+         "  ('MED-0042', {...}),",
+         "  timestamp = 1790369700",
+         ")   en la ventana del 2026-09-25 local"],
         "Va antes de diferenciar, y el orden no es intercambiable: si fuera después, el "
         "duplicado se restaría contra sí mismo y daría un consumo de cero que, con salida por "
         "upsert, pisaría el valor bueno. Un duplicado no es un error —es lo que esta etapa "
         "existe para atender— así que no va a cuarentena, pero sí se cuenta.",
         "pipeline/src/pipeline/transformaciones.py:72 (DeduplicarLecturas)",
         "lectura única, ventaneada",
-        ["instante_invalido"],
+        extra=["estado VISTOS del medidor, después de esta lectura:",
+               "  {'2026-09-25T17:40:00-03:00',",
+               "   '2026-09-25T17:55:00-03:00'}"],
+        cuarentena=["instante_invalido"],
     ),
     Estacion(
         "05", "diferenciar", "Diferenciar el contador", "Diferenciar el contador", PIPE_C,
         "Recién acá aparece el consumo, que no venía en el dato",
-        ["('MED-0042', {...})", "con el contador en 101.5"],
-        ["1. Busca el registro OBIS 15.8.0",
+        ["1. Busca el registro OBIS 15.8.0 -> 101.5",
          "2. Guarda (instante, valor, cabina) en el estado",
          "3. Ordena TODAS las del medidor en la ventana",
          "4. Arma los intervalos vecinos de esta lectura",
-         "5. energia = v_hasta - v_desde"],
+         "5. energia = v_hasta - v_desde = 101.5 - 100.0"],
         ["Consumo(",
          "  medidor_id='MED-0042',",
          "  cabina_id='CAB-07',",
@@ -176,14 +184,14 @@ ESTACIONES = [
         "atribución, el número que el proyecto existe para medir.",
         "pipeline/src/pipeline/transformaciones.py:124 (DiferenciarContador)",
         "Consumo(desde, hasta, 1.5 kWh)",
-        ["sin_registro_util", "contador_retrocede"],
+        extra=["la lectura de las 17:40, con el contador en 100.0,",
+               "estaba guardada en el estado desde su propio paso por acá"],
+        cuarentena=["sin_registro_util", "contador_retrocede"],
     ),
     Estacion(
         "06", "celdas-vigentes", "Atribuir la franja y agregar",
         "Atribuir franja y agregar", PIPE_C,
         "Donde el intervalo se convierte en plata, y donde puede cruzar un borde",
-        ["Consumo(17:40 -> 17:55, 1.5 kWh)",
-         "y después: Consumo(17:55 -> 18:20, 4.0 kWh)"],
         ["1. ¿Hay ya un intervalo igual o más corto para",
          "   ese borde izquierdo? Entonces este quedó",
          "   superado y no se suma",
@@ -192,66 +200,64 @@ ESTACIONES = [
          "   un borde, interpola suponiendo potencia",
          "   constante, y lo declara",
          "4. Emite solo lo que cambió"],
-        ["MED-0042|2026-09-25|resto",
-         '  {"energia_kwh": 1.5, "interpolada": false,',
-         '   "separacion_maxima_minutos": 15.0,',
-         '   "intervalos_usados": 1}',
-         "",
-         "y al llegar el intervalo que cruza las 18:00:",
-         "",
-         "MED-0042|2026-09-25|resto  2.3  interpolada",
-         "MED-0042|2026-09-25|punta  3.2  interpolada"],
-        "El segundo intervalo, de 17:55 a 18:20, cruza el borde de punta: sus 4,0 kWh se "
-        "reparten 0,8 hacia resto —los 5 minutos antes de las 18:00— y 3,2 hacia "
-        "punta, que son los 20 restantes. Es una estimación, y la celda lo dice. "
-        "Recalcular todo en vez de solo lo que tocó la lectura "
-        "nueva es más caro a propósito: así el resultado no depende del orden de llegada.",
+        ["('MED-0042|2026-09-25|resto',",
+         ' {"energia_kwh": 1.5, "interpolada": false,',
+         '  "indeterminada": false, "minutos_cubiertos": 15.0,',
+         '  "separacion_maxima_minutos": 15.0,',
+         '  "cabina_id": "CAB-07", "intervalos_usados": 1})'],
+        "Este intervalo cae entero en resto, así que la celda sale medida. Cuando llegue el "
+        "siguiente —17:55 a 18:20, 4,0 kWh— sí cruza el borde de punta: sus minutos se reparten "
+        "5 de un lado y 20 del otro, o sea 0,8 kWh a resto y 3,2 a punta, y las dos celdas "
+        "pasan a interpoladas. Recalcular todo en vez de solo lo que tocó la lectura nueva es "
+        "más caro a propósito: así el resultado no depende del orden de llegada.",
         "pipeline/src/pipeline/transformaciones.py:227 (CeldasVigentes)",
         "celda medidor|fecha|franja, valor absoluto",
+        extra=["y cuando llega el intervalo que cruza las 18:00,",
+               "esta misma celda se reemite y aparece la otra:",
+               "  MED-0042|2026-09-25|resto  2.3  interpolada",
+               "  MED-0042|2026-09-25|punta  3.2  interpolada"],
     ),
     Estacion(
         "07", "topico-derivado", "medicion.consumo-franja.v1", "Tópico derivado", KAFKA_C,
         "El log derivado: la clave es la celda, no el evento",
-        ["('MED-0042|2026-09-25|resto', {...})"],
         ["1. clave  = medidor|fecha|franja, en bytes",
          "2. valor  = el JSON de la celda, en bytes",
          "3. KafkaIO Write, con el SDK de Java"],
         ["clave : b'MED-0042|2026-09-25|resto'",
-         "valor : b'{\"energia_kwh\": 2.3, ...}'",
-         "",
-         "cleanup.policy = compact,delete · 90 días"],
+         "valor : b'{\"energia_kwh\": 1.5, \"interpolada\":",
+         "         false, ...}'"],
         "Que la clave sea la celda y el valor sea absoluto es lo que hace idempotente a todo "
         "el sistema: cada mensaje reemplaza al anterior en vez de sumarse. Reprocesar el log "
         "entero desde el offset 0 converge a las mismas celdas, y eso está verificado sobre "
         "Kafka y Flink, no solo afirmado.",
         "pipeline/src/pipeline/cadena.py:229 · esqueleto.py:91",
         "clave=celda · absoluto",
+        extra=["cleanup.policy = compact,delete · 90 días",
+               "la compactación por clave deja viva la última revisión de cada celda"],
     ),
     Estacion(
         "08", "consumidores", "Tablero y facturación", "Tablero y facturación", CONSU_C,
         "Dos lectores del mismo log, con necesidades opuestas",
-        ["Los mensajes del tópico derivado,",
-         "cinco revisiones para dos celdas"],
-        ["El tablero relee desde el offset 0 y hace",
-         "upsert por clave: el último gana, nunca suma.",
+        ["El tablero relee desde el offset 0 y hace upsert",
+         "por clave: el último gana, nunca suma.",
          "",
          "La facturación lee una sola vez, pasado",
          "ventana_fin + 36 h, cuando ya convergió."],
         ["MED-0042|2026-09-25|punta   3.100 kWh",
          "MED-0042|2026-09-25|resto   2.400 kWh",
-         "TOTAL                       5.500 kWh",
-         "",
-         "error de atribución = separacion_maxima",
-         "                    / duración de la franja"],
-        "Si el tablero sumara en vez de reemplazar, las cinco revisiones darían más del doble. "
-        "El error de atribución lo calcula el consumidor y no el pipeline, porque el "
-        "denominador es la duración de la franja, que vive en el calendario tarifario y no en "
-        "el evento: ponerlo en el mensaje obligaría a que los dos coincidieran sobre qué "
-        "calendario rige en cada fecha.",
+         "TOTAL                       5.500 kWh"],
+        "Las cinco revisiones que publicó el pipeline colapsan en dos celdas. Si el tablero "
+        "sumara en vez de reemplazar, el total daría más del doble. El error de atribución lo "
+        "calcula el consumidor y no el pipeline, porque el denominador es la duración de la "
+        "franja, que vive en el calendario tarifario y no en el evento: ponerlo en el mensaje "
+        "obligaría a que los dos coincidieran sobre qué calendario rige en cada fecha.",
         "tablero/tablero.py · docs/contratos.md sección 2.3",
         "5 mensajes -> 2 celdas · total 5.500",
+        extra=["error de atribución = separacion_maxima_minutos",
+               "                    / duración de la franja"],
     ),
 ]
+encadenar(ESTACIONES)
 
 
 # ── utilidades de dibujo ────────────────────────────────────────────────────────────────
@@ -301,16 +307,21 @@ def detalle(e: Estacion) -> str:
         piezas.append(_texto(40, 70 + i * 18, ln, tam=14, color=titulo, peso="600"))
     y = 70 + len(cab) * 18 + 22
 
-    def bloque(rotulo, lineas, col, mono=True, alto_extra=0):
+    def bloque(rotulo, lineas, col, mono=True, extra=()):
         nonlocal y
         r, b, t_ = col
-        alto = 34 + len(lineas) * 18 + 14 + alto_extra
+        alto = 34 + len(lineas) * 18 + 14 + (len(extra) * 17 + 10 if extra else 0)
         piezas.append(f'<rect x="40" y="{y}" width="{ANCHO_D - 80}" height="{alto}" rx="7" '
                       f'fill="{r}" stroke="{b}" stroke-width="1.6"/>')
         piezas.append(_texto(56, y + 22, rotulo, tam=11, color=t_, peso="700"))
         for i, ln in enumerate(lineas):
             piezas.append(_texto(56, y + 42 + i * 18, ln, tam=12.5,
                                  familia=MONO if mono else TIPO, color=TINTA))
+        # El contexto no viaja a la estación siguiente, así que va en gris y más chico:
+        # lo que se copia hacia abajo es solo el bloque de arriba.
+        base = y + 42 + len(lineas) * 18 + 4
+        for i, ln in enumerate(extra):
+            piezas.append(_texto(56, base + i * 17, ln, tam=11.5, familia=MONO, color=TENUE))
         y += alto
         return alto
 
@@ -320,11 +331,17 @@ def detalle(e: Estacion) -> str:
                       f'stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>')
         y += 26
 
-    bloque("LO QUE LLEGA", e.entra, ("#f7fafc", "#a0aec0", TENUE))
+    anterior = int(e.numero) - 1
+    rot_entra = ("LO QUE LLEGA" if anterior < 1
+                 else f"LO QUE LLEGA — es la salida de la {anterior:02d}")
+    bloque(rot_entra, e.entra, ("#f7fafc", "#a0aec0", TENUE), mono=anterior >= 1)
     flecha()
     bloque("QUÉ LE PASA", e.hace, (relleno, borde, titulo))
     flecha()
-    bloque("LO QUE SALE", e.sale, CONSU_C)
+    siguiente = int(e.numero) + 1
+    rot_sale = ("LO QUE SALE" if siguiente > 8
+                else f"LO QUE SALE — es lo que llega a la {siguiente:02d}")
+    bloque(rot_sale, e.sale, CONSU_C, extra=e.extra)
 
     if e.cuarentena:
         y += 10

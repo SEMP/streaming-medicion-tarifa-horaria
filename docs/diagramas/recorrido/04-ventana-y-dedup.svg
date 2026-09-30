@@ -1,34 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 748" width="1120" height="748" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 845" width="1120" height="845" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
   <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/></marker><marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/></marker></defs>
-  <rect width="1120" height="748" fill="#ffffff"/>
+  <rect width="1120" height="845" fill="#ffffff"/>
   <text x="40" y="44" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="21" fill="#1a202c" font-weight="600" text-anchor="start">04. Ventana diaria y deduplicación</text>
   <text x="40" y="70" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#2c5282" font-weight="600" text-anchor="start">El duplicado muere acá, antes de poder hacer daño</text>
-  <rect x="40" y="110" width="1040" height="66" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
-  <text x="56" y="132" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA</text>
-  <text x="56" y="152" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">TimestampedValue((&#x27;MED-0042&#x27;, {...}))</text>
-  <line x1="560" y1="178" x2="560" y2="196" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
-  <rect x="40" y="202" width="1040" height="156" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
-  <text x="56" y="224" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
-  <text x="56" y="244" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">1. Cae en la ventana del día local</text>
-  <text x="56" y="262" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   FixedWindows(24 h), desplazada -3 h</text>
-  <text x="56" y="280" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">2. ¿&#x27;2026-09-25T17:55:00-03:00&#x27; en VISTOS?</text>
-  <text x="56" y="298" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   sí -&gt; se cuenta y NO se emite</text>
-  <text x="56" y="316" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   no -&gt; se agrega y sigue</text>
-  <text x="56" y="334" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">3. Timer para expirar a window.end + 36 h</text>
-  <line x1="560" y1="360" x2="560" y2="378" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
-  <rect x="40" y="384" width="1040" height="138" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
-  <text x="56" y="406" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE</text>
-  <text x="56" y="426" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">(&#x27;MED-0042&#x27;, {...})</text>
-  <text x="56" y="444" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start"></text>
-  <text x="56" y="462" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">estado VISTOS del medidor:</text>
-  <text x="56" y="480" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  {&#x27;...T17:40:00-03:00&#x27;,</text>
-  <text x="56" y="498" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   &#x27;...T17:55:00-03:00&#x27;}</text>
-  <rect x="40" y="532" width="1040" height="66" rx="7" fill="#fff5f5" stroke="#c53030" stroke-width="1.6" stroke-dasharray="5 3"/>
-  <text x="56" y="554" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#c53030" font-weight="700" text-anchor="start">Y SI NO SE PUEDE, VA A CUARENTENA</text>
-  <text x="56" y="574" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">instante_invalido</text>
-  <text x="40" y="624" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#1a202c" font-weight="700" text-anchor="start">POR QUÉ</text>
-  <text x="40" y="650" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">Va antes de diferenciar, y el orden no es intercambiable: si fuera después, el duplicado se restaría contra sí mismo y</text>
-  <text x="40" y="668" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">daría un consumo de cero que, con salida por upsert, pisaría el valor bueno. Un duplicado no es un error —es lo que</text>
-  <text x="40" y="686" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">esta etapa existe para atender— así que no va a cuarentena, pero sí se cuenta.</text>
-  <text x="40" y="720" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">pipeline/src/pipeline/transformaciones.py:72 (DeduplicarLecturas)</text>
+  <rect x="40" y="110" width="1040" height="120" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
+  <text x="56" y="132" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA — es la salida de la 03</text>
+  <text x="56" y="152" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">TimestampedValue(</text>
+  <text x="56" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  (&#x27;MED-0042&#x27;, {...}),</text>
+  <text x="56" y="188" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  timestamp = 1790369700</text>
+  <text x="56" y="206" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">)</text>
+  <line x1="560" y1="232" x2="560" y2="250" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="40" y="256" width="1040" height="156" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
+  <text x="56" y="278" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
+  <text x="56" y="298" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">1. Cae en la ventana del día local</text>
+  <text x="56" y="316" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   FixedWindows(24 h), desplazada -3 h</text>
+  <text x="56" y="334" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">2. ¿&#x27;2026-09-25T17:55:00-03:00&#x27; en VISTOS?</text>
+  <text x="56" y="352" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   sí -&gt; se cuenta y NO se emite</text>
+  <text x="56" y="370" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   no -&gt; se agrega y sigue</text>
+  <text x="56" y="388" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">3. Timer para expirar a window.end + 36 h</text>
+  <line x1="560" y1="414" x2="560" y2="432" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="40" y="438" width="1040" height="181" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="56" y="460" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE — es lo que llega a la 05</text>
+  <text x="56" y="480" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">TimestampedValue(</text>
+  <text x="56" y="498" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  (&#x27;MED-0042&#x27;, {...}),</text>
+  <text x="56" y="516" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  timestamp = 1790369700</text>
+  <text x="56" y="534" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">)   en la ventana del 2026-09-25 local</text>
+  <text x="56" y="556" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">estado VISTOS del medidor, después de esta lectura:</text>
+  <text x="56" y="573" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">  {&#x27;2026-09-25T17:40:00-03:00&#x27;,</text>
+  <text x="56" y="590" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">   &#x27;2026-09-25T17:55:00-03:00&#x27;}</text>
+  <rect x="40" y="629" width="1040" height="66" rx="7" fill="#fff5f5" stroke="#c53030" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="56" y="651" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#c53030" font-weight="700" text-anchor="start">Y SI NO SE PUEDE, VA A CUARENTENA</text>
+  <text x="56" y="671" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">instante_invalido</text>
+  <text x="40" y="721" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#1a202c" font-weight="700" text-anchor="start">POR QUÉ</text>
+  <text x="40" y="747" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">Va antes de diferenciar, y el orden no es intercambiable: si fuera después, el duplicado se restaría contra sí mismo y</text>
+  <text x="40" y="765" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">daría un consumo de cero que, con salida por upsert, pisaría el valor bueno. Un duplicado no es un error —es lo que</text>
+  <text x="40" y="783" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">esta etapa existe para atender— así que no va a cuarentena, pero sí se cuenta.</text>
+  <text x="40" y="817" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">pipeline/src/pipeline/transformaciones.py:72 (DeduplicarLecturas)</text>
 </svg>

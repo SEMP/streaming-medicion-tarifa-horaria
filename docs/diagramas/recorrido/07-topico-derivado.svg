@@ -1,27 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 600" width="1120" height="600" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 698" width="1120" height="698" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
   <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/></marker><marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/></marker></defs>
-  <rect width="1120" height="600" fill="#ffffff"/>
+  <rect width="1120" height="698" fill="#ffffff"/>
   <text x="40" y="44" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="21" fill="#1a202c" font-weight="600" text-anchor="start">07. medicion.consumo-franja.v1</text>
   <text x="40" y="70" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#744210" font-weight="600" text-anchor="start">El log derivado: la clave es la celda, no el evento</text>
-  <rect x="40" y="110" width="1040" height="66" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
-  <text x="56" y="132" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA</text>
-  <text x="56" y="152" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">(&#x27;MED-0042|2026-09-25|resto&#x27;, {...})</text>
-  <line x1="560" y1="178" x2="560" y2="196" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
-  <rect x="40" y="202" width="1040" height="102" rx="7" fill="#fffbeb" stroke="#b7791f" stroke-width="1.6"/>
-  <text x="56" y="224" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#744210" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
-  <text x="56" y="244" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">1. clave  = medidor|fecha|franja, en bytes</text>
-  <text x="56" y="262" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">2. valor  = el JSON de la celda, en bytes</text>
-  <text x="56" y="280" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">3. KafkaIO Write, con el SDK de Java</text>
-  <line x1="560" y1="306" x2="560" y2="324" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
-  <rect x="40" y="330" width="1040" height="120" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
-  <text x="56" y="352" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE</text>
-  <text x="56" y="372" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">clave : b&#x27;MED-0042|2026-09-25|resto&#x27;</text>
-  <text x="56" y="390" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">valor : b&#x27;{&quot;energia_kwh&quot;: 2.3, ...}&#x27;</text>
-  <text x="56" y="408" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start"></text>
-  <text x="56" y="426" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">cleanup.policy = compact,delete · 90 días</text>
-  <text x="40" y="476" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#1a202c" font-weight="700" text-anchor="start">POR QUÉ</text>
-  <text x="40" y="502" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">Que la clave sea la celda y el valor sea absoluto es lo que hace idempotente a todo el sistema: cada mensaje reemplaza</text>
-  <text x="40" y="520" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">al anterior en vez de sumarse. Reprocesar el log entero desde el offset 0 converge a las mismas celdas, y eso está</text>
-  <text x="40" y="538" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">verificado sobre Kafka y Flink, no solo afirmado.</text>
-  <text x="40" y="572" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">pipeline/src/pipeline/cadena.py:229 · esqueleto.py:91</text>
+  <rect x="40" y="110" width="1040" height="138" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
+  <text x="56" y="132" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA — es la salida de la 06</text>
+  <text x="56" y="152" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">(&#x27;MED-0042|2026-09-25|resto&#x27;,</text>
+  <text x="56" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start"> {&quot;energia_kwh&quot;: 1.5, &quot;interpolada&quot;: false,</text>
+  <text x="56" y="188" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  &quot;indeterminada&quot;: false, &quot;minutos_cubiertos&quot;: 15.0,</text>
+  <text x="56" y="206" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  &quot;separacion_maxima_minutos&quot;: 15.0,</text>
+  <text x="56" y="224" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  &quot;cabina_id&quot;: &quot;CAB-07&quot;, &quot;intervalos_usados&quot;: 1})</text>
+  <line x1="560" y1="250" x2="560" y2="268" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="40" y="274" width="1040" height="102" rx="7" fill="#fffbeb" stroke="#b7791f" stroke-width="1.6"/>
+  <text x="56" y="296" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#744210" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
+  <text x="56" y="316" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">1. clave  = medidor|fecha|franja, en bytes</text>
+  <text x="56" y="334" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">2. valor  = el JSON de la celda, en bytes</text>
+  <text x="56" y="352" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">3. KafkaIO Write, con el SDK de Java</text>
+  <line x1="560" y1="378" x2="560" y2="396" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="40" y="402" width="1040" height="146" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="56" y="424" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE — es lo que llega a la 08</text>
+  <text x="56" y="444" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">clave : b&#x27;MED-0042|2026-09-25|resto&#x27;</text>
+  <text x="56" y="462" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">valor : b&#x27;{&quot;energia_kwh&quot;: 1.5, &quot;interpolada&quot;:</text>
+  <text x="56" y="480" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">         false, ...}&#x27;</text>
+  <text x="56" y="502" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">cleanup.policy = compact,delete · 90 días</text>
+  <text x="56" y="519" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">la compactación por clave deja viva la última revisión de cada celda</text>
+  <text x="40" y="574" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#1a202c" font-weight="700" text-anchor="start">POR QUÉ</text>
+  <text x="40" y="600" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">Que la clave sea la celda y el valor sea absoluto es lo que hace idempotente a todo el sistema: cada mensaje reemplaza</text>
+  <text x="40" y="618" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">al anterior en vez de sumarse. Reprocesar el log entero desde el offset 0 converge a las mismas celdas, y eso está</text>
+  <text x="40" y="636" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">verificado sobre Kafka y Flink, no solo afirmado.</text>
+  <text x="40" y="670" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">pipeline/src/pipeline/cadena.py:229 · esqueleto.py:91</text>
 </svg>
