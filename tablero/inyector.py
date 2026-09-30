@@ -34,7 +34,7 @@ LOTE = "LOTE-TABLERO"
 HORA_ANCLA = (17, 40)
 """La primera lectura arranca a las 17:40 locales, como en `pipeline.demostracion`.
 
-No es capricho: con pasos de 15 minutos, el tercer intervalo va de 17:55 a 18:10 y **cruza
+Con pasos de 15 minutos, el tercer intervalo va de 17:55 a 18:10 y **cruza
 las 18:00**, que es donde empieza `punta` en el calendario de ejemplo. Sin ese cruce la
 lectura tardía sobre el borde no tendría nada que corregir."""
 

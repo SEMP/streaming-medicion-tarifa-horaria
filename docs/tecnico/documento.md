@@ -228,7 +228,7 @@ Tres campos merecen explicación porque no son obvios:
 aleatorio, un reintento de publicación produciría un id distinto y el duplicado dejaría de ser
 reconocible. Es la mitad de la clave de deduplicación.
 
-**`cabina_id` no es decorativo.** La duración de la ronda —y por lo tanto el error de
+**`cabina_id` identifica el bus que el medidor comparte.** La duración de la ronda —y por lo tanto el error de
 atribución— es una propiedad **de la cabina**, porque sus medidores comparten un bus RS-485 y
 se leen en secuencia. Sin este campo no se distingue «un medidor no contesta» de «se cayó la
 cabina entera».
@@ -650,7 +650,7 @@ acepta el trabajo, que los bytes entran y salen. Sin lógica de dominio de por m
 «el pipeline está mal» de «la infraestructura está mal», que son dos problemas distintos.
 
 `pipeline.extremo_a_extremo` responde la pregunta que ninguna de las otras responde: **¿la
-lógica da lo mismo cuando la ejecuta Flink?** No es retórica. El runner portable serializa las
+lógica da lo mismo cuando la ejecuta Flink?** Vale preguntarlo: el runner portable serializa las
 funciones y el estado hacia procesos que no comparten memoria con el que arma el pipeline, y
 hay cosas que andan en `DirectRunner` y no allá. Siembra las mismas cinco lecturas de la sección 6.1 y
 exige el mismo resultado:

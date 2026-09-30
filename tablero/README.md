@@ -65,7 +65,7 @@ Valida el contrato de salida antes de aceptar un mensaje: clave de tres partes y
 `energia_kwh` en el cuerpo. Lo que no lo cumple **se cuenta y se informa**, no se descarta en
 silencio.
 
-No es paranoia: la **prueba de humo escribe en este mismo tópico** haciendo *passthrough* de
+La **prueba de humo escribe en este mismo tópico** haciendo *passthrough* de
 lecturas crudas, claveadas solo por medidor. Si se mezclan con las celdas aparecen filas sin
 fecha ni franja, y el total pierde sentido. Cuando eso pasa, el tablero lo avisa y recomienda
 arrancar con el tópico limpio:

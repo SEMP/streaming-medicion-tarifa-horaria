@@ -70,7 +70,7 @@ enrutar o rechazar sin deserializar el cuerpo.
 | `schema_version` | sí | Versión del esquema. Ver sección 1.3 |
 | `event_id` | sí | Identidad estable: `sha256("<medidor_id>\|<instante_lectura>")[:16]`. **Determinista, no aleatorio**: un reintento de publicación produce el mismo id, y por eso el duplicado es reconocible. Es la mitad de la clave de deduplicación |
 | `medidor_id` | sí | **Clave de particionamiento.** Ver sección 1.2 |
-| `cabina_id` | sí | La cabina cuyo bus RS-485 comparte el medidor. No es decorativo: la duración de la ronda —y por lo tanto el error de atribución— es una propiedad **de la cabina**, y una caída de enlace afecta a todos sus medidores a la vez. Sin este campo no se puede distinguir «un medidor no contesta» de «se cayó la cabina entera» |
+| `cabina_id` | sí | La cabina cuyo bus RS-485 comparte el medidor. La duración de la ronda —y por lo tanto el error de atribución— es una propiedad **de la cabina**, y una caída de enlace afecta a todos sus medidores a la vez. Sin este campo no se puede distinguir «un medidor no contesta» de «se cayó la cabina entera» |
 | `lote_id` | sí | La publicación en la que vino. Permite rastrear una ráfaga tardía completa y demostrar el duplicado por reintento |
 | `secuencia` | sí | Número de pedido del concentrador para ese medidor. Permite detectar pedidos perdidos sin depender del tiempo |
 | `instante_lectura` | sí | **El tiempo de evento.** El momento en que el concentrador obtuvo la respuesta. ISO-8601 con offset (decisión 4). Es un instante, no un período |
@@ -138,7 +138,7 @@ lo que se cree en el `docker-compose`.
   leerlo decida sin deserializar; en el cuerpo para que el mensaje sea autodescriptivo cuando
   se lo mira suelto, en un archivo o en la cuarentena.
 
-La retención de 7 días en la entrada no es arbitraria: tiene que cubrir la lateness de 36 h
+La retención de 7 días en la entrada cubre la lateness de 36 h
 (sección 2.4) **con margen para reprocesar**. Poder releer una semana entera es lo que permite
 rehacer un cálculo cuando se corrige un bug, y es la forma barata de demostrar que el
 reproceso converge al mismo resultado.
@@ -289,7 +289,7 @@ clave:  MED-0042|2026-09-25|resto
 }
 ```
 
-Que la identidad viva en la clave no es un detalle de serialización: es lo que hace que todas
+Que la identidad viva en la clave es lo que hace que todas
 las revisiones de una celda caigan en la misma partición, se lean en orden y el *upsert* del
 consumidor sea determinista. Repetir esos tres campos en el valor sería redundante y abriría la
 posibilidad de que discrepen.

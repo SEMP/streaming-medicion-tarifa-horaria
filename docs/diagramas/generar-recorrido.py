@@ -181,7 +181,7 @@ ESTACIONES = [
          ")"],
         "101,5 menos 100,0 da 1,5 kWh en quince minutos. Ordenar contra el estado en vez de "
         "recordar solo la última es lo que permite que una lectura tardía parta en dos un "
-        "intervalo ya emitido. Y separacion_minutos no es decorativo: es la cota del error de "
+        "intervalo ya emitido. Y separacion_minutos es la cota del error de "
         "atribución, el número que el proyecto existe para medir.",
         "pipeline/src/pipeline/transformaciones.py:124 (DiferenciarContador)",
         "Consumo(desde, hasta, 1.5 kWh)",

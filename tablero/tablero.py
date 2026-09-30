@@ -220,7 +220,7 @@ def _(
     # Si esto fuera una suma, cada revisión de una celda inflaría el total — que es
     # justamente el error que el contrato evita al emitir el valor absoluto de la celda.
     #
-    # Y se valida el contrato de salida antes de aceptar nada. No es paranoia: la prueba de
+    # Y se valida el contrato de salida antes de aceptar nada, porque la prueba de
     # humo hace *passthrough* y escribe lecturas crudas —claveadas por medidor, sin fecha ni
     # franja— en este mismo tópico. Mezclarlas con las celdas daría filas vacías y totales sin
     # sentido. Nada se descarta en silencio: lo ajeno se cuenta y se muestra aparte.

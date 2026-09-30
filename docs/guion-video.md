@@ -25,7 +25,7 @@ objetivo, es lo que sale de darle a cada tema el tiempo que necesita. Parece raz
 Si hubiera que acortar, **sale de las escenas 2 y 6**, que son explicación. Las escenas 3 y 5
 no se tocan: son la evidencia, y es lo que el criterio 6 puntúa.
 
-**Hablan los tres.** No es adorno: el criterio pide contribuciones por persona, y que cada uno
+**Hablan los tres.** El criterio pide contribuciones por persona, y que cada uno
 explique su parte es la forma más creíble de mostrarlas. Cada escena dice quién habla.
 
 ---
@@ -212,7 +212,7 @@ Es la evidencia más fuerte del criterio de confiabilidad, y cuesta un comando.
 
 ## Escena 6 — Lo que aprendimos · Sergio · 90 s
 
-**No es un resumen: es la parte que distingue el trabajo.** Contar los dos errores que
+**Es la parte que distingue el trabajo.** Contar los dos errores que
 encontramos **en nuestro propio código**, porque son la demostración de por qué el enunciado
 insiste en que una corrida feliz no alcanza.
 

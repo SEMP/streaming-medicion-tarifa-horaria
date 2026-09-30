@@ -1,7 +1,7 @@
 """La cadena de transformación completa: de bytes de Kafka a celdas de salida.
 
-Es lo que va en el hueco que deja [`esqueleto.construir`]. El orden **no es arbitrario** y
-cada paso tiene su razón, documentada en el docstring de cada función:
+Es lo que va en el hueco que deja [`esqueleto.construir`]. **Cada paso va donde va por una
+razón**, documentada en el docstring de cada función:
 
     parsear → marcar tiempo de evento → ventanear → deduplicar → diferenciar
             → celdas vigentes → serializar
@@ -187,7 +187,7 @@ def cadena(
                 CUARENTENA, main="ok"
             )
         )
-        # El type hint de la clave no es decorativo: sin él Beam elige un coder genérico y
+        # El type hint de la clave es lo que fija el coder: sin él Beam elige uno genérico y
         # advierte que puede no ser determinista, que sobre un estado por clave significa que
         # dos claves iguales podrían no encontrarse. Con `str` el coder es estable.
         con_clave = marcadas.ok | "TiparClave" >> beam.Map(lambda kv: kv).with_output_types(
