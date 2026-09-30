@@ -37,13 +37,17 @@ from .transformaciones import (
 log = logging.getLogger(__name__)
 
 CUARENTENADOS = Metrics.counter("cuarentena", "total")
-"""Contadores del *hot path*, visibles en la interfaz de Flink mientras el trabajo corre.
+"""Contadores del *hot path*, por la API de métricas de Beam.
 
 El enunciado pide «logs o métricas suficientes para observar producción, consumo,
-procesamiento y errores». Los logs de un worker distribuido hay que ir a buscarlos a cada
-TaskManager; un contador se lee de un vistazo y es lo que permite responder «¿está entrando
-basura?» sin abrir un archivo. Se cuenta por **motivo**, porque el total no distingue un
-concentrador desincronizado de un tópico con mensajes de otro productor."""
+procesamiento y errores». Se cuenta por **motivo** y no solo el total, porque el total no
+distingue un concentrador desincronizado de un tópico con mensajes de otro productor.
+
+Atención: **hoy no se ven en la interfaz de Flink.** `infra/docker/flink/flink-conf.yaml` no
+configura ningún *metrics reporter*, y el runner portable no las publica solas: verificado
+contra `/jobs/<id>/accumulators` y `/jobs/<id>/vertices/<id>/metrics`, los dos vacíos. Quedan
+disponibles por la API de métricas de Beam —`PipelineResult.metrics().query()`— y exponerlas
+en la interfaz es configuración de Flink, no de este archivo."""
 
 
 def _cuarentenar(motivo: str, registro: dict):

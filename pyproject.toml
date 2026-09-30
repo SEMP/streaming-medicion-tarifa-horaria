@@ -32,7 +32,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["simulador/src", "pipeline/src"]
+pythonpath = ["simulador/src", "pipeline/src", "tablero"]
 testpaths = ["tests"]
 filterwarnings = [
   # Beam llama TestPipeline y TestStream a clases que no son pruebas; pytest intenta

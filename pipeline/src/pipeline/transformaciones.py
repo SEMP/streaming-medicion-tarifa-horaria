@@ -205,9 +205,10 @@ class DiferenciarContador(beam.DoFn):
                 datetime.fromisoformat(i_hasta) - datetime.fromisoformat(i_desde)
             ).total_seconds() / 60
             # La separación entre lecturas es la cota del error de atribución, o sea **la
-            # métrica central del proyecto**. Como distribución, la interfaz de Flink muestra
-            # su mínimo, máximo y media sin que haya que leer la salida: si la media sube, las
-            # rondas se están alargando y el reparto por franja se vuelve más grueso.
+            # métrica central del proyecto**. Como distribución queda su mínimo, máximo y
+            # media: si la media sube, las rondas se están alargando y el reparto por franja
+            # se vuelve más grueso. Se consulta por la API de métricas de Beam — ver la nota
+            # de `cadena.py` sobre por qué todavía no se ve en la interfaz de Flink.
             Metrics.distribution("atribucion", "separacion_minutos").update(int(minutos))
             Metrics.counter("diferenciacion", "consumos_emitidos").inc()
             yield Consumo(

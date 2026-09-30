@@ -50,25 +50,33 @@ def _():
     import os
     import uuid
     from collections import Counter
+    from datetime import datetime
 
     from confluent_kafka import Consumer, KafkaException, TopicPartition
+    from inyector import ACCIONES, enviar
     from pipeline.franjas import cargar_calendario
 
     SERVIDORES = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:29092")
     TOPICO_CONSUMO = os.environ.get("TOPICO_CONSUMO", "medicion.consumo-franja.v1")
     TOPICO_CUARENTENA = os.environ.get("TOPICO_CUARENTENA", "medicion.cuarentena.v1")
+    # El tópico **crudo**: es a donde el inyector publica, no al derivado que el tablero lee.
+    TOPICO_LECTURAS = os.environ.get("TOPICO_LECTURAS", "medicion.lecturas.v1")
     CONFIG_FRANJAS = os.environ.get("CONFIG_FRANJAS", "config/franjas.example.toml")
 
     calendario = cargar_calendario(CONFIG_FRANJAS)
     return (
+        ACCIONES,
         Consumer,
         Counter,
         KafkaException,
         SERVIDORES,
         TOPICO_CONSUMO,
         TOPICO_CUARENTENA,
+        TOPICO_LECTURAS,
         TopicPartition,
         calendario,
+        datetime,
+        enviar,
         json,
         uuid,
     )
@@ -143,6 +151,57 @@ def _(mo):
 
 
 @app.cell
+def _(mo):
+    # El estado guarda la última lectura inyectada, y es lo que permite encadenar: el
+    # duplicado repite la anterior, la tardía se ubica antes que ella, el hueco salta desde
+    # ella. Sin esto cada botón sería un hecho suelto.
+    obtener_ultima, fijar_ultima = mo.state(None)
+    return fijar_ultima, obtener_ultima
+
+
+@app.cell
+def _(
+    ACCIONES,
+    SERVIDORES,
+    TOPICO_LECTURAS,
+    calendario,
+    datetime,
+    enviar,
+    fijar_ultima,
+    mo,
+    obtener_ultima,
+):
+    def _accionar(accion):
+        def _publicar(_):
+            lectura = accion.construir(
+                obtener_ultima(), ahora=datetime.now(calendario.zona)
+            )
+            enviar(lectura, servidores=SERVIDORES, topico=TOPICO_LECTURAS)
+            fijar_ultima(lectura)
+
+        return _publicar
+
+    botones = [
+        mo.ui.button(label=a.titulo, on_click=_accionar(a), tooltip=a.espera)
+        for a in ACCIONES
+    ]
+
+    mo.vstack(
+        [
+            mo.md("""
+## Pedir una irregularidad
+
+Publica al tópico **crudo** una lectura del medidor `MED-DEMO-001`, y el efecto aparece abajo.
+Requiere el **pipeline corriendo y el simulador apagado**: si el simulador está publicando,
+las 21.000 lecturas de una corrida tapan lo inyectado.
+"""),
+            mo.hstack(botones, justify="start", gap=0.5, wrap=True),
+        ]
+    )
+    return (botones,)
+
+
+@app.cell
 def _(
     Counter,
     TOPICO_CONSUMO,
@@ -150,8 +209,10 @@ def _(
     actualizar,
     json,
     leer_desde_el_principio,
+    obtener_ultima,
 ):
     actualizar  # la dependencia es lo que hace que esta celda se recalcule sola
+    obtener_ultima()  # y esta hace que se rehaga al instante cuando se inyecta algo
 
     crudos = leer_desde_el_principio(TOPICO_CONSUMO)
 

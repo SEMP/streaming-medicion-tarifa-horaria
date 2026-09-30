@@ -74,6 +74,42 @@ arrancar con el tópico limpio:
 docker compose -f infra/docker-compose.yml down -v
 ```
 
+## El inyector de irregularidades
+
+Seis botones que publican al tópico **crudo** una lectura del medidor `MED-DEMO-001`, para
+pedir a mano lo que el simulador tira por probabilidad. La lógica vive en
+[`inyector.py`](inyector.py), sin `import marimo`, y se prueba con `pytest` sin levantar nada.
+
+| Botón | Qué tiene que pasar |
+|---|---|
+| Lectura normal | Aparece o crece la celda de la franja que corresponde |
+| Duplicado de publicación | **Nada cambia**: mismo `event_id`, lo descarta el deduplicador |
+| Tardía sobre el borde | Corrige el reparto **sin mover el total**; la celda pasa a `medida` |
+| Reseteo de contador | A cuarentena, con motivo `contador_retrocede` |
+| Trama truncada | A cuarentena, o un valor absurdo según dónde caiga el corte |
+| Hueco largo | Celda `indeterminada`, con `minutos_indeterminados > 0` |
+
+Lo que hace honesto al botón del duplicado: `event_id` es
+`sha256("<medidor_id>|<instante_lectura>")[:16]`, así que republicar el mismo par produce el
+mismo identificador **por construcción**. No imita un duplicado: produce uno.
+
+### Requiere el pipeline corriendo y el simulador apagado
+
+```bash
+docker compose -f infra/docker-compose.yml up -d
+docker compose -f infra/docker-compose.yml --profile demo up -d pipeline
+```
+
+Nombrar `pipeline` explícitamente **no arrastra al simulador**, y eso importa: una corrida del
+perfil `demo` completo publica más de 21.000 lecturas, y entre ellas las inyectadas se pierden
+de vista.
+
+⚠️ **Verificación pendiente.** Las pruebas unitarias están en verde, pero la secuencia a mano
+—`normal → normal → normal → duplicado → tardía`— todavía no se pudo comprobar de punta a
+punta: en el primer intento el simulador ya había llenado el tópico y las lecturas inyectadas
+se consumieron sin producir celda ni cuarentena, sin que se pudiera ver dónde quedaron. Hace
+falta repetirlo sobre un stack recién levantado (`down -v` primero) antes de darlo por bueno.
+
 ## Configuración
 
 Todo por variables de entorno, con el mismo valor por defecto que el resto del proyecto:
@@ -83,6 +119,7 @@ Todo por variables de entorno, con el mismo valor por defecto que el resto del p
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:29092` |
 | `TOPICO_CONSUMO` | `medicion.consumo-franja.v1` |
 | `TOPICO_CUARENTENA` | `medicion.cuarentena.v1` |
+| `TOPICO_LECTURAS` (lo usa el inyector) | `medicion.lecturas.v1` |
 | `CONFIG_FRANJAS` | `config/franjas.example.toml` |
 
 **Hay que correrlo desde la raíz del repositorio.** No por el `import` de `pipeline.franjas`
