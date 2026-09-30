@@ -14,7 +14,7 @@ y la fecha se venía. No es un reproche ni hace falta rehacerlo: está en
 git clone git@github.com:SEMP/streaming-medicion-tarifa-horaria.git
 cd streaming-medicion-tarifa-horaria
 uv sync
-uv run pytest                              # 92 pruebas, sin Docker
+uv run pytest                              # 116 pruebas, sin Docker
 uv run python -m pipeline.demostracion     # los tres escenarios, en 2 segundos
 ```
 

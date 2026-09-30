@@ -1,6 +1,6 @@
 # Evidencia de ejecución
 
-Cinco corridas, en **cuatro máquinas distintas**, dos de ellas hechas por personas que no
+Seis corridas, en **cuatro máquinas distintas**, dos de ellas hechas por personas que no
 escribieron el código. Que el sistema dé lo mismo en todas es lo que hace verificable la
 reproducibilidad, en lugar de afirmarla.
 
@@ -11,6 +11,7 @@ reproducibilidad, en lugar de afirmarla.
 | [`evidencia-ejecucion-clara-2026-09-30.txt`](evidencia-ejecucion-clara-2026-09-30.txt) | Clara | Recorrido completo sobre un tercer entorno, incluidas las dos corridas de replay y la suite dentro del contenedor |
 | [`evidencia-ejecucion-francisco-2026-09-30.txt`](evidencia-ejecucion-francisco-2026-09-30.txt) | Francisco | **Verificación por una persona externa al equipo**, sin conocimiento previo del proyecto y siguiendo únicamente el `README.md` desde el `git clone` |
 | [`evidencia-ejecucion-francisco-2026-09-30-tercera-vuelta.txt`](evidencia-ejecucion-francisco-2026-09-30-tercera-vuelta.txt) | Francisco | Tercera vuelta, desde un clon nuevo. Es la que encontró que al job server le faltaba memoria |
+| [`evidencia-ejecucion-francisco-2026-09-30-cuarta-vuelta.txt`](evidencia-ejecucion-francisco-2026-09-30-cuarta-vuelta.txt) | Francisco | Cuarta vuelta: confirma el arreglo de memoria y encuentra que el perfil `pruebas` no veía `tablero/` |
 
 ## Qué probó la segunda máquina
 
@@ -31,7 +32,7 @@ docker compose -f infra/docker-compose.yml --profile pruebas run --rm -T pruebas
 ```
 
 Es la única imagen que se construye con las dependencias de desarrollo, para no engordar la
-de ejecución. Verificado: 92 pruebas en verde adentro del contenedor.
+de ejecución. Verificado: 116 pruebas en verde adentro del contenedor.
 
 ## La verificación externa, que es la que más encontró
 
@@ -62,8 +63,37 @@ automatización y lo que dice el README no son el mismo camino. `generar-evidenc
 el stack **sin** el perfil `demo`, así que al llegar a la prueba de humo no hay ningún trabajo
 de streaming vivo. El README, en cambio, manda dejar el pipeline corriendo desde el paso 2.
 
-El límite pasó a 1800m y el Camino A completo se verificó de punta a punta: recorrido y replay
-en 5.500 kWh, humo 40/40, y el job server en 1,312 de 1,758 GB sin reinicios.
+El límite pasó a 1800m.
+
+## La cuarta vuelta: el arreglo aguanta, y aparece otro
+
+Sobre la misma máquina y desde un clon nuevo, la prueba de humo —la que había matado al job
+server— termina en **40 de entrada y 40 de salida**, con `OOMKilled=false` y `Restarts=0`. El
+recorrido y el replay vuelven a dar 5.500 kWh.
+
+La medición de memoria, paso a paso, explica por qué había fallado justo ahí:
+
+| Paso | Job server | Stack |
+|---|---:|---:|
+| 1 · entorno | 405 MB | 1,8 GB |
+| 2 · pipeline y simulador | 783 MB | 3,6 GB |
+| 3 · recorrido sobre Flink | 853 MB | 4,9 GB |
+| 3b · replay | 1,735 GB | 6,0 GB |
+| 4b · prueba de humo | 1,755 GB | 6,2 GB |
+
+Con el límite viejo de 900 MB, el paso 2 ya estaba en el 87 %. No era mala suerte: esa máquina
+venía al borde desde el principio.
+
+**Y encontró otra cosa**, que es la tercera vez que aparece el mismo patrón. El paso opcional
+de la suite falla con `ModuleNotFoundError: No module named 'inyector'`, por dos causas
+encadenadas: el servicio `pruebas` no montaba `tablero/`, y su imagen estaba cacheada de una
+vuelta anterior, con un `pyproject.toml` que todavía no incluía `tablero` en el `pythonpath` de
+pytest. En el host `uv run pytest` daba las 116 en verde; el camino que documenta el README
+estaba roto.
+
+Las dos cosas quedaron corregidas: el montaje en `docker-compose.yml`, y `--build` en los dos
+comandos opcionales del README —que es lo que faltaba para que un `git pull` no te dejara
+corriendo una imagen vieja—. Verificado: **116 pruebas en verde dentro del contenedor**.
 
 ## Un detalle de lectura
 

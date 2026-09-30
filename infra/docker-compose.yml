@@ -233,6 +233,7 @@ services:
       - ../pipeline:/app/pipeline
       - ../config:/app/config
       - ../datos:/app/datos
+      - ../tablero:/app/tablero  # `pythonpath` de pytest lo incluye: sin esto, test_inyector no importa
       - ../tests:/app/tests      # la imagen no los trae: se montan para correr los locales
     command: ["/app/.venv/bin/python", "-m", "pytest", "-q"]
     restart: "no"
