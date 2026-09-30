@@ -194,27 +194,36 @@ reprocesar no duplica ni corrige, converge.
 
 **4. Observar la salida**
 
-> **Antes de correrlo:** al terminar vas a ver un `ERROR … TimeoutException`. **No es un
-> error.** Es el `--timeout-ms` venciendo después de leer todo, que es cómo se le pide a esta
-> herramienta que corte en lugar de quedarse esperando para siempre. **La línea que importa es
-> la última: `Processed a total of N messages`.**
-
 ```bash
 docker compose -f infra/docker-compose.yml exec kafka \
   /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 \
   --topic medicion.consumo-franja.v1 --from-beginning --property print.key=true \
-  --timeout-ms 10000
+  --max-messages 10
 ```
 
-Cada línea es una celda `medidor|fecha|franja` con su consumo. **Una clave repetida no es un
-error**: es una revisión posterior del mismo resultado, y vale la última — el consumidor hace
-*upsert*.
+Cada línea es una celda `medidor|fecha|franja` con su consumo, su cobertura en minutos y si el
+valor se midió o se interpoló.
 
-Con el simulador del paso 2 completo salen del orden de **20.000 celdas**, así que la lista es
-larga. El total está en esa última línea.
+**Una clave repetida no es un error**: es una revisión posterior del mismo resultado, y vale la
+última — el consumidor hace *upsert*. Se ve enseguida en la muestra, porque las primeras celdas
+de un medidor aparecen varias veces con valores que crecen.
 
-Para ver lo que el pipeline no pudo procesar, el mismo comando sobre
+El `--max-messages 10` es para ver **la forma** de la salida. Con el simulador del paso 2
+completo hay del orden de **20.000 celdas**, así que pedirlas todas llena la pantalla.
+
+Para ver lo que el pipeline **no** pudo procesar, el mismo comando sobre
 `medicion.cuarentena.v1`. Cada registro lleva su motivo.
+
+**Si querés el total en lugar de una muestra**, se cambia `--max-messages 10` por
+`--timeout-ms 10000`, que lee todo y corta cuando deja de llegar nada nuevo:
+
+```
+Processed a total of 20785 messages
+```
+
+> Esa variante imprime antes un `ERROR … TimeoutException`. **No es un error** —el proceso
+> termina con código 0— sino la forma que tiene esta herramienta de avisar que venció la
+> espera. Por eso el comando de arriba usa `--max-messages`, que corta sin ruido.
 
 **Opcional — la prueba de humo y la suite**
 
