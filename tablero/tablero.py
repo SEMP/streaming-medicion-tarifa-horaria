@@ -51,7 +51,7 @@ def _():
     import uuid
     from collections import Counter
 
-    from confluent_kafka import Consumer, TopicPartition
+    from confluent_kafka import Consumer, KafkaException, TopicPartition
     from pipeline.franjas import cargar_calendario
 
     SERVIDORES = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:29092")
@@ -63,6 +63,7 @@ def _():
     return (
         Consumer,
         Counter,
+        KafkaException,
         SERVIDORES,
         TOPICO_CONSUMO,
         TOPICO_CUARENTENA,
@@ -74,7 +75,7 @@ def _():
 
 
 @app.cell
-def _(Consumer, SERVIDORES, TopicPartition, uuid):
+def _(Consumer, KafkaException, SERVIDORES, TopicPartition, uuid):
     def leer_desde_el_principio(topico: str, espera_s: float = 2.0) -> list[tuple[str, str]]:
         """Devuelve todos los mensajes del tópico, en orden, releyendo desde el offset 0.
 
@@ -84,6 +85,11 @@ def _(Consumer, SERVIDORES, TopicPartition, uuid):
         acá se ejecuta en cada actualización del tablero.
 
         `espera_s` es cuánto se tolera sin recibir nada antes de dar por leído el tópico.
+
+        Si el broker no responde devuelve lista vacía, **no** una excepción: con el stack
+        apagado el tablero tiene que mostrar el mensaje de «tópico vacío» con las
+        instrucciones para levantarlo, que es justo el orden en que alguien lo abre por
+        primera vez. Un traceback ahí no informa nada que se pueda usar.
         """
         consumidor = Consumer(
             {
@@ -94,7 +100,10 @@ def _(Consumer, SERVIDORES, TopicPartition, uuid):
             }
         )
         try:
-            metadatos = consumidor.list_topics(topico, timeout=10)
+            try:
+                metadatos = consumidor.list_topics(topico, timeout=10)
+            except KafkaException:
+                return []  # el broker no está: el tópico, para el caso, está vacío
             if topico not in metadatos.topics or metadatos.topics[topico].error:
                 return []
             particiones = [
@@ -186,10 +195,9 @@ def _(ajenos, calendario, celdas: dict[str, dict], mo, revisiones):
             medidor, fecha, franja = (clave.split("|") + ["", "", ""])[:3]
             c = celdas[clave]
             separacion = c.get("separacion_maxima_minutos", 0.0)
-            try:
-                duracion = calendario.duracion_minutos(franja)
-            except (KeyError, IndexError):
-                duracion = 0
+            # `duracion_minutos` cuenta minutos sobre una tabla: para un nombre desconocido
+            # devuelve 0 y no levanta. El `if duracion` de abajo ya cubre ese caso.
+            duracion = calendario.duracion_minutos(franja)
             # El denominador sale del calendario, no del mensaje: sección 2.3 del contrato.
             error = (separacion / duracion * 100) if duracion else float("nan")
 
@@ -207,7 +215,11 @@ def _(ajenos, calendario, celdas: dict[str, dict], mo, revisiones):
                     "franja": franja,
                     "kWh": round(c.get("energia_kwh", 0.0), 3),
                     "calidad": calidad,
-                    "error atribución": f"{error:.1f} %" if duracion else "—",
+                    # Es la **cota**, no el error: la acota la separación entre las dos
+                    # lecturas que rodean el borde (`contratos.md` sección 2.3). El error
+                    # real solo se conoce cuando llega una lectura sobre el borde — en la
+                    # demostración resultó ser 0,100 kWh.
+                    "error máx. atribución": f"{error:.1f} %" if duracion else "—",
                     "separación máx (min)": separacion,
                     "min cubiertos": c.get("minutos_cubiertos", 0.0),
                     "min indeterminados": c.get("minutos_indeterminados", 0.0),

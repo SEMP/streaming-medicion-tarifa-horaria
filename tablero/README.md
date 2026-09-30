@@ -49,8 +49,11 @@ tópico entero desde el offset 0, con una asignación de particiones nueva y sin
 offsets. Es caro a propósito: es la propiedad de idempotencia que el proyecto declara,
 ejecutándose a la vista en lugar de afirmarse en un documento.
 
-**3. El error de atribución lo calcula el consumidor.** El mensaje trae el numerador,
-`separacion_maxima_minutos`. El denominador es la duración de la franja, que vive en el
+**3. La cota del error de atribución la calcula el consumidor.** Es una **cota**, no el error:
+lo que se sabe es que el error no puede superarla, porque la acota la separación entre las dos
+lecturas que rodean el borde. El error real solo se conoce cuando llega una lectura sobre el
+borde — en la demostración resultó ser 0,100 kWh, bastante menos que la cota. El mensaje trae
+el numerador, `separacion_maxima_minutos`. El denominador es la duración de la franja, que vive en el
 calendario tarifario y **no** en el evento — por eso el tablero carga `config/franjas.toml` con
 el mismo `cargar_calendario` que usa el pipeline. Está explicado en `docs/contratos.md`,
 sección 2.3: ponerlo en el mensaje obligaría a que pipeline y consumidor coincidan sobre qué
@@ -82,5 +85,7 @@ Todo por variables de entorno, con el mismo valor por defecto que el resto del p
 | `TOPICO_CUARENTENA` | `medicion.cuarentena.v1` |
 | `CONFIG_FRANJAS` | `config/franjas.example.toml` |
 
-El notebook importa `pipeline.franjas`, así que hay que correrlo desde la raíz del repositorio
-o con `PYTHONPATH=pipeline/src`.
+**Hay que correrlo desde la raíz del repositorio.** No por el `import` de `pipeline.franjas`
+—`uv run` instala el paquete en el entorno y eso se resuelve solo—, sino porque
+`CONFIG_FRANJAS` apunta a `config/franjas.example.toml`, que es una **ruta relativa**. Desde
+otra carpeta falla con `no existe el archivo de calendario`. Verificado en los dos sentidos.
