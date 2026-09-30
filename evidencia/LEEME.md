@@ -1,12 +1,15 @@
 # Evidencia de ejecución
 
-Dos corridas, en **dos máquinas distintas**. Que el sistema dé lo mismo en las dos es lo que
-hace verificable la reproducibilidad, en lugar de afirmarla.
+Tres corridas documentadas, en **dos máquinas distintas**. Que el sistema dé lo mismo en
+ambas plataformas hace verificable la reproducibilidad, en lugar de afirmarla. La segunda
+máquina conserva además dos momentos: la primera validación del 29/09 y una validación final,
+aislada, del 30/09.
 
 | Archivo | Quién | Qué cubre |
 |---|---|---|
 | [`evidencia-ejecucion.txt`](evidencia-ejecucion.txt) | Sergio | Corrida completa: pruebas, demostración, stack, tópicos, humo, recorrido sobre Flink, replay desde el offset 0, offsets y salida. Se regenera con [`generar-evidencia.sh`](generar-evidencia.sh) |
 | [`evidencia-ejecucion-daniel-2026-09-29.txt`](evidencia-ejecucion-daniel-2026-09-29.txt) | Daniel | **Validación independiente** del recorrido end-to-end en otra máquina: Windows + WSL2 Ubuntu 24.04 + Docker Desktop |
+| [`evidencia-ejecucion-daniel-2026-09-30.txt`](evidencia-ejecucion-daniel-2026-09-30.txt) | Daniel | **Validación final aislada** sobre `b297755`: 92 pruebas, demostración, E2E Kafka + Flink y replay desde offset 0 usando un proyecto Docker Compose independiente |
 
 ## Qué probó la segunda máquina
 
@@ -29,9 +32,15 @@ docker compose -f infra/docker-compose.yml --profile pruebas run --rm -T pruebas
 Es la única imagen que se construye con las dependencias de desarrollo, para no engordar la
 de ejecución. Verificado: 89 pruebas en verde adentro del contenedor.
 
+Ese resultado corresponde a la validación del **29/09**. En la validación final del **30/09**,
+sobre el estado funcional `b297755`, la suite nativa completó **92 pruebas en verde**. Además,
+el recorrido E2E y el replay se ejecutaron con el proyecto Compose
+`medicion-revision-daniel`, con Kafka y volúmenes independientes, para evitar reutilizar estado
+de corridas anteriores.
+
 ## Un detalle de lectura
 
-Las dos corridas terminan con un `TimeoutException` del `kafka-console-consumer`. **No es un
+En las evidencias que usan `kafka-console-consumer`, el `TimeoutException` final **no es un
 error**: es el `--timeout-ms` venciendo después de leer todo lo que había, que es cómo se le
 pide a esa herramienta que corte en lugar de quedarse esperando. La línea anterior dice
 `Processed a total of N messages`.
