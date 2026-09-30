@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 586" width="1480" height="586" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/></marker><marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/></marker></defs>
+  <rect width="1480" height="560" fill="#ffffff"/>
+  <text x="40" y="44" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="22" fill="#1a202c" font-weight="600" text-anchor="start">El recorrido de un dato: del medidor al consumidor</text>
+  <text x="40" y="70" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">Se sigue una sola lectura —MED-0042, 25/09/2026 17:55, contador en 101,5 kWh— y se muestra en qué se convierte en cada paso. Es</text>
+  <text x="40" y="88" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">la misma de la demostración y del recorrido sobre Flink, así que los números coinciden con el documento y con la evidencia.</text>
+  <rect x="40" y="150" width="152" height="150" rx="7" fill="#faf5ff" stroke="#6b46c1" stroke-width="1.6"/>
+  <text x="52" y="172" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#553c9a" font-weight="700" text-anchor="start">01</text>
+  <text x="52" y="192" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">Simulador</text>
+  <text x="52" y="242" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">Lectura con contador</text>
+  <text x="52" y="256" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">acumulado</text>
+  <line x1="192" y1="225" x2="203" y2="225" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <rect x="206" y="150" width="152" height="150" rx="7" fill="#fffbeb" stroke="#b7791f" stroke-width="1.6"/>
+  <text x="218" y="172" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#744210" font-weight="700" text-anchor="start">02</text>
+  <text x="218" y="192" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">Tópico crudo</text>
+  <text x="218" y="242" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">clave=medidor · JSON</text>
+  <line x1="358" y1="225" x2="369" y2="225" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <rect x="372" y="150" width="152" height="150" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
+  <text x="384" y="172" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">03</text>
+  <text x="384" y="192" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">Parsear y marcar el</text>
+  <text x="384" y="207" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">tiempo</text>
+  <text x="384" y="242" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">(&#x27;MED-0042&#x27;, dict)</text>
+  <text x="384" y="256" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">con tiempo de evento</text>
+  <line x1="524" y1="225" x2="535" y2="225" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <line x1="448" y1="300" x2="448" y2="354" stroke="#c53030" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#flr)"/>
+  <rect x="538" y="150" width="152" height="150" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
+  <text x="550" y="172" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">04</text>
+  <text x="550" y="192" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">Ventana y</text>
+  <text x="550" y="207" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">deduplicación</text>
+  <text x="550" y="242" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">lectura única,</text>
+  <text x="550" y="256" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">ventaneada</text>
+  <line x1="690" y1="225" x2="701" y2="225" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <line x1="614" y1="300" x2="614" y2="354" stroke="#c53030" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#flr)"/>
+  <rect x="704" y="150" width="152" height="150" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
+  <text x="716" y="172" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">05</text>
+  <text x="716" y="192" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">Diferenciar el</text>
+  <text x="716" y="207" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">contador</text>
+  <text x="716" y="242" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">Consumo(desde, hasta,</text>
+  <text x="716" y="256" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">1.5 kWh)</text>
+  <line x1="856" y1="225" x2="867" y2="225" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <line x1="780" y1="300" x2="780" y2="354" stroke="#c53030" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#flr)"/>
+  <rect x="870" y="150" width="152" height="150" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
+  <text x="882" y="172" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">06</text>
+  <text x="882" y="192" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">Atribuir franja y</text>
+  <text x="882" y="207" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">agregar</text>
+  <text x="882" y="242" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">celda</text>
+  <text x="882" y="256" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">medidor|fecha|franja,</text>
+  <text x="882" y="270" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">valor absoluto</text>
+  <line x1="1022" y1="225" x2="1033" y2="225" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <rect x="1036" y="150" width="152" height="150" rx="7" fill="#fffbeb" stroke="#b7791f" stroke-width="1.6"/>
+  <text x="1048" y="172" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#744210" font-weight="700" text-anchor="start">07</text>
+  <text x="1048" y="192" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">Tópico derivado</text>
+  <text x="1048" y="242" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">clave=celda ·</text>
+  <text x="1048" y="256" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">absoluto</text>
+  <line x1="1188" y1="225" x2="1199" y2="225" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
+  <rect x="1202" y="150" width="152" height="150" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="1214" y="172" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">08</text>
+  <text x="1214" y="192" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">Tablero y</text>
+  <text x="1214" y="207" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#1a202c" font-weight="600" text-anchor="start">facturación</text>
+  <text x="1214" y="242" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">5 mensajes -&gt; 2</text>
+  <text x="1214" y="256" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="10.5" fill="#4a5568" font-weight="normal" text-anchor="start">celdas · total 5.500</text>
+  <rect x="40" y="354" width="982" height="52" rx="7" fill="#fff5f5" stroke="#c53030" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="54" y="376" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#742a2a" font-weight="700" text-anchor="start">medicion.cuarentena.v1 — nada se descarta en silencio</text>
+  <text x="54" y="394" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11" fill="#4a5568" font-weight="normal" text-anchor="start">json_invalido · sin_medidor_id · instante_invalido · instante_sin_huso · sin_registro_util · contador_retrocede</text>
+  <text x="40" y="436" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#1a202c" font-weight="600" text-anchor="start">Las tres transformaciones del dato, que es de lo que trata esto</text>
+  <text x="40" y="460" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#2c5282" font-weight="700" text-anchor="start">Contador acumulado  -&gt;  consumo</text>
+  <text x="400" y="460" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#4a5568" font-weight="normal" text-anchor="start">101,5 kWh no es lo consumido: es el total histórico. El consumo aparece al restar dos</text>
+  <text x="400" y="475" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#4a5568" font-weight="normal" text-anchor="start">lecturas (estación 05).</text>
+  <text x="40" y="494" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#2c5282" font-weight="700" text-anchor="start">Intervalo  -&gt;  celda de franja</text>
+  <text x="400" y="494" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#4a5568" font-weight="normal" text-anchor="start">Un intervalo que cruza las 18:00 se reparte entre resto y punta. Si no hubo lectura sobre el</text>
+  <text x="400" y="509" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#4a5568" font-weight="normal" text-anchor="start">borde, se interpola y se declara (06).</text>
+  <text x="40" y="528" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#2c5282" font-weight="700" text-anchor="start">Evento  -&gt;  estado con clave</text>
+  <text x="400" y="528" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#4a5568" font-weight="normal" text-anchor="start">La clave pasa de medidor_id a medidor|fecha|franja. Esa mudanza es la que hace idempotente</text>
+  <text x="400" y="543" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#4a5568" font-weight="normal" text-anchor="start">la salida (07).</text>
+</svg>

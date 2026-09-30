@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 802" width="1120" height="802" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/></marker><marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/></marker></defs>
+  <rect width="1120" height="802" fill="#ffffff"/>
+  <text x="40" y="44" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="21" fill="#1a202c" font-weight="600" text-anchor="start">05. Diferenciar el contador</text>
+  <text x="40" y="70" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#2c5282" font-weight="600" text-anchor="start">Recién acá aparece el consumo, que no venía en el dato</text>
+  <rect x="40" y="110" width="1040" height="84" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
+  <text x="56" y="132" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA</text>
+  <text x="56" y="152" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">(&#x27;MED-0042&#x27;, {...})</text>
+  <text x="56" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">con el contador en 101.5</text>
+  <line x1="560" y1="196" x2="560" y2="214" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="40" y="220" width="1040" height="138" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
+  <text x="56" y="242" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
+  <text x="56" y="262" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">1. Busca el registro OBIS 15.8.0</text>
+  <text x="56" y="280" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">2. Guarda (instante, valor, cabina) en el estado</text>
+  <text x="56" y="298" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">3. Ordena TODAS las del medidor en la ventana</text>
+  <text x="56" y="316" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">4. Arma los intervalos vecinos de esta lectura</text>
+  <text x="56" y="334" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">5. energia = v_hasta - v_desde</text>
+  <line x1="560" y1="360" x2="560" y2="378" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="40" y="384" width="1040" height="192" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="56" y="406" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE</text>
+  <text x="56" y="426" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">Consumo(</text>
+  <text x="56" y="444" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  medidor_id=&#x27;MED-0042&#x27;,</text>
+  <text x="56" y="462" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  cabina_id=&#x27;CAB-07&#x27;,</text>
+  <text x="56" y="480" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  desde=&#x27;2026-09-25T17:40:00-03:00&#x27;,</text>
+  <text x="56" y="498" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  hasta=&#x27;2026-09-25T17:55:00-03:00&#x27;,</text>
+  <text x="56" y="516" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  energia_kwh=1.5,</text>
+  <text x="56" y="534" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  separacion_minutos=15.0</text>
+  <text x="56" y="552" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">)</text>
+  <rect x="40" y="586" width="1040" height="66" rx="7" fill="#fff5f5" stroke="#c53030" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="56" y="608" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#c53030" font-weight="700" text-anchor="start">Y SI NO SE PUEDE, VA A CUARENTENA</text>
+  <text x="56" y="628" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">sin_registro_util · contador_retrocede</text>
+  <text x="40" y="678" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#1a202c" font-weight="700" text-anchor="start">POR QUÉ</text>
+  <text x="40" y="704" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">101,5 menos 100,0 da 1,5 kWh en quince minutos. Ordenar contra el estado en vez de recordar solo la última es lo que</text>
+  <text x="40" y="722" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">permite que una lectura tardía parta en dos un intervalo ya emitido. Y separacion_minutos no es decorativo: es la cota</text>
+  <text x="40" y="740" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">del error de atribución, el número que el proyecto existe para medir.</text>
+  <text x="40" y="774" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">pipeline/src/pipeline/transformaciones.py:124 (DiferenciarContador)</text>
+</svg>

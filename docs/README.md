@@ -45,7 +45,7 @@ está. Estado al 30/09:
 | Entregable que pide el aula | Estado | Dónde está |
 |---|---|---|
 | "Enlace al repositorio del proyecto" | Listo | Este repositorio, público |
-| "Documento técnico y diagrama de arquitectura" | Listo, 9 de 9 secciones | [`tecnico/documento.md`](tecnico/documento.md), se compila con `./tecnico/armar-pdf.sh` · [`diagramas/arquitectura.svg`](diagramas/arquitectura.svg), [`diagramas/pipeline-dag.svg`](diagramas/pipeline-dag.svg) y las láminas por etapa de [`diagramas/etapas/`](diagramas/etapas/LEEME.md) |
+| "Documento técnico y diagrama de arquitectura" | Listo, 9 de 9 secciones | [`tecnico/documento.md`](tecnico/documento.md), se compila con `./tecnico/armar-pdf.sh` · [`diagramas/arquitectura.svg`](diagramas/arquitectura.svg), [`diagramas/pipeline-dag.svg`](diagramas/pipeline-dag.svg) y las láminas por etapa de [`diagramas/etapas/`](diagramas/etapas/LEEME.md) y por punto del recorrido de [`diagramas/recorrido/`](diagramas/recorrido/LEEME.md) |
 | "Evidencia de pruebas y ejecución end-to-end" | Listo | [`../evidencia/`](../evidencia/LEEME.md), seis corridas en cuatro máquinas, con fecha y commit; tres de ellas de la verificación externa |
 | "Video breve o demostración en vivo" | Pendiente **sin grabar** | Guion en [`guion-video.md`](guion-video.md) |
 | "Integrantes y contribuciones principales" | Listo | sección 8 del documento |

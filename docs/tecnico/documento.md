@@ -154,6 +154,11 @@ motivos por los que manda algo a cuarentena— está en
 [`docs/diagramas/etapas/`](../diagramas/etapas/LEEME.md), una lámina por etapa. Las secciones
 5 y 6 explican las que tienen estado.
 
+Y para ver **en qué se convierte un dato concreto** en cada punto del recorrido, de la lectura
+del medidor a la celda que lee el consumidor, está
+[`docs/diagramas/recorrido/`](../diagramas/recorrido/LEEME.md). Sigue la misma lectura de la
+sección 6.1, así que los números son los de la demostración.
+
 ## 2.2 El detalle que condiciona el despliegue
 
 `KafkaIO` **no es una librería Python**: es una transformación *cross-language* cuyas etapas
