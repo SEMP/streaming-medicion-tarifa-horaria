@@ -194,6 +194,11 @@ reprocesar no duplica ni corrige, converge.
 
 **4. Observar la salida**
 
+> **Antes de correrlo:** al terminar vas a ver un `ERROR … TimeoutException`. **No es un
+> error.** Es el `--timeout-ms` venciendo después de leer todo, que es cómo se le pide a esta
+> herramienta que corte en lugar de quedarse esperando para siempre. **La línea que importa es
+> la última: `Processed a total of N messages`.**
+
 ```bash
 docker compose -f infra/docker-compose.yml exec kafka \
   /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 \
@@ -203,8 +208,10 @@ docker compose -f infra/docker-compose.yml exec kafka \
 
 Cada línea es una celda `medidor|fecha|franja` con su consumo. **Una clave repetida no es un
 error**: es una revisión posterior del mismo resultado, y vale la última — el consumidor hace
-*upsert*. Al terminar, la herramienta corta con un `TimeoutException`, que **tampoco es un
-error**: es el `--timeout-ms` venciendo después de leer todo.
+*upsert*.
+
+Con el simulador del paso 2 completo salen del orden de **20.000 celdas**, así que la lista es
+larga. El total está en esa última línea.
 
 Para ver lo que el pipeline no pudo procesar, el mismo comando sobre
 `medicion.cuarentena.v1`. Cada registro lleva su motivo.
