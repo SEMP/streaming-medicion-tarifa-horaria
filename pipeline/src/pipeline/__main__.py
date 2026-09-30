@@ -30,7 +30,7 @@ def main() -> int:
         ajustes.job_endpoint,
         ajustes.topico_lecturas,
         ajustes.topico_consumo,
-        ", ".join(calendario.nombres()),
+        ", ".join(calendario.nombres),   # es una property, no un método
     )
 
     with beam.Pipeline(options=opciones(ajustes, nombre="consumo-por-franja")) as pipeline:

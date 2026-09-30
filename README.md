@@ -112,8 +112,10 @@ Para el camino con Docker, que es el recomendado:
 - **git**, para clonar.
 - **Unos 8 GB de RAM libres.** El stack consume 3,1 GB en reposo y llega a 3,6 GB mientras
   corre un trabajo, medido con `docker stats`; el resto es margen para el sistema.
-- **Paciencia la primera vez.** La construcción de las imágenes descarga varios cientos de MB
-  —incluido el runtime de Java para KafkaIO— y tarda unos minutos. No está colgado.
+- **Paciencia la primera vez: entre 10 y 15 minutos.** Medido en una máquina sin nada
+  cacheado: unos 8 minutos el paso 1 —la construcción de Flink y la descarga del job server— y
+  unos 7 más el paso 2. Descarga varios cientos de MB, incluido el runtime de Java que KafkaIO
+  necesita. **No está colgado.** En las corridas siguientes son segundos.
 
 No hace falta tener Python instalado: el camino con Docker no lo usa.
 
@@ -121,24 +123,49 @@ No hace falta tener Python instalado: el camino con Docker no lo usa.
 
 ### Camino A — con Docker (recomendado)
 
-Los cuatro pasos, en orden. **No bajar el stack hasta el final.**
+Los pasos, en orden. **No bajar el stack hasta el final.**
+
+**0. Clonar y entrar**
+
+```bash
+git clone https://github.com/SEMP/streaming-medicion-tarifa-horaria.git
+cd streaming-medicion-tarifa-horaria
+```
+
+**Todos los comandos que siguen se corren desde la raíz del repositorio**, que es donde está
+la carpeta `infra/`.
 
 **1. Iniciar el entorno**
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d
+docker compose -f infra/docker-compose.yml up -d --build
 ```
 
 La interfaz de Flink queda en <http://localhost:8081> y Kafka en `localhost:29092`.
 
+> El `--build` está a propósito. Sin él, Compose reutiliza las imágenes que ya existan, así
+> que **después de un `git pull` seguirías corriendo el código viejo** y parecería que la
+> actualización no hizo nada. Cuando no hay cambios no cuesta casi nada.
+
 **2. Producir eventos y procesarlos**
 
 ```bash
-docker compose -f infra/docker-compose.yml --profile demo up
+docker compose -f infra/docker-compose.yml --profile demo up -d --build
 ```
 
-Levanta el simulador y el pipeline juntos: el simulador publica lecturas en
-`medicion.lecturas.v1` y el pipeline las consume.
+Levanta el simulador y el pipeline: el simulador publica unas 21.000 lecturas en
+`medicion.lecturas.v1` y termina; el pipeline las consume y **queda corriendo**, porque es un
+trabajo de streaming y no tiene por qué terminar.
+
+Para mirar el avance:
+
+```bash
+docker compose -f infra/docker-compose.yml logs -f simulador pipeline
+```
+
+> El `-d` del paso anterior importa. **Sin él, la terminal queda tomada** y el reflejo de
+> apretar `Ctrl+C` **detiene todo el stack, Kafka incluido**, con lo que los pasos 3 y 4
+> fallan. Con `-d`, el `Ctrl+C` de este `logs -f` corta solo la vista y no toca nada.
 
 **3. Ejecutar el pipeline de punta a punta, con verificación**
 
