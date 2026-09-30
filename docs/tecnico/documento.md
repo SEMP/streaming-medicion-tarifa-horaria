@@ -26,12 +26,17 @@ tasa de fallas** y no la velocidad del enlace, **para cobrar por franja horaria 
 mejorar la confiabilidad de la recolección que acelerarla**. Es una decisión de inversión, y
 este pipeline la puede medir.
 
+El ciclo termina en un **tablero en marimo** que lee el tópico derivado haciendo *upsert*, con
+un inyector que publica a mano un duplicado, una tardía o un reseteo y deja ver en vivo cómo
+responde el pipeline.
+
 Lo respaldan **116 pruebas** —incluidas las de `TestStream`, que son las únicas que permiten
-probar comportamiento tardío de forma determinista— y una corrida completa sobre Kafka y
-Flink que reproduce exactamente el mismo resultado que el runner local. Dos errores de doble
-conteo aparecieron en el camino, y ninguno de los dos se habría visto con datos ideales: es
-el argumento del enunciado —una corrida feliz no es evidencia— comprobado sobre nuestro propio
-código.
+probar comportamiento tardío de forma determinista— y **seis corridas completas sobre Kafka y
+Flink en cuatro máquinas**, que reproducen exactamente el mismo resultado que el runner local.
+Dos de ellas las hicieron personas que no escribieron el código, una de ellas **ajena al
+equipo** y siguiendo solo el `README.md`. Dos errores de doble conteo aparecieron en el
+camino, y ninguno de los dos se habría visto con datos ideales: es el argumento del enunciado
+—una corrida feliz no es evidencia— comprobado sobre nuestro propio código.
 
 ---
 
@@ -82,6 +87,11 @@ Esa diferencia es la que justifica el modo **acumulativo** con salida por *upser
 es la revisión completa de la celda, así que el tablero puede mostrar el último y la
 facturación puede leer una sola vez sin reconstruir nada.
 
+**El tablero está construido; la facturación no.** El tablero es una aplicación marimo en
+[`tablero/`](../../tablero/README.md) y se describe en las secciones 2 y 6.5. La facturación
+queda como el segundo lector que el contrato contempla: su patrón de lectura está definido,
+pero implementarla no agrega nada que el tablero no demuestre ya sobre el mismo tópico.
+
 ## 1.4 Qué mide el sistema, además del consumo
 
 Un resultado que el trabajo produce y que no estaba en la consigna: **cada registro de salida
@@ -116,6 +126,15 @@ pisaría el valor correcto.
 es una señal operativa: si sube en una zona, el problema es la cobertura de red y no el
 pipeline.
 
+**El tablero** cierra el ciclo del dato —producir, procesar, analizar—. Lee el tópico derivado
+desde el offset 0 en cada actualización y se queda con la última revisión de cada celda, así
+que el *upsert* y el reproceso que el contrato declara se ejecutan a la vista. Valida el
+contrato de salida antes de aceptar un mensaje, y lo que no lo cumple lo cuenta y lo informa.
+Carga el calendario tarifario con el mismo `cargar_calendario` que el pipeline, porque la cota
+del error de atribución la calcula el consumidor (sección 4.6). marimo se resuelve con
+`uv run --with marimo`, así que ni el entorno del proyecto ni la imagen de Docker cargan con
+una dependencia de visualización.
+
 ## 2.1 El grafo que corre de verdad
 
 El diagrama de arriba se mantiene a mano y muestra los componentes. El de abajo no: lo dibuja
@@ -141,6 +160,39 @@ motivos por los que manda algo a cuarentena— está en
 de lectura y escritura ejecuta el SDK de **Java**. La imagen de Flink empaqueta los dos SDK y
 los corre en modo `PROCESS` dentro del TaskManager, lo que evita tener que darle al contenedor
 acceso al demonio de Docker. Está documentado en [`infra/README.md`](../../infra/README.md).
+
+El job server, que prepara los artefactos de cada trabajo, **no libera memoria entre
+trabajos**: recorriendo el README entero pasa de 400 MB a 1,75 GB. Su límite está en
+`1800m`. Con el valor anterior, 900 MB, moría por OOM en la prueba de humo, que es el cuarto
+trabajo que sirve. Lo encontró la verificación externa (sección 6.6), y no nuestra
+automatización, porque la automatización no deja un trabajo de streaming corriendo mientras
+lanza los demás. El stack completo llega a 8,4 GB, y el README pide 12 GB libres.
+
+## 2.3 Observabilidad
+
+El enunciado pide *«logs o métricas suficientes para observar producción, consumo,
+procesamiento y errores»*. El pipeline cuenta con la API de métricas de Beam lo que pasa en el
+camino caliente:
+
+| Métrica | Qué deja ver |
+|---|---|
+| `cuarentena/total` y `cuarentena/<motivo>` | Cuánto se rechaza y **por qué**. El total no alcanza: no distingue un concentrador desincronizado de un tópico con mensajes de otro productor |
+| `dedup/duplicados_descartados` | El trabajo que la deduplicación hace sin mandar nada a cuarentena, porque un duplicado no es un error. Sin este contador sería invisible |
+| `diferenciacion/consumos_emitidos` | Intervalos que salen de restar lecturas |
+| `atribucion/separacion_minutos` | Distribución —mínimo, máximo, media— de la separación entre lecturas, que es **la métrica central del proyecto**: si la media sube, las rondas se alargaron y el reparto por franja se volvió más grueso |
+| `salida/celdas_emitidas` y `salida/celdas_indeterminadas` | Revisiones publicadas, y cuántas cayeron por encima del umbral de 90 min |
+
+**Hoy no se ven en la interfaz de Flink**, y conviene decirlo porque se llegó a escribir lo
+contrario. El `flink-conf.yaml` no configura ningún *metrics reporter* y el runner portable no
+las publica solo: `/jobs/<id>/accumulators` y `/jobs/<id>/vertices/<id>/metrics` salen
+vacíos. Se consultan con `PipelineResult.metrics().query()`, y exponerlas en la interfaz es
+configuración de Flink (sección 7.3).
+
+Lo que sí se observa sin nada más: la interfaz de Flink en `localhost:8081`, con los registros
+que entran y salen de cada vértice; los offsets y el lag de cada grupo con
+`kafka-consumer-groups`; el log de arranque del pipeline, que informa el calendario cargado y
+el desplazamiento de la ventana; y el tablero, que muestra la cuarentena por motivo al lado de
+las celdas.
 
 # 3. Contrato de eventos y topología de Kafka
 
@@ -202,7 +254,9 @@ Aun el caso grande —100.000 medidores en rondas continuas— son unos 9,6 mill
 por día, que para un broker es poco. Lo que fija el número es otra cosa:
 
 1. **El paralelismo útil está acotado por `min(particiones, slots, claves)`.** El stack corre 2
-   TaskManagers con 2 slots. Con 4 particiones hay margen para duplicar los slots sin
+   TaskManagers con 2 slots cada uno, y cada trabajo pide paralelismo 2: el pipeline de
+   streaming ocupa dos slots y no los suelta, y el recorrido de punta a punta necesita los
+   otros dos. Con 4 particiones, un solo trabajo puede llegar a paralelismo 4 sin
    reparticionar, que es una operación que rompe el orden por clave.
 2. **El estado vive por clave, no por partición**, así que agregar particiones no alivia
    memoria: solo reparte.
@@ -510,7 +564,9 @@ detecta.
 # 6. Pruebas y evidencia
 
 El enunciado fija la vara: *«una ejecución exitosa con datos ideales no es evidencia
-suficiente»*. Por eso la evidencia está partida en tres piezas con propósitos distintos.
+suficiente»*. Por eso la evidencia está partida en piezas con propósitos distintos: una historia
+controlada, las pruebas, el recorrido sobre el stack real, las irregularidades a pedido y la
+reproducción en otras máquinas.
 
 ## 6.1 La demostración narrada
 
@@ -555,14 +611,21 @@ cubierta por la suite: si se rompe, el video que la muestra deja de ser reproduc
 
 ## 6.2 Las pruebas automáticas
 
-76 en total, y la división importa:
+116 en total, y la división importa:
 
 | Suite | Cuántas | Qué fija |
 |---|---|---|
-| Simulador | 34 | Determinismo por semilla, inyección de fallas, curva de consumo |
+| Simulador | 34 | Determinismo por semilla, también entre procesos; inyección de fallas, curva de consumo |
 | Franjas | 29 | Validación del calendario, atribución, reparto por borde, conservación de la energía |
-| `TestStream` | 10 | Duplicado, desorden, contador que retrocede, cuarentena, orden de las etapas |
+| Inyector del tablero | 24 | Que cada botón produzca un evento del contrato, y que el duplicado conserve el `event_id` |
+| Etapas con estado | 11 | Duplicado, desorden, contador que retrocede, orden de las etapas, dos panes que no suman doble |
+| Cadena completa | 12 | Ventana alineada al día local, cuarentena por motivo, lectura sin huso, umbral de 90 min |
 | Demostración | 3 | Que la evidencia de la sección 6.1 siga saliendo como está escrita acá |
+| Arranque | 3 | El punto de entrada que usa el README, que las demás no ejercitaban (sección 6.6) |
+
+Corren igual en el host con `uv run pytest` y dentro del contenedor con el perfil `pruebas`,
+que existe porque en una de las máquinas de verificación `uv run pytest` abortaba con un
+*segmentation fault* durante la colección.
 
 Las de `TestStream` son las que no se pueden escribir de otra forma: el comportamiento tardío
 depende de dónde está el watermark, y con un reloj real habría que esperar y el resultado
@@ -637,6 +700,80 @@ cadena a Kafka y probarla con una ventana que dispara dos veces.
 Con datos ideales ninguno de los dos aparece. El primero necesita una lectura tardía; el
 segundo, además, que la ventana dispare más de una vez.
 
+## 6.5 Las irregularidades, a pedido y en vivo
+
+La demostración de la sección 6.1 corre sobre `DirectRunner`, y el recorrido de la sección 6.3
+siembra siempre las mismas cinco lecturas. Faltaba poder **provocar** una irregularidad sobre
+el stack real y ver la respuesta en el momento, que es lo que pide la demostración en vivo.
+Para eso, el tablero trae un **inyector**: seis botones que publican al tópico crudo una
+lectura del medidor `MED-DEMO-001`.
+
+| Botón | Qué tiene que pasar |
+|---|---|
+| Lectura normal | Aparece o crece la celda de la franja que corresponde |
+| Duplicado de publicación | **Nada cambia**: mismo `event_id`, lo descarta el deduplicador |
+| Tardía sobre el borde | Corrige el reparto **sin mover el total**; la celda pasa a `medida` |
+| Reseteo de contador | A cuarentena, con motivo `contador_retrocede` |
+| Trama truncada | A cuarentena, o un valor absurdo según dónde caiga el corte |
+| Hueco largo | Celda `indeterminada`, con `minutos_indeterminados > 0` |
+
+**El duplicado no se imita, se produce.** Como `event_id` es
+`sha256("<medidor_id>|<instante_lectura>")[:16]`, republicar el mismo par da el mismo
+identificador por construcción: es un reintento de publicación de verdad. Si el botón generara
+un evento nuevo, el deduplicador lo dejaría pasar y el total se movería, que es lo contrario
+de lo que la demostración afirma. Dos pruebas lo fijan.
+
+**La tardía necesitó un desvío deliberado.** El consumo del inyector es lineal, así que
+interpolar el cruce de las 18:00 acertaba exacto y la lectura tardía solo cambiaba la
+etiqueta. Con 0,200 kWh de desvío respecto de la recta modela lo que pasa de verdad: la
+interpolación supone potencia constante, y en el borde de `punta` la potencia no es constante.
+
+Verificado de punta a punta sobre Kafka y Flink el 30/09. La secuencia
+`normal → normal → normal → duplicado → tardía` produjo **cinco revisiones para seis mensajes
+publicados**:
+
+| # | Celda | kWh | Origen |
+|---|---|---:|---|
+| 1 | `MED-DEMO-001\|2026-09-30\|resto` | 0,900 | medida |
+| 2 | `MED-DEMO-001\|2026-09-30\|resto` | 1,200 | **interpolada** |
+| 3 | `MED-DEMO-001\|2026-09-30\|punta` | 0,600 | **interpolada** |
+| 4 | `MED-DEMO-001\|2026-09-30\|resto` | 1,000 | **medida** |
+| 5 | `MED-DEMO-001\|2026-09-30\|punta` | 0,800 | **medida** |
+
+El duplicado no produjo ninguna revisión. La tardía mueve **0,200 kWh de `resto` a `punta`**
+con el total quieto en 1,800 kWh, y las dos celdas pasan de *interpolada* a *medida*. Es el
+mismo fenómeno de la sección 6.1, ahora sobre el stack real y a pedido.
+
+## 6.6 Reproducibilidad: seis corridas, cuatro máquinas
+
+| Corrida | Entorno | Qué aportó |
+|---|---|---|
+| Sergio | Máquina de desarrollo | La corrida de referencia, regenerable con `evidencia/generar-evidencia.sh` |
+| Daniel | Windows + WSL2 Ubuntu 24.04 + Docker Desktop | Mismos números con otras versiones de Docker, Compose y `uv`; encontró el *segfault* de `uv run pytest`, que dio origen al perfil `pruebas` |
+| Clara | Un tercer entorno | Recorrido completo, los dos replays y la suite dentro del contenedor |
+| Francisco, vueltas 2, 3 y 4 | Ubuntu 24.04, **persona ajena al equipo** | Siguiendo solo el `README.md` desde el `git clone`. La primera vuelta no quedó transcrita; sus correcciones están en el historial |
+
+Las seis dan **5,500 kWh**, con 2,400 en `resto` y 3,100 en `punta`, y la cuarentena vacía.
+Están en [`evidencia/`](../../evidencia/LEEME.md) con su fecha, su commit y las versiones del
+entorno.
+
+**La verificación externa fue la que más encontró, y siempre lo mismo.** El enunciado pide que
+alguien ajeno al equipo pueda levantar el sistema siguiendo solo el README. En cuatro vueltas
+aparecieron tres defectos, y los tres tenían la misma forma: **lo que probaba nuestra
+automatización y lo que mandaba hacer el README no eran el mismo camino.**
+
+| Vuelta | Qué falló | Por qué no lo vimos antes |
+|---|---|---|
+| 1.ª | El perfil `demo` moría al arrancar: se llamaba como método a una propiedad | Las pruebas cubrían otro punto de entrada. Ahora hay tres pruebas del arranque |
+| 3.ª | El job server moría por OOM en la prueba de humo (sección 2.2) | `generar-evidencia.sh` no deja el pipeline de streaming corriendo; el README sí |
+| 4.ª | La suite dentro del contenedor no encontraba `tablero/` | En el host pasaba; el servicio `pruebas` no montaba la carpeta y su imagen estaba cacheada |
+
+La segunda vuelta salió limpia, y aun así la tercera, sobre un clon nuevo, falló. **Una
+verificación que sale bien una vez no prueba que el camino esté sano**, y la memoria del job
+server fallaba unas veces sí y otras no. La cuarta vuelta confirmó el arreglo: prueba de humo
+con 40 lecturas de entrada y 40 de salida, el job server sin reinicios, y las 116 pruebas en
+verde dentro del contenedor.
+
 # 7. Límites, supuestos y posibles mejoras
 
 ## 7.1 Supuestos declarados
@@ -701,7 +838,31 @@ siguientes no tienen contra qué restarse hasta que llegue la próxima de cada m
 deduplicación olvida lo que había visto. Para una demostración no cambia nada; para producción
 es lo primero que habría que cerrar.
 
+**Con el tópico casi vacío, la lectura no acotada no entrega.** Con el pipeline en modo no
+acotado y muy pocos mensajes en el tópico, las lecturas se consumen —el grupo queda con lag
+0— pero no salen de la etapa de lectura de `KafkaIO`: el vértice `LeerLecturas` recibe
+registros y emite cero. En cuanto hay volumen, las mismas lecturas salen con los valores
+esperados. No afecta a `humo` ni a `extremo_a_extremo`, que leen acotado, ni al perfil `demo`,
+donde el simulador publica miles de lecturas. Sí afecta al inyector: **para usarlo en vivo hay
+que dejar el simulador corriendo**. La causa no está aislada.
+
+**Las métricas existen, pero no se ven en Flink**, como explica la sección 2.3. Para observar
+el trabajo mientras corre hoy hay que ir a la interfaz de Flink, a los offsets de Kafka o al
+tablero.
+
+**El job server acumula memoria entre trabajos.** Con `1800m` alcanza para el recorrido
+completo del README, que sirve cuatro trabajos. Una sesión más larga sin reiniciar el stack
+podría volver a agotarlo.
+
 ## 7.3 Posibles mejoras
+
+**Cerrar los checkpoints, antes que cualquier otra cosa.** Pasar `--checkpointing_interval`
+en `esqueleto.opciones`, comprobar con la API de Flink que completan, y recién ahí cambiar
+el consumidor a `commit_offset_in_finalize=True`. Hay que repetir las corridas de evidencia
+después de hacerlo, y por eso no entró en esta entrega.
+
+**Un *metrics reporter* en Flink**, para que los contadores de la sección 2.3 se vean en la
+interfaz mientras el trabajo corre. Es configuración de `flink-conf.yaml`, no código.
 
 **Un dispositivo de lectura por medidor.** Elimina de raíz la limitación de fondo, que es el
 bus compartido. Y su justificación económica **sale de este mismo trabajo**: el error de
@@ -728,10 +889,14 @@ ad-hoc o muchos lectores concurrentes.
 
 | Integrante | Contribución principal |
 |---|---|
-| Sergio Morel | **Simulador**: datos sintéticos deterministas por semilla, con inyección deliberada de fallas —pedidos corridos, cabinas caídas, tramas truncadas, duplicados y ráfagas tardías—. **Infraestructura**: Kafka, Flink, el job server y la resolución de `KafkaIO` como transformación *cross-language*. **Cadena del pipeline**: deduplicación con estado y timer, diferenciación del contador acumulado, y la etapa de celdas vigentes. **Franjas**: calendario tarifario, atribución y reparto de un intervalo entre los bordes que cruza, con el umbral de 90 min elegido sobre la distribución medida. Las **116 pruebas**, la demostración narrada y las dos verificaciones del recorrido completo. Secciones 1, 2, 5, 6 y 7 de este documento. Encontró los **dos errores de doble conteo** de sección 5.4 |
-| Clara Almirón | **Contratos de evento de entrada y de salida**: clave de particionamiento, cantidad de particiones, tópicos, regla de versionado y política de cuarentena. **Política temporal**: ventana diaria alineada al día local y lateness de 36 h, con su justificación contra 24 y 48. **Tablero de pendientes** y **mapa de la documentación**, que son la convención con que el equipo se mantuvo sincronizado. Revisión de las secciones 3 y 4 de este documento, donde detectó que la política de *triggers* documentada no existía en el código |
+| Sergio Morel | **Simulador**: datos sintéticos deterministas por semilla, con inyección deliberada de fallas —pedidos corridos, cabinas caídas, tramas truncadas, duplicados y ráfagas tardías—. **Infraestructura**: Kafka, Flink, el job server y la resolución de `KafkaIO` como transformación *cross-language*. **Cadena del pipeline**: deduplicación con estado y timer, diferenciación del contador acumulado, y la etapa de celdas vigentes. **Franjas**: calendario tarifario, atribución y reparto de un intervalo entre los bordes que cruza, con el umbral de 90 min elegido sobre la distribución medida. **92 de las 116 pruebas**, la demostración narrada, las dos verificaciones del recorrido completo, el replay desde el offset 0 y el DAG dibujado desde el código. Las correcciones que dejó la verificación externa: el arranque del perfil `demo`, la memoria del job server y el montaje del perfil `pruebas`. Secciones 1, 2, 5, 6 y 7 de este documento. Encontró los **dos errores de doble conteo** de sección 5.4 |
+| Clara Almirón | **Contratos de evento de entrada y de salida**: clave de particionamiento, cantidad de particiones, tópicos, regla de versionado y política de cuarentena. **Política temporal**: ventana diaria alineada al día local y lateness de 36 h, con su justificación contra 24 y 48. **Tablero en marimo** que cierra el ciclo del dato, y su **inyector de irregularidades**, con sus 24 pruebas y la verificación de punta a punta sobre el stack. **Métricas** del camino caliente (sección 2.3) y la corrección posterior de que no se ven en Flink. **Garantías del productor de salida** —`acks=all` e idempotencia—, verificadas contra el stack. Una corrida completa de evidencia en un tercer entorno. **Tablero de pendientes** y **mapa de la documentación**, que son la convención con que el equipo se mantuvo sincronizado. Revisión de las secciones 3 y 4 de este documento, donde detectó que la política de *triggers* documentada no existía en el código |
 | Daniel Ramírez | **Validación de reproducibilidad en plataforma independiente.** Ejecutó el recorrido completo en una segunda máquina —Windows + WSL2 Ubuntu 24.04 + Docker Desktop, con otras versiones de Docker, Compose y `uv`— y obtuvo los mismos resultados, lo que convierte la reproducibilidad en algo verificado y no afirmado. Encontró además que `uv run pytest` aborta con *segmentation fault* en ese entorno, hallazgo que derivó en el perfil `pruebas` que corre la suite dentro del contenedor. Su evidencia está en [`evidencia/`](../../evidencia/) |
 
 `git shortlog -sn --no-merges` respalda las contribuciones **de código**. La de Daniel no es
 de código sino de validación, y su evidencia está en el repositorio: una corrida completa del
 recorrido en otra máquina, con su fecha, su commit y las versiones del entorno.
+
+**Francisco**, que no integra el equipo, hizo la verificación externa que pide el enunciado:
+levantó el sistema en cuatro vueltas siguiendo solo el `README.md`, y encontró tres de los
+defectos de la sección 6.6.

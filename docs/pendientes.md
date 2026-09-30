@@ -48,6 +48,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 30/09 | — | **Documento técnico al día con lo construido**: tablero e inyector (sección 2 y sección 6.5), observabilidad (sección 2.3), las 116 pruebas por suite, la verificación externa y las seis corridas (sección 6.6), tres límites nuevos y dos mejoras en la sección 7, y las contribuciones de Clara. 15 páginas |
 | 30/09 | `b297755` | **Verificado contra el stack**: la prueba de humo pasa con el `acks=all` y la idempotencia del productor de salida. Queda sin efecto la advertencia de ese commit, que decía que el productor Java no se había podido probar |
 | 29/09 | `e2c5efe` | **Replay sobre Kafka y Flink**: el servicio `repeticion` relee la entrada desde el offset 0 con grupo nuevo y converge a las mismas celdas (documento sección 6.3). El productor del simulador declara `acks=all` e idempotencia (sección 5.5), y `enable.auto.commit` queda como límite conocido (sección 7.2) |
 | 29/09 | — | **P9 cerrado: el equipo es de tres.** No se suma un cuarto integrante |

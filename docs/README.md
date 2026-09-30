@@ -40,15 +40,15 @@ no toma decisiones de un texto muerto.
 ## 3. Los entregables, y de dónde sale cada uno
 
 **El aula pide cinco entregables.** Ninguno se escribe de cero: se **arman** con lo que ya
-está. Estado al 29/09:
+está. Estado al 30/09:
 
 | Entregable que pide el aula | Estado | Dónde está |
 |---|---|---|
 | "Enlace al repositorio del proyecto" | Listo | Este repositorio, público |
 | "Documento técnico y diagrama de arquitectura" | Listo, 9 de 9 secciones | [`tecnico/documento.md`](tecnico/documento.md), se compila con `./tecnico/armar-pdf.sh` · [`diagramas/arquitectura.svg`](diagramas/arquitectura.svg), [`diagramas/pipeline-dag.svg`](diagramas/pipeline-dag.svg) y las láminas por etapa de [`diagramas/etapas/`](diagramas/etapas/LEEME.md) |
-| "Evidencia de pruebas y ejecución end-to-end" | Listo | [`../evidencia/`](../evidencia/), una corrida completa con fecha y commit |
+| "Evidencia de pruebas y ejecución end-to-end" | Listo | [`../evidencia/`](../evidencia/LEEME.md), seis corridas en cuatro máquinas, con fecha y commit; tres de ellas de la verificación externa |
 | "Video breve o demostración en vivo" | Pendiente **sin grabar** | Guion en [`guion-video.md`](guion-video.md) |
-| "Integrantes y contribuciones principales" | Pendiente | sección 8 del documento — necesita a los tres |
+| "Integrantes y contribuciones principales" | Listo | sección 8 del documento |
 
 Y en el repositorio, que el PDF pide aparte: código, [`README`](../README.md) reproducible
 con y sin Docker —detalle en [`infra/`](../infra/README.md)— y el simulador como mecanismo
@@ -62,7 +62,7 @@ resumen**, que es decisión nuestra y no del enunciado. Cada contenido tiene su 
 | Parte que pide el enunciado | Fuente |
 |---|---|
 | Problema, usuarios del resultado, y qué decisiones habilita | [`../README.md`](../README.md) + [`dominio-medicion.md`](dominio-medicion.md) |
-| Diagrama de arquitectura y descripción de cada componente | El diagrama, pendiente + [`../README.md`](../README.md) |
+| Diagrama de arquitectura y descripción de cada componente | [`diagramas/`](diagramas/) + [`../README.md`](../README.md) + [`../tablero/README.md`](../tablero/README.md) |
 | Contrato de eventos, tópicos, claves, particiones y esquema de salida | [`contratos.md`](contratos.md) |
 | Ventanas, lateness, deduplicación, idempotencia y semántica de entrega | [`contratos.md`](contratos.md) sección 1.9 y sección 2.4, y decisiones 8, 9 y 10 |
 | Límites conocidos, supuestos y posibles mejoras | Los «**lo que se resigna**» de cada decisión, y la sección «Posibles mejoras» de [`decisiones-de-diseno.md`](decisiones-de-diseno.md) |
