@@ -26,7 +26,7 @@ tasa de fallas** y no la velocidad del enlace, **para cobrar por franja horaria 
 mejorar la confiabilidad de la recolección que acelerarla**. Es una decisión de inversión, y
 este pipeline la puede medir.
 
-Lo respaldan **89 pruebas** —incluidas las de `TestStream`, que son las únicas que permiten
+Lo respaldan **92 pruebas** —incluidas las de `TestStream`, que son las únicas que permiten
 probar comportamiento tardío de forma determinista— y una corrida completa sobre Kafka y
 Flink que reproduce exactamente el mismo resultado que el runner local. Dos errores de doble
 conteo aparecieron en el camino, y ninguno de los dos se habría visto con datos ideales: es
@@ -536,18 +536,21 @@ cubierta por la suite: si se rompe, el video que la muestra deja de ser reproduc
 
 ## 6.2 Las pruebas automáticas
 
-76 en total, y la división importa:
+92 en total, distribuidas así:
 
 | Suite | Cuántas | Qué fija |
-|---|---|---|
-| Simulador | 34 | Determinismo por semilla, inyección de fallas, curva de consumo |
-| Franjas | 29 | Validación del calendario, atribución, reparto por borde, conservación de la energía |
-| `TestStream` | 10 | Duplicado, desorden, contador que retrocede, cuarentena, orden de las etapas |
-| Demostración | 3 | Que la evidencia de la sección 6.1 siga saliendo como está escrita acá |
+|---|---:|---|
+| Simulador | 34 | Determinismo por semilla, inyección de fallas y curva de consumo |
+| Franjas | 29 | Validación del calendario, atribución, reparto por borde y conservación de la energía |
+| Cadena del pipeline | 12 | Integración de etapas, ventana diaria, cuarentena, duplicados y construcción de celdas |
+| Transformaciones con `TestStream` | 11 | Deduplicación, diferenciación, desorden, tardíos, panes y revisiones de celdas |
+| Demostración | 3 | Que los tres escenarios narrados sigan produciendo los resultados documentados |
+| Arranque | 3 | Que el punto de entrada construya el pipeline y valide correctamente el calendario |
+| **Total** | **92** | |
 
-Las de `TestStream` son las que no se pueden escribir de otra forma: el comportamiento tardío
-depende de dónde está el watermark, y con un reloj real habría que esperar y el resultado
-dependería de la máquina.
+Las 11 pruebas de transformaciones usan `TestStream`, que permite decidir cuándo llega cada
+evento y hasta dónde avanzó el watermark. Eso hace reproducibles los casos de desorden y datos
+tardíos sin depender del reloj real ni de la máquina.
 
 Dos merecen mención porque fijan decisiones que alguien podría deshacer sin darse cuenta:
 
@@ -689,9 +692,9 @@ ad-hoc o muchos lectores concurrentes.
 
 | Integrante | Contribución principal |
 |---|---|
-| Sergio Morel | **Simulador**: datos sintéticos deterministas por semilla, con inyección deliberada de fallas —pedidos corridos, cabinas caídas, tramas truncadas, duplicados y ráfagas tardías—. **Infraestructura**: Kafka, Flink, el job server y la resolución de `KafkaIO` como transformación *cross-language*. **Cadena del pipeline**: deduplicación con estado y timer, diferenciación del contador acumulado, y la etapa de celdas vigentes. **Franjas**: calendario tarifario, atribución y reparto de un intervalo entre los bordes que cruza, con el umbral de 90 min elegido sobre la distribución medida. Las **89 pruebas**, la demostración narrada y las dos verificaciones del recorrido completo. Secciones 1, 2, 5, 6 y 7 de este documento. Encontró los **dos errores de doble conteo** de sección 5.4 |
+| Sergio Morel | **Simulador**: datos sintéticos deterministas por semilla, con inyección deliberada de fallas —pedidos corridos, cabinas caídas, tramas truncadas, duplicados y ráfagas tardías—. **Infraestructura**: Kafka, Flink, el job server y la resolución de `KafkaIO` como transformación *cross-language*. **Cadena del pipeline**: deduplicación con estado y timer, diferenciación del contador acumulado, y la etapa de celdas vigentes. **Franjas**: calendario tarifario, atribución y reparto de un intervalo entre los bordes que cruza, con el umbral de 90 min elegido sobre la distribución medida. Las **92 pruebas**, la demostración narrada y las dos verificaciones del recorrido completo. Secciones 1, 2, 5, 6 y 7 de este documento. Encontró los **dos errores de doble conteo** de sección 5.4 |
 | Clara Almirón | **Contratos de evento de entrada y de salida**: clave de particionamiento, cantidad de particiones, tópicos, regla de versionado y política de cuarentena. **Política temporal**: ventana diaria alineada al día local y lateness de 36 h, con su justificación contra 24 y 48. **Tablero de pendientes** y **mapa de la documentación**, que son la convención con que el equipo se mantuvo sincronizado. Revisión de las secciones 3 y 4 de este documento, donde detectó que la política de *triggers* documentada no existía en el código |
-| Daniel Ramírez | **Validación de reproducibilidad en plataforma independiente.** Ejecutó el recorrido completo en una segunda máquina —Windows + WSL2 Ubuntu 24.04 + Docker Desktop, con otras versiones de Docker, Compose y `uv`— y obtuvo los mismos resultados, lo que convierte la reproducibilidad en algo verificado y no afirmado. Encontró además que `uv run pytest` aborta con *segmentation fault* en ese entorno, hallazgo que derivó en el perfil `pruebas` que corre la suite dentro del contenedor. Su evidencia está en [`evidencia/`](../../evidencia/) |
+| Daniel Ramírez | **Validación de reproducibilidad en plataforma independiente.** Ejecutó el recorrido completo en una segunda máquina —Windows + WSL2 Ubuntu 24.04 + Docker Desktop, con otras versiones de Docker, Compose y `uv`— y obtuvo los mismos resultados, lo que convierte la reproducibilidad en algo verificado y no afirmado. En una ejecución inicial, `uv run pytest` abortó con *segmentation fault* durante la colección, hallazgo que derivó en el perfil `pruebas` que corre la suite dentro del contenedor. En verificaciones posteriores, la suite nativa volvió a completar normalmente. Su evidencia está en [`evidencia/`](../../evidencia/) |
 
 `git shortlog -sn --no-merges` respalda las contribuciones **de código**. La de Daniel no es
 de código sino de validación, y su evidencia está en el repositorio: una corrida completa del
