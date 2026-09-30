@@ -1,6 +1,6 @@
 # Evidencia de ejecución
 
-Seis corridas, en **cuatro máquinas distintas**, dos de ellas hechas por personas que no
+Siete corridas, en **cuatro máquinas distintas**, dos de ellas hechas por personas que no
 escribieron el código. Que el sistema dé lo mismo en todas es lo que hace verificable la
 reproducibilidad, en lugar de afirmarla.
 
@@ -8,6 +8,7 @@ reproducibilidad, en lugar de afirmarla.
 |---|---|---|
 | [`evidencia-ejecucion.txt`](evidencia-ejecucion.txt) | Sergio | Corrida completa: pruebas, demostración, stack, tópicos, humo, recorrido sobre Flink, replay desde el offset 0, offsets y salida. Se regenera con [`generar-evidencia.sh`](generar-evidencia.sh) |
 | [`evidencia-ejecucion-daniel-2026-09-29.txt`](evidencia-ejecucion-daniel-2026-09-29.txt) | Daniel | **Validación independiente** del recorrido end-to-end en otra máquina: Windows + WSL2 Ubuntu 24.04 + Docker Desktop |
+| [`evidencia-ejecucion-daniel-2026-09-30.txt`](evidencia-ejecucion-daniel-2026-09-30.txt) | Daniel | **Validación final aislada**: misma máquina, pero con un proyecto Compose propio —Kafka y volúmenes independientes— para no reutilizar estado de corridas anteriores |
 | [`evidencia-ejecucion-clara-2026-09-30.txt`](evidencia-ejecucion-clara-2026-09-30.txt) | Clara | Recorrido completo sobre un tercer entorno, incluidas las dos corridas de replay y la suite dentro del contenedor |
 | [`evidencia-ejecucion-francisco-2026-09-30.txt`](evidencia-ejecucion-francisco-2026-09-30.txt) | Francisco | **Verificación por una persona externa al equipo**, sin conocimiento previo del proyecto y siguiendo únicamente el `README.md` desde el `git clone` |
 | [`evidencia-ejecucion-francisco-2026-09-30-tercera-vuelta.txt`](evidencia-ejecucion-francisco-2026-09-30-tercera-vuelta.txt) | Francisco | Tercera vuelta, desde un clon nuevo. Es la que encontró que al job server le faltaba memoria |
@@ -21,9 +22,12 @@ el tópico de salida recibió 5 mensajes por corrida, que son las revisiones suc
 
 ## Y encontró algo, que es de lo que sirve una segunda máquina
 
-En su host WSL2, **`uv run pytest` abortó con un *segmentation fault* durante la colección**.
-No es un fallo del proyecto —dentro del contenedor la misma suite pasa— pero sí de la
-instrucción del README, que ofrecía esa vía como la forma de correr las pruebas sin Docker.
+En su host WSL2, en una **ejecución inicial**, `uv run pytest` abortó con un *segmentation
+fault* durante la colección. No es un fallo del proyecto —dentro del contenedor la misma suite
+pasa— pero sí de la instrucción del README, que ofrecía esa vía como la única forma de correr
+las pruebas sin Docker. En sus verificaciones posteriores, incluida la del 30/09, **la suite
+nativa volvió a completar normalmente**: el fallo resultó intermitente, que es exactamente el
+motivo por el que conviene tener la vía del contenedor.
 
 Por eso existe ahora el perfil `pruebas`:
 

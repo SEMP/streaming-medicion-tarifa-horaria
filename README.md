@@ -101,7 +101,7 @@ y las atribuye a su franja, y el resultado sale por el tópico derivado.
 | Configuración de franjas | Listo · cargador con validación de cobertura y reparto por borde |
 | Pipeline | Listo · parseo, cuarentena, ventana, deduplicación, diferenciación y celdas |
 | Pruebas | Listo · **89**, incluidas las de `TestStream` para el comportamiento tardío |
-| Evidencia de ejecución | Listo · [`evidencia/`](evidencia/) · seis corridas, en cuatro máquinas |
+| Evidencia de ejecución | Listo · [`evidencia/`](evidencia/) · siete corridas, en cuatro máquinas |
 | Documento técnico | Listo · [`docs/tecnico/`](docs/tecnico/documento.md) · 11 páginas |
 | Video | **Pendiente** · guion en [`docs/guion-video.md`](docs/guion-video.md) |
 
@@ -334,7 +334,7 @@ mensajes entraron, cuántos salieron y cuántos cayeron en cuarentena.
 |---|---|
 | Sergio Morel | Infraestructura (Kafka, Flink, KafkaIO), simulador, deduplicación con estado e idempotencia |
 | Clara | Contrato de evento, tópicos y particiones; pipeline Beam de transformación; ventanas y política de datos tardíos |
-| Daniel | Franjas horarias: asignación, configuración y validación; validación de timestamps y cuarentena; pruebas |
+| Daniel | Validación independiente de reproducibilidad: recorrido completo en Windows + WSL2 + Docker Desktop, contraste de resultados y evidencia de ejecución en una segunda máquina |
 
 Cada integrante **commitea con su propia cuenta** en su área, escribe la sección del
 documento técnico correspondiente y la presenta en la demostración.

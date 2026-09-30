@@ -1,0 +1,198 @@
+Evidencia de ejecución — Daniel Ramírez
+Proyecto: streaming-medicion-tarifa-horaria
+Validación final independiente con aislamiento explícito de Docker Compose
+Registro resumido manualmente a partir de la ejecución observada; no fue generado
+por evidencia/generar-evidencia.sh.
+
+================================================================
+1. Fecha, versión y alcance
+================================================================
+Fecha de registro: 2026-09-30T03:17:15-03:00
+
+Commit funcional validado:
+b2977555c8ab2070e138e9a55ed97d33b823b864
+
+Commit documental posterior:
+cb40d300d438fc418eb20368a78d4d4069c0b96b
+
+La validación funcional se realizó sobre una rama basada en b297755.
+El commit cb40d30 contiene únicamente cambios documentales en README.md
+y docs/tecnico/documento.md; no modifica código del pipeline ni infraestructura.
+
+================================================================
+2. Entorno
+================================================================
+Sistema:
+Linux noopoiesis 6.18.33.2-microsoft-standard-WSL2
+x86_64
+Windows + WSL2 Ubuntu 24.04 + Docker Desktop
+
+uv:
+uv 0.12.20 (x86_64-unknown-linux-gnu)
+
+Python:
+Python 3.12.3
+
+Docker:
+Docker version 29.8.0, build 88096ef
+
+Docker Compose:
+Docker Compose version v5.5.1
+
+================================================================
+3. Suite automática
+================================================================
+Comando:
+
+uv run pytest -q
+
+Resultado:
+
+92 passed in 13.85s
+
+La suite nativa completó normalmente en esta validación.
+
+================================================================
+4. Demostración con DirectRunner
+================================================================
+Comando:
+
+uv run python -m pipeline.demostracion
+
+Resultado final:
+
+Acto 1 — lecturas normales
+  punta: 3.200 kWh
+  resto: 2.300 kWh
+  total: 5.500 kWh
+
+Acto 2 — duplicado
+  la tabla no cambió
+  total: 5.500 kWh
+
+Acto 3 — lectura tardía
+  punta: 3.100 kWh
+  resto: 2.400 kWh
+  total: 5.500 kWh
+
+Resultado:
+BIEN: los tres escenarios se comportaron como está documentado.
+
+================================================================
+5. Aislamiento del stack Docker
+================================================================
+Durante la revisión se observó que infra/docker-compose.yml declara un
+nombre de proyecto Compose fijo. Dos clones ejecutados contra el mismo
+daemon Docker pueden por tanto referirse al mismo proyecto, sus contenedores
+y sus volúmenes si no se fuerza un nombre diferente.
+
+La evidencia del 29/09 se ejecutó sobre el proyecto Compose
+medicion-tarifa-horaria. En aquella evidencia, el stack ya llevaba 44 minutos
+levantado antes del E2E y el tópico de entrada terminó con offset 15 después
+de sembrar 5 lecturas. Eso hacía necesario distinguir una validación realmente
+aislada de una que pudiera reutilizar estado anterior.
+
+Para eliminar esa ambigüedad en esta validación se utilizó un proyecto Compose
+independiente:
+
+medicion-revision-daniel
+
+El arranque creó explícitamente recursos separados, entre ellos:
+
+medicion-revision-daniel_beam-artifacts
+medicion-revision-daniel_kafka-data
+medicion-revision-daniel_default
+
+Kafka quedó healthy y Flink, los dos TaskManager y el Beam Job Server
+quedaron operativos.
+
+================================================================
+6. Recorrido E2E aislado — Kafka + Beam + Flink
+================================================================
+Comando:
+
+docker compose -p medicion-revision-daniel \
+  -f infra/docker-compose.yml \
+  --profile e2e run --rm -T extremo-a-extremo
+
+Se sembraron 5 lecturas en:
+
+medicion.lecturas.e2e
+
+El job recorrió los estados:
+
+STOPPED
+STARTING
+RUNNING
+DONE
+
+Resultado materializado:
+
+MED-0042|2026-09-25|punta   3.100 kWh   esperado 3.100   medido OK
+MED-0042|2026-09-25|resto   2.400 kWh   esperado 2.400   medido OK
+TOTAL                       5.500 kWh   esperado 5.500
+
+Resultado:
+
+BIEN: Flink y Kafka dan el mismo resultado que la demostración con
+DirectRunner. El duplicado no sumó, la tardía corrigió el reparto y
+el total se conserva.
+
+Durante el arranque apareció un mensaje transitorio del productor Kafka
+al solicitar el PID de idempotencia ("Coordinator load in progress").
+El productor reintentó y el job terminó en DONE.
+
+================================================================
+7. Replay desde offset 0 con estado nuevo
+================================================================
+Comando:
+
+docker compose -p medicion-revision-daniel \
+  -f infra/docker-compose.yml \
+  --profile e2e run --rm -T repeticion
+
+El replay informó:
+
+5 records de medicion.lecturas.e2e
+
+El job recorrió:
+
+STOPPED
+STARTING
+RUNNING
+DONE
+
+Resultado:
+
+MED-0042|2026-09-25|punta   3.100 kWh   esperado 3.100   medido OK
+MED-0042|2026-09-25|resto   2.400 kWh   esperado 2.400   medido OK
+TOTAL                       5.500 kWh   esperado 5.500
+
+Resultado:
+
+BIEN: releer el log desde el offset 0, con estado nuevo, converge a las
+mismas celdas. Reprocesar es inocuo: la salida es idempotente sobre el
+stack real.
+
+================================================================
+8. Conclusión
+================================================================
+La validación final confirma, en una segunda plataforma y sobre un stack
+Docker aislado:
+
+- 92 pruebas automáticas en verde;
+- comportamiento correcto de normales, duplicado y lectura tardía;
+- mismo resultado entre DirectRunner y Kafka + Flink;
+- conservación del total de 5.500 kWh;
+- convergencia del replay desde offset 0;
+- salida idempotente;
+- funcionamiento del estado funcional b297755 sobre el stack real.
+
+La corrida del 29/09 se conserva sin modificar como evidencia histórica.
+Esta evidencia del 30/09 añade la validación sobre el estado final y elimina
+el posible solapamiento de estado entre clones mediante un proyecto Compose
+independiente.
+
+================================================================
+FIN DE EVIDENCIA
+================================================================
