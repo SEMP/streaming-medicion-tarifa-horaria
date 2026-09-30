@@ -176,6 +176,11 @@ docker compose -f infra/docker-compose.yml --profile e2e run --rm extremo-a-extr
 Siembra cinco lecturas —con un duplicado y una tardía—, las procesa sobre Flink y **compara el
 resultado contra el esperado**. Devuelve código de salida, así que sirve como prueba.
 
+> Acá **no va `-d`**, a diferencia de los pasos 1 y 2, y la razón es que `run` y `up` hacen
+> cosas distintas. `up` levanta servicios que quedan corriendo, así que el `-d` libera la
+> terminal. `run` ejecuta **un comando que termina solo**: con `-d` verías un identificador de
+> contenedor en lugar de la tabla de resultados, que es justo lo que viniste a mirar.
+
 Y el replay, que muestra la idempotencia sobre el stack real:
 
 ```bash
