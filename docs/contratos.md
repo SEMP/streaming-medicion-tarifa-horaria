@@ -397,7 +397,7 @@ fusionaron en `CeldasVigentes` porque encadenarlas bajo un modo acumulativo **co
 seguía configurado, pero ya no tenía dónde dispararse.
 
 Que es inerte no es una deducción: se verificó quitando la configuración de trigger que el
-pipeline tenía escrita, y las 89 pruebas y la demostración dieron exactamente lo mismo.
+pipeline tenía escrita, y las 92 pruebas y la demostración dieron exactamente lo mismo.
 
 **De la configuración de ventana, lo que sí trabaja:**
 

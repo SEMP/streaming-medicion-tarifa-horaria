@@ -97,7 +97,7 @@ y las atribuye a su franja, y el resultado sale por el tópico derivado.
 | Configuración de franjas | Listo · cargador con validación de cobertura y reparto por borde |
 | Pipeline | Listo · parseo, cuarentena, ventana, deduplicación, diferenciación y celdas |
 | Pruebas | Listo · **89**, incluidas las de `TestStream` para el comportamiento tardío |
-| Evidencia de ejecución | Listo · [`evidencia/`](evidencia/) · dos corridas, en dos máquinas |
+| Evidencia de ejecución | Listo · [`evidencia/`](evidencia/) · cuatro corridas, en cuatro máquinas |
 | Documento técnico | Listo · [`docs/tecnico/`](docs/tecnico/documento.md) · 11 páginas |
 | Video | **Pendiente** · guion en [`docs/guion-video.md`](docs/guion-video.md) |
 
@@ -233,7 +233,7 @@ docker compose -f infra/docker-compose.yml --profile pruebas run --rm pruebas
 ```
 
 La primera verifica el cableado con un *passthrough*, sin lógica de dominio: separa «el
-pipeline está mal» de «la infraestructura está mal». La segunda corre las 89 pruebas dentro del
+pipeline está mal» de «la infraestructura está mal». La segunda corre las 92 pruebas dentro del
 contenedor, sin depender del Python del host.
 
 **5. Bajar y limpiar** — recién acá, cuando ya no haga falta nada de lo anterior:
@@ -261,7 +261,7 @@ intérprete solo**. Si la máquina trae otra versión, no importa.
 
 ```bash
 uv sync                                          # crea .venv e instala dependencias
-uv run pytest                                    # las 89 pruebas
+uv run pytest                                    # las 92 pruebas
 uv run python -m pipeline.demostracion           # los tres escenarios, en 2 segundos
 uv run simulador --cabinas 8 --salida datos/lecturas.jsonl
 ```
@@ -278,7 +278,7 @@ controla y **la salida es idéntica en cualquier máquina**.
 
 | Qué | Con Docker | Con uv |
 |---|---|---|
-| Las 89 pruebas | `--profile pruebas run --rm pruebas` | `uv run pytest` |
+| Las 92 pruebas | `--profile pruebas run --rm pruebas` | `uv run pytest` |
 | Generar lecturas a un archivo | — | `uv run simulador --cabinas 8 --salida datos/lecturas.jsonl` |
 
 El resto no es equivalente: el camino A levanta el sistema real y el B corre lógica aislada.
