@@ -114,9 +114,10 @@ Para el camino con Docker, que es el recomendado:
 - **Docker Engine con el plugin Compose v2.** El comando es `docker compose`, con espacio, no
   `docker-compose`. Verificalo con `docker compose version`.
 - **git**, para clonar.
-- **Unos 12 GB de RAM libres.** Medido con `docker stats`: el stack solo consume 3,1 GB en
-  reposo, pero **con el pipeline del paso 2 procesando llega a 8,9 GB**, porque los dos
-  TaskManagers levantan un proceso del SDK de Python por slot. El resto es margen para el
+- **Unos 12 GB de RAM libres.** Medido con `docker stats` recorriendo el Camino A entero: el
+  stack consume 4,7 GB con el pipeline del paso 2 corriendo y **llega a 8,4 GB** al ejecutar
+  los pasos 3 y 5, porque los dos TaskManagers levantan un proceso del SDK de Python por slot
+  y el job server acumula los artefactos de cada trabajo que sirve. El resto es margen para el
   sistema. Con menos, el paso 2 puede quedarse sin memoria a mitad de camino.
 - **Paciencia la primera vez: entre 10 y 15 minutos.** Medido en una máquina sin nada
   cacheado: unos 8 minutos el paso 1 —la construcción de Flink y la descarga del job server— y

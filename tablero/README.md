@@ -104,11 +104,46 @@ Nombrar `pipeline` explícitamente **no arrastra al simulador**, y eso importa: 
 perfil `demo` completo publica más de 21.000 lecturas, y entre ellas las inyectadas se pierden
 de vista.
 
-⚠️ **Verificación pendiente.** Las pruebas unitarias están en verde, pero la secuencia a mano
-—`normal → normal → normal → duplicado → tardía`— todavía no se pudo comprobar de punta a
-punta: en el primer intento el simulador ya había llenado el tópico y las lecturas inyectadas
-se consumieron sin producir celda ni cuarentena, sin que se pudiera ver dónde quedaron. Hace
-falta repetirlo sobre un stack recién levantado (`down -v` primero) antes de darlo por bueno.
+### Verificado de punta a punta el 30/09/2026
+
+La secuencia `normal → normal → normal → duplicado → tardía` produjo **cinco revisiones para
+seis mensajes publicados**, que es el resultado que el tablero promete:
+
+| # | Celda | kWh | Origen | Intervalos |
+|---|---|---:|---|---:|
+| 1 | `MED-DEMO-001|2026-09-30|resto` | 0,900 | medida | 1 |
+| 2 | `MED-DEMO-001|2026-09-30|resto` | 1,200 | **interpolada** | 2 |
+| 3 | `MED-DEMO-001|2026-09-30|punta` | 0,600 | **interpolada** | 1 |
+| 4 | `MED-DEMO-001|2026-09-30|resto` | 1,000 | **medida** | 2 |
+| 5 | `MED-DEMO-001|2026-09-30|punta` | 0,800 | **medida** | 1 |
+
+Las tres primeras son de las lecturas normales; **el duplicado no produjo ninguna**, que es
+exactamente lo que tiene que pasar. Las dos últimas son de la tardía, y ahí está lo que el
+proyecto existe para mostrar: el total se queda en **1,800 kWh** —0,900 + 0,900, la energía
+que el contador acumuló— pero **0,200 kWh se mudan de `resto` a `punta`**, que es el
+`DESVIO_EN_EL_BORDE`, y las dos celdas pasan de `interpolada` a `medida`. La cuarentena del
+medidor quedó vacía.
+
+### ⚠️ Con el tópico casi vacío la salida no aparece
+
+Es la condición que hizo fallar el primer intento, y hay que conocerla: con el pipeline en
+modo **no acotado** y muy pocos mensajes en el tópico, las lecturas se consumen —el grupo
+`g-consumo-franja` queda con lag 0— pero **no salen de la etapa de lectura de KafkaIO**. Los
+contadores de Flink lo muestran sin ambigüedad: el vértice `LeerLecturas` recibe los registros
+y emite cero.
+
+No es un defecto del inyector ni de la cadena: en cuanto hay volumen, las mismas lecturas
+inyectadas salen con los valores de la tabla de arriba. Los otros tres caminos del proyecto no
+tropiezan con esto porque leen acotado (`humo`, `e2e`, con `--max-messages`) o corren con el
+simulador publicando miles de lecturas.
+
+**Para una demostración en vivo, entonces, conviene dejar el simulador corriendo**:
+
+```bash
+docker compose -f infra/docker-compose.yml --profile demo up -d
+```
+
+El tablero filtra por medidor, así que `MED-DEMO-001` se sigue viendo entre las demás.
 
 ## Configuración
 

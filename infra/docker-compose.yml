@@ -151,7 +151,12 @@ services:
     depends_on:
       - jobmanager
       - taskmanager
-    mem_limit: 900m
+    # 900m no alcanzaba. El job server no libera todo entre trabajos: con uno solo vivo va por
+    # 460 MB, con tres llega a 857 de 900 —el 95 %— y el cuarto lo mata el OOM killer. Le pasó
+    # a la verificación externa siguiendo el README: el perfil `demo` queda corriendo desde el
+    # paso 2, así que para cuando llega la prueba de humo ya son cuatro trabajos servidos.
+    # `generar-evidencia.sh` no lo veía porque levanta el stack sin el perfil `demo`.
+    mem_limit: 1800m
 
   # ---------------------------------------------------------------- perfiles opcionales
 
