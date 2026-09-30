@@ -12,6 +12,13 @@ quede implícita**:
 | **Para la defensa** | Clara escribió una versión extendida con el fondo conceptual de cada escena y las preguntas probables del profesor, con su respuesta. Está en su repositorio, en `TPF/guion_video_detallado.md` |
 | Integrantes y contribuciones | Escena 7 |
 
+**Las diapositivas están en [`presentacion/`](presentacion/)**: el PDF y
+[`notas.md`](presentacion/notas.md), con el texto para leer en cada diapositiva y **quién
+presenta cada una**. Agregan dos diapositivas que este guion no tiene —garantías y límites,
+y la evidencia en números— y un anexo para la defensa que no va en el video. Si el guion y las
+notas no coinciden en quién habla, mandan las notas: se repartió para que los tres presenten
+parecido.
+
 ## Cuánto tiene que durar
 
 **Atención — La cátedra no fija una duración.** Dice «video **breve** o demostración en vivo», y nada
@@ -56,7 +63,7 @@ técnico, y <http://localhost:8081> (la interfaz de Flink).
 
 **Qué se ve:** la cara de quien habla, o el título del repositorio.
 
-> ANDE necesita cobrar la energía a precios distintos según la hora del día. Para eso hace
+> Una distribuidora eléctrica necesita cobrar la energía a precios distintos según la hora del día. Para eso hace
 > falta saber cuánta energía consumió cada cliente **en cada franja horaria** — y ese dato hoy
 > no existe.
 >
