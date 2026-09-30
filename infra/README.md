@@ -74,9 +74,24 @@ docker compose -f infra/docker-compose.yml --profile humo up --build \
 publica en segundos lecturas cuyo tiempo de evento abarca horas. Sin ese margen, el broker
 rechazaría por timestamp fuera de rango los eventos que le parecen "del futuro".
 
-**El checkpointing de Flink no es opcional acá.** El pipeline mantiene estado por medidor —la
-última lectura para diferenciar, los ids vistos para deduplicar—, así que un reinicio sin
-checkpoint pierde ese estado y las lecturas siguientes no tienen contra qué restarse.
+**El checkpointing de Flink no es opcional acá, y hoy no funciona.** El pipeline mantiene
+estado por medidor —la última lectura para diferenciar, los ids vistos para deduplicar—, así
+que un reinicio sin checkpoint pierde ese estado y las lecturas siguientes no tienen contra
+qué restarse.
+
+La configuración está (`execution.checkpointing.interval: 30s`, modo `EXACTLY_ONCE`) y Flink
+dispara los checkpoints, pero **ninguno completa**: medido el 30/09 sobre un trabajo con
+veinte mil mensajes de salida, `total=4, completed=0, failed=3`, con 3 de 13 subtareas
+confirmando. Se puede comprobar en cualquier momento:
+
+```bash
+JID=$(curl -s localhost:8081/jobs | python3 -c "import sys,json;print(json.load(sys.stdin)['jobs'][0]['id'])")
+curl -s localhost:8081/jobs/$JID/checkpoints | python3 -c "import sys,json;print(json.load(sys.stdin)['counts'])"
+```
+
+La causa probable es que `esqueleto.opciones` no le pasa `--checkpointing_interval` a Beam,
+donde está deshabilitado por defecto: este archivo configura a Flink, no a los operadores que
+Beam genera. Queda documentado como límite conocido en la sección 7.2 del documento técnico.
 
 **El código del pipeline viaja en la imagen del TaskManager**, no solo en la de la aplicación:
 el TaskManager es el proceso que realmente ejecuta las transformaciones Python. Si cambiás

@@ -74,7 +74,7 @@
 
   <text x="598" y="384" font-size="9.5" fill="#2c5282">ventana diaria local · lateness 36 h · sin trigger: no hay GroupByKey</text>
   <text x="598" y="398" font-size="9.5" fill="#2c5282">se emite por lectura que cambia una celda, no cada N segundos</text>
-  <text x="598" y="412" font-size="9.5" fill="#2c5282">KafkaIO corre el SDK Java en modo PROCESS · checkpoints cada 30 s</text>
+  <text x="598" y="412" font-size="9.5" fill="#2c5282">KafkaIO corre el SDK Java en modo PROCESS dentro del TaskManager</text>
 
   <line x1="912" y1="200" x2="956" y2="200" stroke="#2d3748" stroke-width="1.6" marker-end="url(#fl)"/>
 

@@ -488,7 +488,7 @@ Declarado por tramo, sin sobreprometer:
 | Tramo | Garantía | Por qué |
 |---|---|---|
 | Concentrador → Kafka | **Al menos una vez** | El productor declara `acks=all` e idempotencia: lo confirmado está en todas las réplicas, y sus reintentos internos no duplican ni reordenan. El que duplica es el reintento de publicación de la sección 5.1, que es otro envío |
-| Dentro del pipeline | **Efectivamente una vez** dentro del horizonte de 36 h | Deduplicación con estado por clave, respaldada por el checkpointing de Flink |
+| Dentro del pipeline | **Efectivamente una vez** dentro del horizonte de 36 h, **mientras el trabajo no se reinicie** | Deduplicación con estado por clave. El respaldo tendría que darlo el checkpointing de Flink, y en este despliegue no completa — ver la sección 7.2 |
 | Pipeline → salida | **Efectivamente una vez** en el efecto observable | El *upsert* por clave estable hace que reescribir sea inocuo |
 
 **No se afirma exactly-once de punta a punta**, y conviene decir por qué: fuera del horizonte
@@ -675,11 +675,31 @@ versión por evento **para que la corrección sea visible en la demostración**.
 
 **El consumidor confirma offsets por su cuenta.** `ReadFromKafka` corre con
 `enable.auto.commit=true`, y ese commit periódico no espera a que el elemento termine de
-procesarse. Mientras Flink restaure desde su checkpoint no importa, porque los offsets que
-valen son los del checkpoint. Pero un trabajo relanzado **sin** checkpoint arranca desde el
-último offset confirmado, que puede estar por delante de lo procesado, y ahí el tramo de
-entrada deja de ser «al menos una vez». La corrección es `commit_offset_in_finalize=True`, que
-confirma recién al cerrar el checkpoint; no se aplicó para no tocar un recorrido ya verificado.
+procesarse. Con checkpoints que completaran no importaría, porque los offsets que valdrían
+serían los del checkpoint; como no completan (límite siguiente), un trabajo relanzado arranca
+desde el último offset confirmado, que puede estar por delante de lo procesado, y ahí el tramo
+de entrada deja de ser «al menos una vez». La corrección es `commit_offset_in_finalize=True`,
+que confirma recién al cerrar el checkpoint — pero sin checkpoints que cierren, tampoco
+alcanzaría por sí sola.
+
+**Ningún checkpoint completa, así que el estado no sobrevive a un reinicio.** Es el límite más
+serio que encontramos, y lo encontramos tarde: el 30/09, midiendo otra cosa. La configuración
+está puesta —`execution.checkpointing.interval: 30s`, modo `EXACTLY_ONCE`— y Flink los dispara,
+pero **ninguno cierra**: sobre un trabajo que llevaba veinte mil mensajes de salida, la API de
+Flink reportaba `total=4, completed=0, failed=3`, con **3 de 13 subtareas** confirmando y el
+resto venciendo por tiempo.
+
+La causa probable es concreta y está a una línea: `esqueleto.opciones` no le pasa
+`--checkpointing_interval` a Beam, y en Beam el checkpointing está **deshabilitado por
+defecto** — lo que diga `flink-conf.yaml` configura a Flink, no a los operadores que Beam
+genera. No se aplicó porque se detectó el mismo día de la entrega y habría invalidado las seis
+corridas de evidencia ya tomadas; verificarlo de verdad exige repetirlas.
+
+Qué significa en la práctica: el pipeline procesa y emite correctamente —eso está verificado
+seis veces—, pero **si el trabajo se reinicia, el estado por medidor se pierde**. Las lecturas
+siguientes no tienen contra qué restarse hasta que llegue la próxima de cada medidor, y la
+deduplicación olvida lo que había visto. Para una demostración no cambia nada; para producción
+es lo primero que habría que cerrar.
 
 ## 7.3 Posibles mejoras
 
