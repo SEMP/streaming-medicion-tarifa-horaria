@@ -142,6 +142,21 @@ las 22:00, no hay manera de saber cuánto se consumió en punta — el dato simp
 Un sistema con perfil de carga no tiene este problema: la frecuencia de medición la fija el
 medidor internamente y la de recolección es independiente. **Acá son la misma cosa.**
 
+### Quién pregunta: el concentrador
+
+El que pide es el **concentrador**, un dispositivo con lógica propia que vive en la cabina.
+Decide el orden de la ronda, pregunta medidor por medidor sobre el bus, **sella el instante
+con su reloj** al recibir cada respuesta, y guarda y publica los resultados por su cuenta.
+
+Las cuatro cosas importan para el pipeline, y cada una deja su huella en el dato:
+
+| Lo que hace | Qué produce aguas abajo |
+|---|---|
+| Decide el orden y la cadencia de la ronda | Ninguna lectura cae justo sobre el borde de franja: hay que interpolar |
+| Pregunta en secuencia sobre un bus compartido | La ronda dura de 6 a 60 min según el tamaño de la cabina |
+| Sella el instante al recibir | El tiempo de evento es confiable pero no exacto, y el reloj del medidor no participa |
+| Guarda y publica por su cuenta | Las ráfagas tardías y los duplicados de publicación |
+
 ### De dónde salen los datos tardíos y los duplicados
 
 No del medidor, que no guarda nada, sino del **concentrador** que hace los pedidos y publica
