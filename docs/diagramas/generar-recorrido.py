@@ -293,14 +293,36 @@ def _marcador() -> str:
 
 # ── lámina de detalle ───────────────────────────────────────────────────────────────────
 
-ANCHO_D = 1120
+# Ancho medio de un carácter, en unidades de la fuente. En monoespaciada es exacto; en la
+# proporcional es un promedio, suficiente para envolver sin desbordar.
+_CAR_MONO = 0.6
+_CAR_TIPO = 0.52
+
+
+def _ancho_detalle(e: Estacion) -> int:
+    """El ancho de la lámina sale de su línea más larga, no de un valor fijo.
+
+    Con un ancho fijo las cajas quedaban a lo ancho de toda la lámina y el texto ocupaba la
+    mitad izquierda: el resto era espacio vacío dentro del recuadro.
+    """
+    mono_entra = int(e.numero) > 1
+    anchos = [len(ln) * 12.5 * (_CAR_MONO if mono_entra else _CAR_TIPO) for ln in e.entra]
+    anchos += [len(ln) * 12.5 * _CAR_MONO for ln in (*e.hace, *e.sale)]
+    anchos += [len(ln) * 11.5 * _CAR_MONO for ln in e.extra]
+    if e.cuarentena:
+        anchos.append(len(" · ".join(e.cuarentena)) * 12.5 * _CAR_MONO)
+    anchos.append(len(e.fuente) * 11.5 * _CAR_MONO - 32)
+    # Piso: que el rótulo más largo y el título entren holgados.
+    caja = max(max(anchos) + 44, 560)
+    return int(caja) + 80
 
 
 def detalle(e: Estacion) -> str:
     relleno, borde, titulo = e.color
     piezas, y = [], 0
+    ANCHO_D = _ancho_detalle(e)
 
-    cab = _envolver(e.titular, 96)
+    cab = _envolver(e.titular, int((ANCHO_D - 80) / (14 * 0.56)))
     piezas.append(_texto(40, 44, f"{e.numero}. {e.nombre.replace('-', ' ').capitalize()}"
                          if False else f"{e.numero}. {e.corto}", tam=21, color=TINTA, peso="600"))
     for i, ln in enumerate(cab):
@@ -358,7 +380,7 @@ def detalle(e: Estacion) -> str:
     y += 26
     piezas.append(_texto(40, y, "POR QUÉ", tam=11, color=TINTA, peso="700"))
     y += 8
-    for ln in _envolver(e.porque, 118):
+    for ln in _envolver(e.porque, int((ANCHO_D - 80) / (13 * _CAR_TIPO))):
         y += 18
         piezas.append(_texto(40, y, ln, tam=13, color=SUAVE))
 
@@ -375,8 +397,9 @@ def detalle(e: Estacion) -> str:
 # ── lámina del recorrido completo ───────────────────────────────────────────────────────
 
 def recorrido() -> str:
-    ancho, alto = 1480, 560
     cw, gap, x0, y0, ch = 152, 14, 40, 150, 150
+    # El lienzo termina donde termina la última estación, más el mismo margen de la izquierda.
+    ancho, alto = x0 + len(ESTACIONES) * (cw + gap) - gap + x0, 560
     piezas = [f'<rect width="{ancho}" height="{alto}" fill="#ffffff"/>',
               _texto(40, 44, "El recorrido de un dato: del medidor al consumidor", tam=22,
                      color=TINTA, peso="600")]

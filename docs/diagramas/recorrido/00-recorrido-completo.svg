@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 586" width="1480" height="586" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1394 586" width="1394" height="586" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
   <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/></marker><marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/></marker></defs>
-  <rect width="1480" height="560" fill="#ffffff"/>
+  <rect width="1394" height="560" fill="#ffffff"/>
   <text x="40" y="44" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="22" fill="#1a202c" font-weight="600" text-anchor="start">El recorrido de un dato: del medidor al consumidor</text>
   <text x="40" y="70" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">Se sigue una sola lectura —MED-0042, 25/09/2026 17:55, contador en 101,5 kWh— y se muestra en qué se convierte en cada paso. Es</text>
   <text x="40" y="88" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">la misma de la demostración y del recorrido sobre Flink, así que los números coinciden con el documento y con la evidencia.</text>

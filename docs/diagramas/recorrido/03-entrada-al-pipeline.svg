@@ -1,22 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 774" width="1120" height="774" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 649 792" width="649" height="792" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
   <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/></marker><marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/></marker></defs>
-  <rect width="1120" height="774" fill="#ffffff"/>
+  <rect width="649" height="792" fill="#ffffff"/>
   <text x="40" y="44" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="21" fill="#1a202c" font-weight="600" text-anchor="start">03. Parsear y marcar el tiempo</text>
   <text x="40" y="70" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="14" fill="#2c5282" font-weight="600" text-anchor="start">De bytes a un par con clave, y con el tiempo del dominio</text>
-  <rect x="40" y="110" width="1040" height="102" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
+  <rect x="40" y="110" width="569" height="102" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
   <text x="56" y="132" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA — es la salida de la 02</text>
   <text x="56" y="152" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">clave : b&#x27;MED-0042&#x27;</text>
   <text x="56" y="170" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">valor : b&#x27;{&quot;schema_version&quot;: 1, &quot;event_id&quot;:</text>
   <text x="56" y="188" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">         &quot;d4612d921b39e34a&quot;, &quot;medidor_id&quot;: ...}&#x27;</text>
-  <line x1="560" y1="214" x2="560" y2="232" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
-  <rect x="40" y="238" width="1040" height="120" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
+  <line x1="324" y1="214" x2="324" y2="232" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="40" y="238" width="569" height="120" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
   <text x="56" y="260" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
   <text x="56" y="280" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">1. json.loads del valor -&gt; (&#x27;MED-0042&#x27;, {...})</text>
   <text x="56" y="298" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   el medidor sale del cuerpo; la clave es respaldo</text>
   <text x="56" y="316" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">2. Se lee instante_lectura y se exige su huso</text>
   <text x="56" y="334" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">3. Se sella como tiempo de EVENTO, no de llegada</text>
-  <line x1="560" y1="360" x2="560" y2="378" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
-  <rect x="40" y="384" width="1040" height="164" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <line x1="324" y1="360" x2="324" y2="378" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="40" y="384" width="569" height="164" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
   <text x="56" y="406" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE — es lo que llega a la 04</text>
   <text x="56" y="426" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">TimestampedValue(</text>
   <text x="56" y="444" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  (&#x27;MED-0042&#x27;, {...}),</text>
@@ -24,12 +24,13 @@
   <text x="56" y="480" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">)</text>
   <text x="56" y="502" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">1790369700 = 2026-09-25 17:55:00-03:00</text>
   <text x="56" y="519" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">{...} es el JSON de la estación 01, ya parseado a dict</text>
-  <rect x="40" y="558" width="1040" height="66" rx="7" fill="#fff5f5" stroke="#c53030" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <rect x="40" y="558" width="569" height="66" rx="7" fill="#fff5f5" stroke="#c53030" stroke-width="1.6" stroke-dasharray="5 3"/>
   <text x="56" y="580" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#c53030" font-weight="700" text-anchor="start">Y SI NO SE PUEDE, VA A CUARENTENA</text>
   <text x="56" y="600" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">json_invalido · sin_medidor_id · instante_invalido · instante_sin_huso</text>
   <text x="40" y="650" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#1a202c" font-weight="700" text-anchor="start">POR QUÉ</text>
-  <text x="40" y="676" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">El record de Kafka trae cuándo se publicó; instante_lectura trae cuándo se midió. Entre los dos puede haber horas —una</text>
-  <text x="40" y="694" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">cabina que vuelve de una caída publica de golpe lo que fue juntando— y ventanear por el de publicación metería ese</text>
-  <text x="40" y="712" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">consumo en el día equivocado, que es dinero mal facturado.</text>
-  <text x="40" y="746" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">pipeline/src/pipeline/cadena.py:89 y :115</text>
+  <text x="40" y="676" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">El record de Kafka trae cuándo se publicó; instante_lectura trae cuándo se midió.</text>
+  <text x="40" y="694" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">Entre los dos puede haber horas —una cabina que vuelve de una caída publica de golpe</text>
+  <text x="40" y="712" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">lo que fue juntando— y ventanear por el de publicación metería ese consumo en el día</text>
+  <text x="40" y="730" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="13" fill="#4a5568" font-weight="normal" text-anchor="start">equivocado, que es dinero mal facturado.</text>
+  <text x="40" y="764" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">pipeline/src/pipeline/cadena.py:89 y :115</text>
 </svg>
