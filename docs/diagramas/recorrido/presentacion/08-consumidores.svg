@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 592 470" width="592" height="470" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/></marker><marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/></marker></defs>
+  <rect width="592" height="470" fill="#ffffff"/>
+  <rect x="16" y="16" width="560" height="102" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
+  <text x="32" y="38" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA — es la salida de la 07</text>
+  <text x="32" y="58" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">clave : b&#x27;MED-0042|2026-09-25|resto&#x27;</text>
+  <text x="32" y="76" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">valor : b&#x27;{&quot;energia_kwh&quot;: 1.5, &quot;interpolada&quot;:</text>
+  <text x="32" y="94" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">         false, ...}&#x27;</text>
+  <line x1="296" y1="120" x2="296" y2="138" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="16" y="144" width="560" height="138" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="32" y="166" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
+  <text x="32" y="186" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">El tablero relee desde el offset 0 y hace upsert</text>
+  <text x="32" y="204" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">por clave: el último gana, nunca suma.</text>
+  <text x="32" y="222" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start"></text>
+  <text x="32" y="240" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">La facturación lee una sola vez, pasado</text>
+  <text x="32" y="258" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">ventana_fin + 36 h, cuando ya convergió.</text>
+  <line x1="296" y1="284" x2="296" y2="302" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="16" y="308" width="560" height="146" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="32" y="330" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE</text>
+  <text x="32" y="350" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">MED-0042|2026-09-25|punta   3.100 kWh</text>
+  <text x="32" y="368" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">MED-0042|2026-09-25|resto   2.400 kWh</text>
+  <text x="32" y="386" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">TOTAL                       5.500 kWh</text>
+  <text x="32" y="408" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">error de atribución = separacion_maxima_minutos</text>
+  <text x="32" y="425" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">                    / duración de la franja</text>
+</svg>

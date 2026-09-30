@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 592 684" width="592" height="684" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/></marker><marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/></marker></defs>
+  <rect width="592" height="684" fill="#ffffff"/>
+  <rect x="16" y="16" width="560" height="192" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
+  <text x="32" y="38" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA — es la salida de la 05</text>
+  <text x="32" y="58" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">Consumo(</text>
+  <text x="32" y="76" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  medidor_id=&#x27;MED-0042&#x27;,</text>
+  <text x="32" y="94" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  cabina_id=&#x27;CAB-07&#x27;,</text>
+  <text x="32" y="112" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  desde=&#x27;2026-09-25T17:40:00-03:00&#x27;,</text>
+  <text x="32" y="130" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  hasta=&#x27;2026-09-25T17:55:00-03:00&#x27;,</text>
+  <text x="32" y="148" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  energia_kwh=1.5,</text>
+  <text x="32" y="166" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  separacion_minutos=15.0</text>
+  <text x="32" y="184" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">)</text>
+  <line x1="296" y1="210" x2="296" y2="228" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="16" y="234" width="560" height="192" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
+  <text x="32" y="256" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
+  <text x="32" y="276" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">1. ¿Hay ya un intervalo igual o más corto para</text>
+  <text x="32" y="294" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   ese borde izquierdo? Entonces este quedó</text>
+  <text x="32" y="312" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   superado y no se suma</text>
+  <text x="32" y="330" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">2. Recalcula TODAS las celdas del medidor</text>
+  <text x="32" y="348" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">3. Reparte por franja; si el intervalo cruza</text>
+  <text x="32" y="366" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   un borde, interpola suponiendo potencia</text>
+  <text x="32" y="384" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   constante, y lo declara</text>
+  <text x="32" y="402" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">4. Emite solo lo que cambió</text>
+  <line x1="296" y1="428" x2="296" y2="446" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="16" y="452" width="560" height="216" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="32" y="474" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE — es lo que llega a la 07</text>
+  <text x="32" y="494" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">(&#x27;MED-0042|2026-09-25|resto&#x27;,</text>
+  <text x="32" y="512" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start"> {&quot;energia_kwh&quot;: 1.5, &quot;interpolada&quot;: false,</text>
+  <text x="32" y="530" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  &quot;indeterminada&quot;: false, &quot;minutos_cubiertos&quot;: 15.0,</text>
+  <text x="32" y="548" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  &quot;separacion_maxima_minutos&quot;: 15.0,</text>
+  <text x="32" y="566" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  &quot;cabina_id&quot;: &quot;CAB-07&quot;, &quot;intervalos_usados&quot;: 1})</text>
+  <text x="32" y="588" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">y cuando llega el intervalo que cruza las 18:00,</text>
+  <text x="32" y="605" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">esta misma celda se reemite y aparece la otra:</text>
+  <text x="32" y="622" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">  MED-0042|2026-09-25|resto  2.3  interpolada</text>
+  <text x="32" y="639" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">  MED-0042|2026-09-25|punta  3.2  interpolada</text>
+</svg>

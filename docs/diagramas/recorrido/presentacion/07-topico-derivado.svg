@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 592 470" width="592" height="470" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/></marker><marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/></marker></defs>
+  <rect width="592" height="470" fill="#ffffff"/>
+  <rect x="16" y="16" width="560" height="138" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
+  <text x="32" y="38" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA — es la salida de la 06</text>
+  <text x="32" y="58" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">(&#x27;MED-0042|2026-09-25|resto&#x27;,</text>
+  <text x="32" y="76" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start"> {&quot;energia_kwh&quot;: 1.5, &quot;interpolada&quot;: false,</text>
+  <text x="32" y="94" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  &quot;indeterminada&quot;: false, &quot;minutos_cubiertos&quot;: 15.0,</text>
+  <text x="32" y="112" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  &quot;separacion_maxima_minutos&quot;: 15.0,</text>
+  <text x="32" y="130" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  &quot;cabina_id&quot;: &quot;CAB-07&quot;, &quot;intervalos_usados&quot;: 1})</text>
+  <line x1="296" y1="156" x2="296" y2="174" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="16" y="180" width="560" height="102" rx="7" fill="#fffbeb" stroke="#b7791f" stroke-width="1.6"/>
+  <text x="32" y="202" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#744210" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
+  <text x="32" y="222" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">1. clave  = medidor|fecha|franja, en bytes</text>
+  <text x="32" y="240" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">2. valor  = el JSON de la celda, en bytes</text>
+  <text x="32" y="258" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">3. KafkaIO Write, con el SDK de Java</text>
+  <line x1="296" y1="284" x2="296" y2="302" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="16" y="308" width="560" height="146" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="32" y="330" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE — es lo que llega a la 08</text>
+  <text x="32" y="350" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">clave : b&#x27;MED-0042|2026-09-25|resto&#x27;</text>
+  <text x="32" y="368" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">valor : b&#x27;{&quot;energia_kwh&quot;: 1.5, &quot;interpolada&quot;:</text>
+  <text x="32" y="386" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">         false, ...}&#x27;</text>
+  <text x="32" y="408" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">cleanup.policy = compact,delete · 90 días</text>
+  <text x="32" y="425" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">la compactación por clave deja viva la última revisión de cada celda</text>
+</svg>

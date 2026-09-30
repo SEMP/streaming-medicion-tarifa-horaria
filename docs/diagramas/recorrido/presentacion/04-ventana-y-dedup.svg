@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 592 617" width="592" height="617" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif">
+  <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2d3748"/></marker><marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c53030"/></marker></defs>
+  <rect width="592" height="617" fill="#ffffff"/>
+  <rect x="16" y="16" width="560" height="120" rx="7" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.6"/>
+  <text x="32" y="38" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#718096" font-weight="700" text-anchor="start">LO QUE LLEGA — es la salida de la 03</text>
+  <text x="32" y="58" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">TimestampedValue(</text>
+  <text x="32" y="76" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  (&#x27;MED-0042&#x27;, {...}),</text>
+  <text x="32" y="94" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  timestamp = 1790369700</text>
+  <text x="32" y="112" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">)</text>
+  <line x1="296" y1="138" x2="296" y2="156" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="16" y="162" width="560" height="156" rx="7" fill="#ebf4ff" stroke="#2b6cb0" stroke-width="1.6"/>
+  <text x="32" y="184" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#2c5282" font-weight="700" text-anchor="start">QUÉ LE PASA</text>
+  <text x="32" y="204" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">1. Cae en la ventana del día local</text>
+  <text x="32" y="222" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   FixedWindows(24 h), desplazada -3 h</text>
+  <text x="32" y="240" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">2. ¿&#x27;2026-09-25T17:55:00-03:00&#x27; en VISTOS?</text>
+  <text x="32" y="258" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   sí -&gt; se cuenta y NO se emite</text>
+  <text x="32" y="276" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">   no -&gt; se agrega y sigue</text>
+  <text x="32" y="294" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">3. Timer para expirar a window.end + 36 h</text>
+  <line x1="296" y1="320" x2="296" y2="338" stroke="#2d3748" stroke-width="1.8" marker-end="url(#fl)"/>
+  <rect x="16" y="344" width="560" height="181" rx="7" fill="#f0fff4" stroke="#276749" stroke-width="1.6"/>
+  <text x="32" y="366" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#22543d" font-weight="700" text-anchor="start">LO QUE SALE — es lo que llega a la 05</text>
+  <text x="32" y="386" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">TimestampedValue(</text>
+  <text x="32" y="404" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  (&#x27;MED-0042&#x27;, {...}),</text>
+  <text x="32" y="422" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">  timestamp = 1790369700</text>
+  <text x="32" y="440" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">)   en la ventana del 2026-09-25 local</text>
+  <text x="32" y="462" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">estado VISTOS del medidor, después de esta lectura:</text>
+  <text x="32" y="479" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">  {&#x27;2026-09-25T17:40:00-03:00&#x27;,</text>
+  <text x="32" y="496" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="11.5" fill="#718096" font-weight="normal" text-anchor="start">   &#x27;2026-09-25T17:55:00-03:00&#x27;}</text>
+  <rect x="16" y="535" width="560" height="66" rx="7" fill="#fff5f5" stroke="#c53030" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="32" y="557" font-family="'DejaVu Sans','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#c53030" font-weight="700" text-anchor="start">Y SI NO SE PUEDE, VA A CUARENTENA</text>
+  <text x="32" y="577" font-family="'DejaVu Sans Mono','Menlo',monospace" font-size="12.5" fill="#1a202c" font-weight="normal" text-anchor="start">instante_invalido</text>
+</svg>

@@ -32,6 +32,10 @@ que se reemitirá después.
 
 El evento de entrada es la salida real de `Lectura.a_dict()`. El `Consumo` y las celdas son la salida real de pasar las tres lecturas por `DeduplicarLecturas`, `DiferenciarContador` y `CeldasVigentes` con `DirectRunner`. Cada lámina declara al pie de qué archivo y línea sale.
 
+## Para una presentación: `presentacion/`
+
+Las mismas nueve láminas **solo con el diagrama**: sin título, sin el «por qué» y sin la línea de fuente. En una diapositiva ese texto va en la diapositiva misma y en sus notas, donde se puede editar y se lee con la tipografía del resto; dentro de la imagen quedaría dos veces. Las genera el mismo script, así que no se desincronizan.
+
 ## Y las otras tres vistas, que muestran otra cosa
 
 - [`../arquitectura.svg`](../arquitectura.svg): los componentes y los tópicos.

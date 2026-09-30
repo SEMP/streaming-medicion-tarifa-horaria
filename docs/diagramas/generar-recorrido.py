@@ -28,6 +28,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 SALIDA = Path(__file__).parent / "recorrido"
+PRESENTACION = SALIDA / "presentacion"
 
 TIPO = "'DejaVu Sans','Helvetica Neue',Arial,sans-serif"
 MONO = "'DejaVu Sans Mono','Menlo',monospace"
@@ -299,7 +300,7 @@ _CAR_MONO = 0.6
 _CAR_TIPO = 0.52
 
 
-def _ancho_detalle(e: Estacion) -> int:
+def _ancho_detalle(e: Estacion, margen: int = 40) -> int:
     """El ancho de la lámina sale de su línea más larga, no de un valor fijo.
 
     Con un ancho fijo las cajas quedaban a lo ancho de toda la lámina y el texto ocupaba la
@@ -314,36 +315,47 @@ def _ancho_detalle(e: Estacion) -> int:
     anchos.append(len(e.fuente) * 11.5 * _CAR_MONO - 32)
     # Piso: que el rótulo más largo y el título entren holgados.
     caja = max(max(anchos) + 44, 560)
-    return int(caja) + 80
+    return int(caja) + 2 * margen
 
 
-def detalle(e: Estacion) -> str:
+def detalle(e: Estacion, presentacion: bool = False) -> str:
+    """Una estación: lo que llega, lo que le pasa y lo que sale.
+
+    Con `presentacion`, la lámina lleva **solo el diagrama**: sin título, sin el «por qué» y
+    sin la línea de fuente, que en una diapositiva van como texto de la diapositiva y en sus
+    notas. Así el texto explicativo no queda dos veces en pantalla, ni en una imagen que no se
+    puede editar ni leer con la tipografía del resto.
+    """
     relleno, borde, titulo = e.color
-    piezas, y = [], 0
-    ANCHO_D = _ancho_detalle(e)
+    m = 16 if presentacion else 40          # margen exterior
+    t = m + 16                              # sangría del texto dentro de las cajas
+    ANCHO_D = _ancho_detalle(e, m)
+    piezas = []
 
-    cab = _envolver(e.titular, int((ANCHO_D - 80) / (14 * 0.56)))
-    piezas.append(_texto(40, 44, f"{e.numero}. {e.nombre.replace('-', ' ').capitalize()}"
-                         if False else f"{e.numero}. {e.corto}", tam=21, color=TINTA, peso="600"))
-    for i, ln in enumerate(cab):
-        piezas.append(_texto(40, 70 + i * 18, ln, tam=14, color=titulo, peso="600"))
-    y = 70 + len(cab) * 18 + 22
+    if presentacion:
+        y = m
+    else:
+        cab = _envolver(e.titular, int((ANCHO_D - 80) / (14 * 0.56)))
+        piezas.append(_texto(40, 44, f"{e.numero}. {e.corto}", tam=21, color=TINTA, peso="600"))
+        for i, ln in enumerate(cab):
+            piezas.append(_texto(40, 70 + i * 18, ln, tam=14, color=titulo, peso="600"))
+        y = 70 + len(cab) * 18 + 22
 
     def bloque(rotulo, lineas, col, mono=True, extra=()):
         nonlocal y
         r, b, t_ = col
         alto = 34 + len(lineas) * 18 + 14 + (len(extra) * 17 + 10 if extra else 0)
-        piezas.append(f'<rect x="40" y="{y}" width="{ANCHO_D - 80}" height="{alto}" rx="7" '
+        piezas.append(f'<rect x="{m}" y="{y}" width="{ANCHO_D - 2 * m}" height="{alto}" rx="7" '
                       f'fill="{r}" stroke="{b}" stroke-width="1.6"/>')
-        piezas.append(_texto(56, y + 22, rotulo, tam=11, color=t_, peso="700"))
+        piezas.append(_texto(t, y + 22, rotulo, tam=11, color=t_, peso="700"))
         for i, ln in enumerate(lineas):
-            piezas.append(_texto(56, y + 42 + i * 18, ln, tam=12.5,
+            piezas.append(_texto(t, y + 42 + i * 18, ln, tam=12.5,
                                  familia=MONO if mono else TIPO, color=TINTA))
         # El contexto no viaja a la estación siguiente, así que va en gris y más chico:
         # lo que se copia hacia abajo es solo el bloque de arriba.
         base = y + 42 + len(lineas) * 18 + 4
         for i, ln in enumerate(extra):
-            piezas.append(_texto(56, base + i * 17, ln, tam=11.5, familia=MONO, color=TENUE))
+            piezas.append(_texto(t, base + i * 17, ln, tam=11.5, familia=MONO, color=TENUE))
         y += alto
         return alto
 
@@ -369,24 +381,27 @@ def detalle(e: Estacion) -> str:
         y += 10
         r, b, t_ = ALERTA
         alto = 34 + 18 + 14
-        piezas.append(f'<rect x="40" y="{y}" width="{ANCHO_D - 80}" height="{alto}" rx="7" '
+        piezas.append(f'<rect x="{m}" y="{y}" width="{ANCHO_D - 2 * m}" height="{alto}" rx="7" '
                       f'fill="{r}" stroke="{b}" stroke-width="1.6" stroke-dasharray="5 3"/>')
-        piezas.append(_texto(56, y + 22, "Y SI NO SE PUEDE, VA A CUARENTENA",
+        piezas.append(_texto(t, y + 22, "Y SI NO SE PUEDE, VA A CUARENTENA",
                              tam=11, color=t_, peso="700"))
-        piezas.append(_texto(56, y + 42, " · ".join(e.cuarentena),
+        piezas.append(_texto(t, y + 42, " · ".join(e.cuarentena),
                              tam=12.5, familia=MONO, color=TINTA))
         y += alto
 
-    y += 26
-    piezas.append(_texto(40, y, "POR QUÉ", tam=11, color=TINTA, peso="700"))
-    y += 8
-    for ln in _envolver(e.porque, int((ANCHO_D - 80) / (13 * _CAR_TIPO))):
-        y += 18
-        piezas.append(_texto(40, y, ln, tam=13, color=SUAVE))
+    if presentacion:
+        alto_total = y + m
+    else:
+        y += 26
+        piezas.append(_texto(40, y, "POR QUÉ", tam=11, color=TINTA, peso="700"))
+        y += 8
+        for ln in _envolver(e.porque, int((ANCHO_D - 80) / (13 * _CAR_TIPO))):
+            y += 18
+            piezas.append(_texto(40, y, ln, tam=13, color=SUAVE))
 
-    y += 34
-    piezas.append(_texto(40, y, e.fuente, tam=11.5, familia=MONO, color=TENUE))
-    alto_total = y + 28
+        y += 34
+        piezas.append(_texto(40, y, e.fuente, tam=11.5, familia=MONO, color=TENUE))
+        alto_total = y + 28
 
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {ANCHO_D} {alto_total}" '
             f'width="{ANCHO_D}" height="{alto_total}" font-family={TIPO!r}>\n  {_marcador()}\n'
@@ -396,14 +411,18 @@ def detalle(e: Estacion) -> str:
 
 # ── lámina del recorrido completo ───────────────────────────────────────────────────────
 
-def recorrido() -> str:
-    cw, gap, x0, y0, ch = 152, 14, 40, 150, 150
+def recorrido(presentacion: bool = False) -> str:
+    """Las ocho estaciones en fila. Con `presentacion`, sin el título, la introducción ni las
+    tres transformaciones de abajo, que en la diapositiva van como texto."""
+    cw, gap, ch = 152, 14, 150
+    x0, y0 = (16, 16) if presentacion else (40, 150)
     # El lienzo termina donde termina la última estación, más el mismo margen de la izquierda.
     ancho, alto = x0 + len(ESTACIONES) * (cw + gap) - gap + x0, 560
-    piezas = [f'<rect width="{ancho}" height="{alto}" fill="#ffffff"/>',
-              _texto(40, 44, "El recorrido de un dato: del medidor al consumidor", tam=22,
-                     color=TINTA, peso="600")]
-    for i, ln in enumerate(_envolver(
+    piezas = [f'<rect width="{ancho}" height="{alto}" fill="#ffffff"/>']
+    if not presentacion:
+        piezas.append(_texto(40, 44, "El recorrido de un dato: del medidor al consumidor",
+                             tam=22, color=TINTA, peso="600"))
+    for i, ln in enumerate([] if presentacion else _envolver(
             "Se sigue una sola lectura —MED-0042, 25/09/2026 17:55, contador en 101,5 kWh— y se "
             "muestra en qué se convierte en cada paso. Es la misma de la demostración y del "
             "recorrido sobre Flink, así que los números coinciden con el documento y con la "
@@ -439,6 +458,13 @@ def recorrido() -> str:
                          "json_invalido · sin_medidor_id · instante_invalido · instante_sin_huso · "
                          "sin_registro_util · contador_retrocede",
                          tam=11, familia=MONO, color=SUAVE))
+
+    if presentacion:
+        alto = yq + 52 + y0
+        piezas[0] = f'<rect width="{ancho}" height="{alto}" fill="#ffffff"/>'
+        return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {ancho} {alto}" '
+                f'width="{ancho}" height="{alto}" font-family={TIPO!r}>\n  {_marcador()}\n  '
+                + "\n  ".join(piezas) + "\n</svg>\n")
 
     yb = yq + 82
     piezas.append(_texto(40, yb,
@@ -477,6 +503,16 @@ def main() -> int:
         filas.append(f"| {e.numero} | [`{nombre}`]({nombre}) | {e.corto} — {e.titular} |")
         print(f"  {nombre}")
 
+    # Las mismas láminas sin el texto explicativo, para usarlas como imagen en una
+    # diapositiva: el título y el «por qué» van en la diapositiva, no dentro del dibujo.
+    PRESENTACION.mkdir(exist_ok=True)
+    (PRESENTACION / "00-recorrido-completo.svg").write_text(recorrido(presentacion=True),
+                                                           encoding="utf-8")
+    for e in ESTACIONES:
+        (PRESENTACION / f"{e.numero}-{e.nombre}.svg").write_text(
+            detalle(e, presentacion=True), encoding="utf-8")
+    print(f"  presentacion/: las mismas {len(ESTACIONES) + 1}, solo el diagrama")
+
     (SALIDA / "LEEME.md").write_text(
         "# El recorrido de un dato, paso a paso\n\n"
         "Se sigue **una sola lectura** —`MED-0042`, 25/09/2026 a las 17:55, con el contador en "
@@ -497,6 +533,11 @@ def main() -> int:
         "son la salida real de pasar las tres lecturas por `DeduplicarLecturas`, "
         "`DiferenciarContador` y `CeldasVigentes` con `DirectRunner`. Cada lámina declara al pie "
         "de qué archivo y línea sale.\n\n"
+        "## Para una presentación: `presentacion/`\n\n"
+        "Las mismas nueve láminas **solo con el diagrama**: sin título, sin el «por qué» y sin "
+        "la línea de fuente. En una diapositiva ese texto va en la diapositiva misma y en sus "
+        "notas, donde se puede editar y se lee con la tipografía del resto; dentro de la imagen "
+        "quedaría dos veces. Las genera el mismo script, así que no se desincronizan.\n\n"
         "## Y las otras tres vistas, que muestran otra cosa\n\n"
         "- [`../arquitectura.svg`](../arquitectura.svg): los componentes y los tópicos.\n"
         "- [`../pipeline-dag.svg`](../pipeline-dag.svg): la topología real, dibujada por Beam "
