@@ -117,12 +117,17 @@ services:
     environment:
       FLINK_PROPERTIES: |
         jobmanager.rpc.address: jobmanager
-        taskmanager.numberOfTaskSlots: 1
-        taskmanager.memory.process.size: 1536m
+        # DOS slots por TaskManager, no uno. Con 2 réplicas dan 4 slots, y cada trabajo
+        # pide paralelismo 2: hacen falta para que el pipeline de streaming del perfil `demo`
+        # —que ocupa sus slots y no los suelta nunca— no impida correr el recorrido de punta
+        # a punta después. Con un solo slot por TaskManager, el paso 3 del README se quedaba
+        # esperando y moría a los 5 minutos por timeout.
+        taskmanager.numberOfTaskSlots: 2
+        taskmanager.memory.process.size: 1792m
         taskmanager.memory.task.off-heap.size: 384m
         taskmanager.memory.managed.fraction: 0.1
-        taskmanager.memory.network.min: 64m
-        taskmanager.memory.network.max: 64m
+        taskmanager.memory.network.min: 128m
+        taskmanager.memory.network.max: 128m
         parallelism.default: ${BEAM_PARALLELISM:-2}
         taskmanager.load-balance.mode: SLOTS
     volumes:

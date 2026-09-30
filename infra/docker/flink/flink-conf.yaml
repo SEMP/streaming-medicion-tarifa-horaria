@@ -1,14 +1,22 @@
 jobmanager.rpc.address: jobmanager
 parallelism.default: 2
-taskmanager.numberOfTaskSlots: 1
+taskmanager.numberOfTaskSlots: 2
 
+# Dos slots por TaskManager: con 2 réplicas son 4, y cada trabajo pide paralelismo 2. Hacen
+# falta dos trabajos a la vez porque el pipeline de streaming no termina nunca y el recorrido
+# de punta a punta corre después, sobre el mismo cluster.
+#
+# La memoria de red va atada a los slots, no es independiente: con 2 slots por TaskManager
+# hacen falta 128m. Con 64m el segundo trabajo falla con "Insufficient number of network
+# buffers", que no dice que el problema son los slots.
+#
 # Memoria acotada a propósito: el stack completo tiene que entrar en una máquina de
-# desarrollo. Si sobra memoria, subir numberOfTaskSlots antes que el tamaño del proceso.
-taskmanager.memory.process.size: 1536m
+# desarrollo.
+taskmanager.memory.process.size: 1792m
 taskmanager.memory.task.off-heap.size: 384m
 taskmanager.memory.managed.fraction: 0.1
-taskmanager.memory.network.min: 64m
-taskmanager.memory.network.max: 64m
+taskmanager.memory.network.min: 128m
+taskmanager.memory.network.max: 128m
 jobmanager.memory.process.size: 768m
 
 # El pipeline mantiene estado por medidor (última lectura para diferenciar, e ids vistos
