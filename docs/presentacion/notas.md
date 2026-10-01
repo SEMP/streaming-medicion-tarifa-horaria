@@ -16,24 +16,21 @@ Texto para leer en cada diapositiva. Exportado de la presentación el 30/09/2026
 | 6 | El recorrido de una lectura, del medidor al consumidor | Escena 2 | **Clara** |
 | 7 | Tres escenarios, un solo medidor | Escena 3 | **Sergio** |
 | 8 | La tardía corrige el reparto sin cambiar el total | Escena 3 | **Sergio** |
-| 9 | Kafka y Flink de verdad, no un simulador de Beam | Escena 4 | **Daniel** |
-| 10 | Las mismas cinco lecturas, ahora sobre Kafka y Flink | Escena 5 | **Daniel** |
-| 11 | Qué garantizamos, y dónde termina | Después de la escena 5 | **Sergio** |
-| 12 | La evidencia, en números | Después de la escena 5 | **Daniel** |
-| 13 | Una corrida exitosa con datos ideales no es evidencia | Escena 6 | **los tres** |
-| 14 | Quién hizo qué | Escena 7 | **los tres** |
-| 15 | El recorrido de una lectura, estación por estación | Anexo | — |
-| 16 | Simulador | Anexo, para la defensa | **Sergio** |
-| 17 | Tópico crudo | Anexo, para la defensa | **Clara** |
-| 18 | Parsear y marcar el tiempo | Anexo, para la defensa | **Clara** |
-| 19 | Ventana diaria y deduplicación | Anexo, para la defensa | **Sergio** |
-| 20 | Diferenciar el contador | Anexo, para la defensa | **Sergio** |
-| 21 | Atribuir la franja y agregar | Anexo, para la defensa | **Sergio** |
-| 22 | Tópico derivado | Anexo, para la defensa | **Clara** |
-| 23 | Tablero y facturación | Anexo, para la defensa | **Clara** |
-
-Las diapositivas 16 a 23 son el **anexo**: no van en el video, están para responder
-preguntas en la defensa.
+| 9 | La misma lectura, estación por estación | Escena 3b | **Sergio** |
+| 10 | Simulador | Escena 3b | **Sergio** |
+| 11 | Tópico crudo | Escena 3b | **Clara** |
+| 12 | Parsear y marcar el tiempo | Escena 3b | **Clara** |
+| 13 | Ventana diaria y deduplicación | Escena 3b | **Sergio** |
+| 14 | Diferenciar el contador | Escena 3b | **Sergio** |
+| 15 | Atribuir la franja y agregar | Escena 3b | **Sergio** |
+| 16 | Tópico derivado | Escena 3b | **Clara** |
+| 17 | Tablero y facturación | Escena 3b | **Clara** |
+| 18 | Kafka y Flink de verdad, no un simulador de Beam | Escena 4 | **Daniel** |
+| 19 | Las mismas cinco lecturas, ahora sobre Kafka y Flink | Escena 5 | **Daniel** |
+| 20 | Qué garantizamos, y dónde termina | Después de la escena 5 | **Sergio** |
+| 21 | La evidencia, en números | Después de la escena 5 | **Daniel** |
+| 22 | Una corrida exitosa con datos ideales no es evidencia | Escena 6 | **los tres** |
+| 23 | Quién hizo qué | Escena 7 | **los tres** |
 
 ## 1. Consumo eléctrico por franja horaria, en streaming
 
@@ -57,7 +54,7 @@ Escena 2 · Presentan **Clara** y **Sergio**. **Clara:** En cuanto a estas cuatr
 
 ## 6. El recorrido de una lectura, del medidor al consumidor
 
-Escena 2 · Presenta **Clara**. Antes de ver qué pasa con duplicados y lecturas tardías, sigamos una sola lectura de punta a punta. Es la del medidor MED-0042, del 25 de septiembre a las 17:55, con el contador en 101,5 kilovatios hora. Es la misma lectura que usan la demostración y el recorrido sobre Flink, así que los números que van a ver son los mismos del documento técnico y de la evidencia. Pasa por ocho estaciones: el simulador la produce, el tópico crudo la guarda, el pipeline la parsea, la deduplica, calcula el consumo y lo atribuye a una franja, el tópico derivado guarda el resultado y el tablero lo lee. En el camino el dato cambia tres veces de naturaleza. Un contador acumulado se convierte en consumo. Un intervalo se convierte en una celda de franja. Y la clave pasa de ser el medidor a ser la celda, que es lo que hace idempotente la salida. Todo lo que no se puede procesar, en las estaciones tres, cuatro y cinco, va a la cuarentena, contado y con su motivo: nada se descarta en silencio. Cada estación, con el dato exacto que entra y que sale, está en el anexo del final, para las preguntas.
+Escena 2 · Presenta **Clara**. Antes de ver qué pasa con duplicados y lecturas tardías, sigamos una sola lectura de punta a punta. Es la del medidor MED-0042, del 25 de septiembre a las 17:55, con el contador en 101,5 kilovatios hora. Es la misma lectura que usan la demostración y el recorrido sobre Flink, así que los números que van a ver son los mismos del documento técnico y de la evidencia. Pasa por ocho estaciones: el simulador la produce, el tópico crudo la guarda, el pipeline la parsea, la deduplica, calcula el consumo y lo atribuye a una franja, el tópico derivado guarda el resultado y el tablero lo lee. En el camino el dato cambia tres veces de naturaleza. Un contador acumulado se convierte en consumo. Un intervalo se convierte en una celda de franja. Y la clave pasa de ser el medidor a ser la celda, que es lo que hace idempotente la salida. Todo lo que no se puede procesar, en las estaciones tres, cuatro y cinco, va a la cuarentena, contado y con su motivo: nada se descarta en silencio. Después de ver los escenarios volvemos a esta misma lectura y la recorremos estación por estación.
 
 ## 7. Tres escenarios, un solo medidor
 
@@ -67,62 +64,62 @@ Escena 3 · Presenta **Sergio**. Esta es la parte más importante: la evidencia 
 
 Escena 3 · Presenta **Sergio**. Y este es el remate. El total no cambió: 5,5 kilovatios hora antes y después. Medir con más detalle no crea ni destruye energía; lo que cambia es a qué franja se le atribuye, y cambió en 0,1 kilovatios hora. Ese número es el error de atribución, que es lo que este proyecto existe para medir. No es un defecto del pipeline: es la consecuencia de que el intervalo cruzaba el borde y hubo que suponer potencia constante. La lectura tardía es la que revela cuánto se erró. Y fíjense en la columna de origen: pasó de interpolado a medido, porque la lectura cayó justo sobre el borde y ya no hubo nada que estimar. En un momento vamos a ver exactamente estos números otra vez, pero corriendo sobre Kafka y Flink.
 
-## 9. Kafka y Flink de verdad, no un simulador de Beam
+## 9. La misma lectura, estación por estación
+
+Escena 3b · Presenta **Sergio** · 15 segundos. Ya vimos qué pasa: el duplicado no mueve nada, y la tardía corrige el reparto sin cambiar el total. Ahora vamos a ver dónde pasa cada cosa. Volvemos a la misma lectura de las 17:55 y la seguimos por las ocho estaciones, con el dato exacto que entra y que sale de cada una. Cada estación la presenta quien la hizo.
+
+## 10. Simulador
+
+Escena 3b · Presenta **Sergio** · 70 segundos. Todo empieza con una pregunta. El medidor no transmite por su cuenta: el concentrador recorre la cabina, medidor por medidor, sobre un bus RS-485 compartido, y le pide el registro 15.8.0. Lo que el medidor responde es su contador acumulado: 101,5 kilovatios hora. Y eso no es lo que se consumió: es el total desde que el medidor existe. El consumo hay que sacarlo restando dos lecturas, y por eso más adelante el pipeline va a necesitar recordar la anterior. Con esa respuesta se arma el evento que ven a la derecha. Fíjense en el event_id: no es aleatorio, es un hash del medidor y del instante de la lectura. Si el concentrador reintenta la publicación, el reintento sale con el mismo id, y eso es lo que permite reconocerlo como duplicado. En nuestro proyecto el simulador ocupa el lugar del concentrador, y existe sobre todo para inyectar fallas a propósito: pedidos que se corren, cabinas que caen enteras, tramas truncadas, duplicados y ráfagas tardías.
+
+## 11. Tópico crudo
+
+Escena 3b · Presenta **Clara** · 60 segundos. La lectura llega al tópico crudo, medicion.lecturas.v1, tal como llegó. La clave es el identificador del medidor, en bytes, y el valor es el mismo JSON de antes, serializado. Kafka elige la partición por el hash de la clave, así que todas las lecturas de un mismo medidor caen siempre en la misma partición y se leen en orden. Ese orden es un requisito duro, porque la etapa que calcula el consumo resta lecturas consecutivas del mismo equipo. ¿Por qué el medidor y no la cabina? La cabina era tentadora, porque agrupa la ronda de lectura, pero las cabinas van de 1 a 199 medidores: el reparto entre particiones quedaría desbalanceado en un factor de 200. Con el medidor, el reparto es parejo por construcción. El tópico tiene cuatro particiones y siete días de retención, y el productor publica con acks igual a all e idempotencia.
+
+## 12. Parsear y marcar el tiempo
+
+Escena 3b · Presenta **Clara** · 65 segundos. Acá la lectura entra al pipeline. Lo primero es parsear: el valor pasa de bytes a un diccionario, y el medidor se toma del cuerpo del mensaje; la clave de Kafka queda como respaldo. Después viene la decisión más importante de esta etapa: qué tiempo usar. El registro de Kafka trae cuándo se publicó el mensaje; el campo instante_lectura trae cuándo se midió. Entre los dos puede haber horas, porque una cabina que vuelve de una caída de enlace publica de golpe todo lo que fue juntando. Si ventaneáramos por el tiempo de publicación, ese consumo caería en el día equivocado, y eso es energía mal facturada. Por eso la lectura se sella con su tiempo de evento. Y se exige que el instante traiga su huso horario: si no lo trae, va a cuarentena, en lugar de interpretarse en la zona de la máquina donde corre el pipeline, que haría depender el resultado de dónde se ejecuta.
+
+## 13. Ventana diaria y deduplicación
+
+Escena 3b · Presenta **Sergio** · 70 segundos. La lectura cae en la ventana del día local. Es una ventana fija de 24 horas, pero desplazada tres horas, porque Beam corta sobre el instante absoluto: sin el desplazamiento, el día terminaría a medianoche UTC, que son las 21 horas en Asunción, en plena hora punta. El corte caería en el medio de la franja más cara. Después viene la deduplicación. El estado del medidor guarda los instantes que ya vio. Si este instante ya estaba, la lectura se cuenta como duplicado y no se emite; si no estaba, se agrega y sigue. Y el orden de las etapas no es intercambiable: si deduplicáramos después de calcular el consumo, el duplicado se restaría contra sí mismo, daría cero, y con salida por upsert ese cero pisaría el valor correcto. Un duplicado no es un error, así que no va a cuarentena, pero sí se cuenta. Y un temporizador borra ese estado 36 horas después del fin de la ventana, el mismo horizonte que la lateness.
+
+## 14. Diferenciar el contador
+
+Escena 3b · Presenta **Sergio** · 65 segundos. Recién acá aparece el consumo, que no venía en el dato. La etapa busca el registro 15.8.0, guarda la lectura en el estado del medidor y ordena todas las lecturas de ese medidor dentro de la ventana. La de las 17:40, con el contador en 100, ya estaba guardada desde su propio paso por esta etapa. Entonces: 101,5 menos 100 da 1,5 kilovatios hora en quince minutos. Guardar todas las lecturas, y no solo la última, es lo que permite que una lectura tardía caiga en el medio de un intervalo y lo parta en dos, aunque ese intervalo ya se haya emitido. Y el campo separacion_minutos no es decorativo: es la cota del error de atribución, el número que este proyecto existe para medir. Si el contador retrocede, la lectura va a cuarentena: sin compra de energía al usuario, un contador que baja es un reseteo del equipo o una trama truncada, nunca una medición.
+
+## 15. Atribuir la franja y agregar
+
+Escena 3b · Presenta **Sergio** · 75 segundos. Esta es la etapa donde el intervalo se convierte en plata. Primero se fija si hay otro intervalo que empiece en el mismo instante y sea más corto; si lo hay, este quedó superado por una lectura tardía y deja de sumar. Esa regla es la que corrigió nuestro error de doble conteo. Después recalcula todas las celdas del medidor y reparte cada intervalo entre las franjas. Este intervalo, de 17:40 a 17:55, cae entero en resto, así que la celda sale como medida, con 1,5 kilovatios hora. Pero cuando llegue el siguiente, de 17:55 a 18:20 con 4 kilovatios hora, ese sí cruza el borde de punta. Se reparte por minutos, suponiendo potencia constante: 5 minutos de un lado y 20 del otro, o sea 0,8 a resto y 3,2 a punta, y las dos celdas pasan a interpoladas. Recalcular todo en lugar de solo lo que tocó la lectura nueva es más caro, y es a propósito: así el resultado no depende del orden en que llegan las lecturas, y un reproceso converge al mismo valor.
+
+## 16. Tópico derivado
+
+Escena 3b · Presenta **Clara** · 60 segundos. El resultado vuelve a Kafka, al tópico derivado. Pero fíjense que la clave cambió: ya no es el medidor, es la celda, que es medidor, fecha y franja. Y el valor es absoluto: el consumo total de esa celda, no un incremento. Esas dos cosas juntas son las que hacen idempotente a todo el sistema. Cada mensaje reemplaza al anterior en lugar de sumarse, así que volver a escribir es inocuo. Y lo verificamos sobre Kafka y Flink: reprocesar el log entero desde el offset cero, con un grupo de consumidor nuevo, converge a las mismas celdas. El tópico usa compactación más borrado a los 90 días. La compactación deja viva la última revisión de cada celda, y el borrado evita que las claves se acumulen para siempre, porque la clave incluye la fecha y cada día aparecen claves nuevas.
+
+## 17. Tablero y facturación
+
+Escena 3b · Presenta **Clara** · 65 segundos. Del tópico derivado leen dos consumidores con necesidades opuestas. El tablero, que construimos en marimo, relee el tópico desde el offset cero y hace upsert por clave: el último mensaje gana, nunca suma. Las cinco revisiones que publicó el pipeline en la demostración colapsan en dos celdas: 3,1 kilovatios hora en punta y 2,4 en resto, 5,5 en total. Si el tablero sumara en lugar de reemplazar, el total daría más del doble. La facturación la dejamos descripta pero no implementada: leería una sola vez, pasadas 36 horas del fin de la ventana, cuando el valor ya convergió. Y un último detalle de diseño: el error de atribución lo calcula el consumidor y no el pipeline, porque el denominador es la duración de la franja, que vive en el calendario tarifario y no en el evento. Ponerlo en el mensaje obligaría a que el pipeline y el consumidor coincidieran sobre qué calendario rige en cada fecha.
+
+## 18. Kafka y Flink de verdad, no un simulador de Beam
 
 Escena 4 · Presenta **Daniel** · 45 segundos. Mostrar la interfaz de Flink y después la terminal. Esto no corre en un simulador de Beam: corre en un Flink de verdad, con dos TaskManagers de dos slots cada uno, y un Kafka real, en modo KRaft. El pipeline se envía a través del job server de Beam, y la lectura y escritura en Kafka las hace KafkaIO, que es una transformación cross-language: la ejecuta el SDK de Java dentro del TaskManager. Ahora corremos la prueba de humo. Verifica el cableado: que KafkaIO levanta, que Flink acepta el trabajo, que los bytes entran y salen. Lo hace con un passthrough, sin lógica de dominio, y eso es a propósito: sirve para separar «el pipeline está mal» de «la infraestructura está mal», que son dos problemas muy distintos. Termina en entraron 40, salieron 40, con código de salida cero. Y no es solo nuestra máquina: este mismo stack lo levanté en Windows con WSL2 y Docker Desktop, con otras versiones de todo, y dio lo mismo.
 
-## 10. Las mismas cinco lecturas, ahora sobre Kafka y Flink
+## 19. Las mismas cinco lecturas, ahora sobre Kafka y Flink
 
 Escena 5 · Presenta **Daniel** · 120 segundos. Mientras corre el recorrido, que tarda alrededor de un minuto y medio: la demostración de recién probaba la lógica con el runner local, y la prueba de humo probaba el cableado. Falta la pregunta que ninguna de las dos responde: ¿la lógica da lo mismo cuando la ejecuta Flink? No es retórica. El runner portable serializa las funciones y el estado hacia procesos que no comparten memoria con el que arma el pipeline, y hay cosas que andan en local y no allá. Esto siembra las mismas cinco lecturas de antes, con el duplicado y la tardía, pero a través de Kafka, y exige el mismo resultado. Cuando termina, tres cosas. Los mismos números: 3,1 en punta, 2,4 en resto, 5,5 en total. La cuarentena quedó vacía, así que nada se perdió. Y el tópico de salida recibió cinco mensajes para dos celdas: son las revisiones sucesivas, una por cada lectura que cambió algo, y el consumidor se queda con la última. Y el remate, sin bajar el stack: la repetición no siembra nada. Relee el mismo tópico desde el offset cero, con otro grupo de consumidor y un trabajo sin estado previo, y da las mismas dos celdas. Eso es la idempotencia, medida en lugar de declarada. Este recorrido y este replay los corrí dos veces en mi máquina; la última, con un proyecto de Docker Compose propio, con su propio Kafka y sus volúmenes, para asegurarme de que ninguna corrida anterior dejara estado. Dieron lo mismo.
 
-## 11. Qué garantizamos, y dónde termina
+## 20. Qué garantizamos, y dónde termina
 
 Después de la escena 5 · Presenta **Sergio** · 60 segundos. Declaramos la garantía por tramo, sin sobreprometer. Del concentrador a Kafka, al menos una vez: el productor usa acks igual a all e idempotencia, así que lo confirmado está en todas las réplicas y sus reintentos internos no duplican. El que sí duplica es el reintento de publicación, que es otro envío, y ese lo absorbe la deduplicación. Dentro del pipeline, efectivamente una vez, pero con dos condiciones: dentro del horizonte de 36 horas, porque después el estado expira y un duplicado se contaría de nuevo, y mientras el trabajo no se reinicie. Hacia la salida, efectivamente una vez en el efecto observable, porque el upsert por clave estable hace que reescribir sea inocuo. Por eso no afirmamos exactly-once de punta a punta. Y el límite más serio lo encontramos tarde, el mismo día de la entrega: la configuración de checkpoints está puesta, Flink los dispara, pero ninguno completa. La causa probable es que no le pasamos el intervalo de checkpointing a Beam, donde está deshabilitado por defecto. En la práctica, el pipeline procesa y emite bien, verificado siete veces, pero si el trabajo se reinicia, el estado por medidor se pierde. No lo corregimos hoy porque invalidaba las siete corridas de evidencia. Para producción es lo primero que habría que cerrar, y preferimos decirlo nosotros.
 
-## 12. La evidencia, en números
+## 21. La evidencia, en números
 
 Después de la escena 5 · Presenta **Daniel** · 45 segundos. La evidencia, en cuatro números. Ciento dieciséis pruebas automáticas, entre ellas las de TestStream, que son las únicas que permiten probar el comportamiento tardío de forma determinista: con un reloj real habría que esperar, y el resultado dependería de la máquina. Siete corridas completas sobre Kafka y Flink, en cuatro máquinas distintas; dos de ellas las hice yo en Windows con WSL2, con otras versiones de Docker, de Compose y de uv. Las siete dan 5,5 kilovatios hora con la cuarentena vacía. Tres defectos que encontró una persona ajena al equipo, siguiendo solo el README desde el git clone, en cuatro vueltas. Y el tablero, que construyó Clara en marimo, con un inyector que publica a pedido un duplicado o una tardía sobre el stack real: el duplicado no mueve nada, y la tardía muda 0,2 kilovatios hora de resto a punta sin cambiar el total, que queda en 1,8.
 
-## 13. Una corrida exitosa con datos ideales no es evidencia
+## 22. Una corrida exitosa con datos ideales no es evidencia
 
 Escena 6 · Presentan **los tres**, una tarjeta cada uno. **Sergio:** El enunciado dice que una ejecución exitosa con datos ideales no es evidencia suficiente, y lo comprobamos sobre nuestro propio código. Encontramos dos errores de doble conteo. Cuando llegaba una lectura tardía, el intervalo se partía en dos, pero el intervalo original ya había salido y seguía sumando: 12 kilovatios hora donde el consumo real era 6. Y la primera corrección también estaba mal: encadenar dos agregaciones bajo un modo acumulativo vuelve a contar doble. Ninguno de los dos aparece con datos ideales. **Daniel:** La segunda es la prueba externa. Una persona ajena al equipo levantó el sistema siguiendo solo el README, y en quince minutos encontró un error que las 89 pruebas que teníamos entonces no habían visto: el perfil de demostración moría al arrancar, porque las pruebas cubrían un punto de entrada y el README usaba otro. En cuatro vueltas encontró tres errores, todos con la misma forma: lo que recorrían nuestras pruebas y lo que mandaba hacer el README no eran el mismo camino. **Clara:** Y la tercera: cuando no sabemos, lo decimos. Si dos lecturas quedan a más de 90 minutos, suponer potencia constante deja de ser defendible, así que la energía de ese cruce no se reparte. La celda se marca indeterminada, dice cuántos minutos quedaron sin cubrir, y el resto de la celda se conserva. Preferimos decir no sé antes que inventar un número.
 
-## 14. Quién hizo qué
+## 23. Quién hizo qué
 
 Escena 7 · Presentan **los tres**, cada uno su parte. **Sergio:** Hice el simulador, con datos sintéticos deterministas por semilla y las fallas inyectadas a propósito; la infraestructura de Kafka y Flink, incluida la resolución de KafkaIO como transformación cross-language; la cadena del pipeline, con la deduplicación con estado, la diferenciación del contador y las celdas vigentes; y las franjas, con el umbral de 90 minutos elegido sobre la distribución medida. Escribí 92 de las 116 pruebas, la demostración y las verificaciones sobre Flink, los diagramas y esta presentación, y encontré los dos errores de doble conteo. **Clara:** Hice los contratos de evento de entrada y de salida: la clave, las particiones, los tópicos, el versionado y la cuarentena. La política temporal, con la ventana diaria alineada al día local y la lateness de 36 horas. El tablero en marimo, con su inyector de irregularidades y sus 24 pruebas, las métricas del pipeline y las garantías del productor de salida. Y el tablero de pendientes y el mapa de la documentación, que es como nos mantuvimos sincronizados. **Daniel:** Validé la reproducibilidad en otra plataforma, Windows con WSL2 y Docker Desktop, con otras versiones de Docker, Compose y uv, y obtuve los mismos resultados. En la primera corrida las pruebas abortaban con un segmentation fault, y de ahí salió el perfil que corre la suite dentro de un contenedor. La validación final la hice aislada, con un proyecto de Compose propio, para que ninguna corrida anterior dejara estado. Y documenté el desglose de las pruebas. **Sergio:** El detalle está en la sección 8 del documento técnico, y el repositorio es público: github.com/SEMP/streaming-medicion-tarifa-horaria.
-
-## 15. El recorrido de una lectura, estación por estación
-
-Separador del anexo. No se presenta en el video. Si en la defensa preguntan por una etapa, saltar a su estación y la presenta quien la hizo, según la sección 8 del documento técnico. **Sergio:** 01 simulador, 04 deduplicación, 05 diferenciación y 06 franjas. **Clara:** 02 tópico crudo, 03 tiempo de evento, 07 tópico derivado y 08 tablero. **Daniel:** si preguntan si es reproducible, sus dos corridas en otra máquina.
-
-## 16. Simulador
-
-Anexo, para la defensa · Presenta **Sergio**. Todo empieza con una pregunta. El medidor no transmite por su cuenta: el concentrador recorre la cabina, medidor por medidor, sobre un bus RS-485 compartido, y le pide el registro 15.8.0. Lo que el medidor responde es su contador acumulado: 101,5 kilovatios hora. Y eso no es lo que se consumió: es el total desde que el medidor existe. El consumo hay que sacarlo restando dos lecturas, y por eso más adelante el pipeline va a necesitar recordar la anterior. Con esa respuesta se arma el evento que ven a la derecha. Fíjense en el event_id: no es aleatorio, es un hash del medidor y del instante de la lectura. Si el concentrador reintenta la publicación, el reintento sale con el mismo id, y eso es lo que permite reconocerlo como duplicado. En nuestro proyecto el simulador ocupa el lugar del concentrador, y existe sobre todo para inyectar fallas a propósito: pedidos que se corren, cabinas que caen enteras, tramas truncadas, duplicados y ráfagas tardías.
-
-## 17. Tópico crudo
-
-Anexo, para la defensa · Presenta **Clara**. La lectura llega al tópico crudo, medicion.lecturas.v1, tal como llegó. La clave es el identificador del medidor, en bytes, y el valor es el mismo JSON de antes, serializado. Kafka elige la partición por el hash de la clave, así que todas las lecturas de un mismo medidor caen siempre en la misma partición y se leen en orden. Ese orden es un requisito duro, porque la etapa que calcula el consumo resta lecturas consecutivas del mismo equipo. ¿Por qué el medidor y no la cabina? La cabina era tentadora, porque agrupa la ronda de lectura, pero las cabinas van de 1 a 199 medidores: el reparto entre particiones quedaría desbalanceado en un factor de 200. Con el medidor, el reparto es parejo por construcción. El tópico tiene cuatro particiones y siete días de retención, y el productor publica con acks igual a all e idempotencia.
-
-## 18. Parsear y marcar el tiempo
-
-Anexo, para la defensa · Presenta **Clara**. Acá la lectura entra al pipeline. Lo primero es parsear: el valor pasa de bytes a un diccionario, y el medidor se toma del cuerpo del mensaje; la clave de Kafka queda como respaldo. Después viene la decisión más importante de esta etapa: qué tiempo usar. El registro de Kafka trae cuándo se publicó el mensaje; el campo instante_lectura trae cuándo se midió. Entre los dos puede haber horas, porque una cabina que vuelve de una caída de enlace publica de golpe todo lo que fue juntando. Si ventaneáramos por el tiempo de publicación, ese consumo caería en el día equivocado, y eso es energía mal facturada. Por eso la lectura se sella con su tiempo de evento. Y se exige que el instante traiga su huso horario: si no lo trae, va a cuarentena, en lugar de interpretarse en la zona de la máquina donde corre el pipeline, que haría depender el resultado de dónde se ejecuta.
-
-## 19. Ventana diaria y deduplicación
-
-Anexo, para la defensa · Presenta **Sergio**. La lectura cae en la ventana del día local. Es una ventana fija de 24 horas, pero desplazada tres horas, porque Beam corta sobre el instante absoluto: sin el desplazamiento, el día terminaría a medianoche UTC, que son las 21 horas en Asunción, en plena hora punta. El corte caería en el medio de la franja más cara. Después viene la deduplicación. El estado del medidor guarda los instantes que ya vio. Si este instante ya estaba, la lectura se cuenta como duplicado y no se emite; si no estaba, se agrega y sigue. Y el orden de las etapas no es intercambiable: si deduplicáramos después de calcular el consumo, el duplicado se restaría contra sí mismo, daría cero, y con salida por upsert ese cero pisaría el valor correcto. Un duplicado no es un error, así que no va a cuarentena, pero sí se cuenta. Y un temporizador borra ese estado 36 horas después del fin de la ventana, el mismo horizonte que la lateness.
-
-## 20. Diferenciar el contador
-
-Anexo, para la defensa · Presenta **Sergio**. Recién acá aparece el consumo, que no venía en el dato. La etapa busca el registro 15.8.0, guarda la lectura en el estado del medidor y ordena todas las lecturas de ese medidor dentro de la ventana. La de las 17:40, con el contador en 100, ya estaba guardada desde su propio paso por esta etapa. Entonces: 101,5 menos 100 da 1,5 kilovatios hora en quince minutos. Guardar todas las lecturas, y no solo la última, es lo que permite que una lectura tardía caiga en el medio de un intervalo y lo parta en dos, aunque ese intervalo ya se haya emitido. Y el campo separacion_minutos no es decorativo: es la cota del error de atribución, el número que este proyecto existe para medir. Si el contador retrocede, la lectura va a cuarentena: sin compra de energía al usuario, un contador que baja es un reseteo del equipo o una trama truncada, nunca una medición.
-
-## 21. Atribuir la franja y agregar
-
-Anexo, para la defensa · Presenta **Sergio**. Esta es la etapa donde el intervalo se convierte en plata. Primero se fija si hay otro intervalo que empiece en el mismo instante y sea más corto; si lo hay, este quedó superado por una lectura tardía y deja de sumar. Esa regla es la que corrigió nuestro error de doble conteo. Después recalcula todas las celdas del medidor y reparte cada intervalo entre las franjas. Este intervalo, de 17:40 a 17:55, cae entero en resto, así que la celda sale como medida, con 1,5 kilovatios hora. Pero cuando llegue el siguiente, de 17:55 a 18:20 con 4 kilovatios hora, ese sí cruza el borde de punta. Se reparte por minutos, suponiendo potencia constante: 5 minutos de un lado y 20 del otro, o sea 0,8 a resto y 3,2 a punta, y las dos celdas pasan a interpoladas. Recalcular todo en lugar de solo lo que tocó la lectura nueva es más caro, y es a propósito: así el resultado no depende del orden en que llegan las lecturas, y un reproceso converge al mismo valor.
-
-## 22. Tópico derivado
-
-Anexo, para la defensa · Presenta **Clara**. El resultado vuelve a Kafka, al tópico derivado. Pero fíjense que la clave cambió: ya no es el medidor, es la celda, que es medidor, fecha y franja. Y el valor es absoluto: el consumo total de esa celda, no un incremento. Esas dos cosas juntas son las que hacen idempotente a todo el sistema. Cada mensaje reemplaza al anterior en lugar de sumarse, así que volver a escribir es inocuo. Y lo verificamos sobre Kafka y Flink: reprocesar el log entero desde el offset cero, con un grupo de consumidor nuevo, converge a las mismas celdas. El tópico usa compactación más borrado a los 90 días. La compactación deja viva la última revisión de cada celda, y el borrado evita que las claves se acumulen para siempre, porque la clave incluye la fecha y cada día aparecen claves nuevas.
-
-## 23. Tablero y facturación
-
-Anexo, para la defensa · Presenta **Clara**. Del tópico derivado leen dos consumidores con necesidades opuestas. El tablero, que construimos en marimo, relee el tópico desde el offset cero y hace upsert por clave: el último mensaje gana, nunca suma. Las cinco revisiones que publicó el pipeline en la demostración colapsan en dos celdas: 3,1 kilovatios hora en punta y 2,4 en resto, 5,5 en total. Si el tablero sumara en lugar de reemplazar, el total daría más del doble. La facturación la dejamos descripta pero no implementada: leería una sola vez, pasadas 36 horas del fin de la ventana, cuando el valor ya convergió. Y un último detalle de diseño: el error de atribución lo calcula el consumidor y no el pipeline, porque el denominador es la duración de la franja, que vive en el calendario tarifario y no en el evento. Ponerlo en el mensaje obligaría a que el pipeline y el consumidor coincidieran sobre qué calendario rige en cada fecha.

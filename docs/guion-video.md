@@ -14,10 +14,10 @@ quede implícita**:
 
 **Las diapositivas están en [`presentacion/`](presentacion/)**: el PDF y
 [`notas.md`](presentacion/notas.md), con el texto para leer en cada diapositiva y **quién
-presenta cada una**. Agregan dos diapositivas que este guion no tiene —garantías y límites,
-y la evidencia en números— y un anexo para la defensa que no va en el video. Si el guion y las
-notas no coinciden en quién habla, mandan las notas: se repartió para que los tres presenten
-parecido.
+presenta cada una**. Agregan a este guion la **escena 3b** —la misma lectura, estación por
+estación— y dos diapositivas después de la escena 5: garantías y límites, y la evidencia en
+números. Si el guion y las notas no coinciden en quién habla, mandan las notas: cada
+diapositiva la presenta quien hizo lo que muestra, según la sección 8 del documento técnico.
 
 ## Cuánto tiene que durar
 
@@ -25,12 +25,16 @@ parecido.
 más — ni el enunciado, ni la consigna del aula, ni ninguna lámina de las ocho clases. Conviene
 saberlo antes de recortar algo por creer que hay un límite: no lo hay.
 
-**Estas siete escenas suman 9 min 45 s** (60 + 90 + 150 + 45 + 120 + 90 + 30 s). No es un
-objetivo, es lo que sale de darle a cada tema el tiempo que necesita. Parece razonable para
-«breve» en un trabajo que integra ocho clases, pero es criterio nuestro.
+**Las siete escenas originales suman 9 min 45 s** (60 + 90 + 150 + 45 + 120 + 90 + 30 s). Con
+lo que agregó la presentación —la vista general del recorrido en la escena 2, unos 45 s; la
+escena 3b, unos 9 min; garantías y evidencia, 1 min 45 s— **el video queda en unos 21
+minutos**. Es más largo que «breve» a secas, y es una decisión del equipo: las ocho
+estaciones muestran el mecanismo con el dato real, y la cátedra no pone un tope.
 
-Si hubiera que acortar, **sale de las escenas 2 y 6**, que son explicación. Las escenas 3 y 5
-no se tocan: son la evidencia, y es lo que el criterio 6 puntúa.
+Si hubiera que acortar, **sale primero de la escena 3b**: se puede quedar con la 04
+(deduplicación) y la 06 (franjas), que son las que responden a lo que se vio en la escena 3.
+Después, de las escenas 2 y 6, que son explicación. Las escenas 3 y 5 no se tocan: son la
+evidencia, y es lo que el criterio 6 puntúa.
 
 **Hablan los tres.** El criterio pide contribuciones por persona, y que cada uno
 explique su parte es la forma más creíble de mostrarlas. Cada escena dice quién habla.
@@ -139,6 +143,23 @@ que por eso las dos celdas salen marcadas como `interpolado`.
 >
 > Y fíjense en la última columna: pasó de `interpolado` a `medido`. Como la lectura cayó justo
 > sobre el borde, ya no hubo nada que estimar.
+
+---
+
+## Escena 3b — La misma lectura, estación por estación · Sergio y Clara · 9 min
+
+**Qué se ve:** las diapositivas 9 a 17, una transición y una por estación. Cada una con el
+dato exacto que entra y que sale de esa etapa, para la lectura de las 17:55.
+
+Va **después** de la escena 3 y no dentro de la 2, a propósito: la escena 3 muestra *qué*
+pasa —el duplicado no mueve nada, la tardía corrige el reparto— y las estaciones muestran
+*cómo*. Puestas antes, serían ocho diapositivas de mecanismo sin que se sepa todavía para qué
+sirven.
+
+Cada estación la presenta quien la hizo: **Sergio** el simulador (01), la deduplicación (04),
+la diferenciación (05) y las franjas (06); **Clara** el tópico crudo (02), el tiempo de evento
+(03), el tópico derivado (07) y el tablero (08). El texto de cada una está en
+[`presentacion/notas.md`](presentacion/notas.md).
 
 ---
 
