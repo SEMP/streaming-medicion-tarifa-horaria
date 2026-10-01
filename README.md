@@ -332,9 +332,11 @@ mensajes entraron, cuántos salieron y cuántos cayeron en cuarentena.
 
 | Integrante | Responsabilidad principal |
 |---|---|
-| Sergio Morel | Infraestructura (Kafka, Flink, KafkaIO), simulador, deduplicación con estado e idempotencia |
-| Clara | Contrato de evento, tópicos y particiones; pipeline Beam de transformación; ventanas y política de datos tardíos |
-| Daniel | Validación independiente de reproducibilidad: recorrido completo en Windows + WSL2 + Docker Desktop, contraste de resultados y evidencia de ejecución en una segunda máquina |
+| Sergio Morel | Simulador, infraestructura (Kafka, Flink, KafkaIO), la cadena del pipeline —deduplicación, diferenciación y celdas vigentes—, franjas, la mayor parte de las pruebas, diagramas y presentación |
+| Clara Almirón | Contratos de evento de entrada y de salida, política temporal —ventana diaria y lateness de 36 h—, tablero en marimo con su inyector de irregularidades, métricas y garantías del productor de salida |
+| Daniel Ramírez | Validación independiente de reproducibilidad en Windows + WSL2 + Docker Desktop, en dos corridas —la segunda, aislada—, y la documentación de las pruebas |
+
+El detalle está en la sección 8 del [documento técnico](docs/tecnico/documento.md).
 
 Cada integrante **commitea con su propia cuenta** en su área, escribe la sección del
 documento técnico correspondiente y la presenta en la demostración.
