@@ -9,6 +9,22 @@ Inteligencia Artificial, Facultad Politécnica (UNA).
 
 ---
 
+## Lo que pide la entrega, y dónde está cada cosa
+
+| Lo que pide el enunciado | Dónde está |
+|---|---|
+| **Enlace al repositorio** | Este mismo: <https://github.com/SEMP/streaming-medicion-tarifa-horaria> — público |
+| **Documento técnico** | [`docs/tecnico/documento-tecnico.pdf`](docs/tecnico/documento-tecnico.pdf) · 15 páginas, 8 secciones. La fuente es [`documento.md`](docs/tecnico/documento.md) y se compila con [`armar-pdf.sh`](docs/tecnico/armar-pdf.sh) |
+| **Diagrama de arquitectura** | [`docs/diagramas/arquitectura.svg`](docs/diagramas/arquitectura.svg), incrustado en la sección 2 del documento. Además hay tres vistas más: el [DAG dibujado por Beam desde el código](docs/diagramas/pipeline-dag.svg), una [lámina por etapa](docs/diagramas/etapas/LEEME.md) y [el recorrido de un dato](docs/diagramas/recorrido/LEEME.md) |
+| **Evidencia de pruebas y ejecución end-to-end** | [`evidencia/LEEME.md`](evidencia/LEEME.md) · siete corridas en cuatro máquinas, dos de ellas hechas por alguien ajeno al equipo. Y 116 pruebas automáticas, que se corren con [el paso 4 de abajo](#cómo-levantarlo) |
+| **Video breve** | Guion en [`docs/guion-video.md`](docs/guion-video.md) · presentación en [`docs/presentacion/`](docs/presentacion/presentacion.pdf) con sus notas por orador |
+| **Integrantes y contribuciones** | Sección 8 del documento técnico, y el resumen en [Equipo y contribuciones](#equipo-y-contribuciones). El historial de git las respalda |
+
+**Para verlo funcionando en quince minutos**, saltar a [Cómo levantarlo](#cómo-levantarlo).
+Son cinco pasos y no hace falta instalar nada más que Docker.
+
+---
+
 ## El problema
 
 Una distribuidora eléctrica necesita facturar la energía a **precio diferenciado según la
@@ -100,9 +116,9 @@ y las atribuye a su franja, y el resultado sale por el tópico derivado.
 | Infraestructura | Listo · [`infra/`](infra/) · Kafka + Flink + job server, con `KafkaIO` andando |
 | Configuración de franjas | Listo · cargador con validación de cobertura y reparto por borde |
 | Pipeline | Listo · parseo, cuarentena, ventana, deduplicación, diferenciación y celdas |
-| Pruebas | Listo · **89**, incluidas las de `TestStream` para el comportamiento tardío |
+| Pruebas | Listo · **116**, incluidas las de `TestStream` para el comportamiento tardío |
 | Evidencia de ejecución | Listo · [`evidencia/`](evidencia/) · siete corridas, en cuatro máquinas |
-| Documento técnico | Listo · [`docs/tecnico/`](docs/tecnico/documento.md) · 11 páginas |
+| Documento técnico | Listo · [`docs/tecnico/`](docs/tecnico/documento.md) · 15 páginas |
 | Video | **Pendiente** · guion en [`docs/guion-video.md`](docs/guion-video.md) |
 
 ## Cómo levantarlo
