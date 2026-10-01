@@ -19,7 +19,8 @@ Inteligencia Artificial, Facultad Politécnica (UNA).
 | **Documento técnico** | [`docs/tecnico/documento-tecnico.pdf`](docs/tecnico/documento-tecnico.pdf) · 15 páginas, 8 secciones. La fuente es [`documento.md`](docs/tecnico/documento.md) y se compila con [`armar-pdf.sh`](docs/tecnico/armar-pdf.sh) |
 | **Diagrama de arquitectura** | [`docs/diagramas/arquitectura.svg`](docs/diagramas/arquitectura.svg), incrustado en la sección 2 del documento. Además hay tres vistas más: el [DAG dibujado por Beam desde el código](docs/diagramas/pipeline-dag.svg), una [lámina por etapa](docs/diagramas/etapas/LEEME.md) y [el recorrido de un dato](docs/diagramas/recorrido/LEEME.md) |
 | **Evidencia de pruebas y ejecución end-to-end** | [`evidencia/LEEME.md`](evidencia/LEEME.md) · siete corridas en cuatro máquinas, dos de ellas hechas por alguien ajeno al equipo. Y 116 pruebas automáticas, que se corren con [el paso 4 de abajo](#cómo-levantarlo) |
-| **Video** | **<https://youtu.be/qIuYcMCqOFA>** · la presentación está en [`docs/presentacion/presentacion.pdf`](docs/presentacion/presentacion.pdf) con sus [notas por orador](docs/presentacion/notas.md), y el guion en [`docs/guion-video.md`](docs/guion-video.md) |
+| **Video** | **<https://youtu.be/qIuYcMCqOFA>** · se grabó con el guion de [`docs/guion-video.md`](docs/guion-video.md) |
+| **Presentación** | [`docs/presentacion/presentacion.pdf`](docs/presentacion/presentacion.pdf) · 23 diapositivas, con el texto de cada orador en [`notas.md`](docs/presentacion/notas.md) |
 | **Integrantes y contribuciones** | Sección 8 del documento técnico, y el resumen en [Equipo y contribuciones](#equipo-y-contribuciones). El historial de git las respalda |
 
 **Para verlo funcionando en quince minutos**, saltar a [Cómo levantarlo](#cómo-levantarlo).
