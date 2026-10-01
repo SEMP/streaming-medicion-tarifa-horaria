@@ -48,6 +48,7 @@ def _(mo):
 def _():
     import json
     import os
+    import textwrap
     import uuid
     from collections import Counter
     from datetime import datetime
@@ -63,12 +64,18 @@ def _():
     TOPICO_LECTURAS = os.environ.get("TOPICO_LECTURAS", "medicion.lecturas.v1")
     CONFIG_FRANJAS = os.environ.get("CONFIG_FRANJAS", "config/franjas.example.toml")
 
+    SANGRIA = " " * 12
+    """La indentación de las plantillas de `mo.md` dentro de las funciones. Lo que se
+    interpola tiene que llevarla, o el dedent no encuentra prefijo común y la tabla sale
+    como bloque de código."""
+
     calendario = cargar_calendario(CONFIG_FRANJAS)
     return (
         ACCIONES,
         Consumer,
         Counter,
         KafkaException,
+        SANGRIA,
         SERVIDORES,
         TOPICO_CONSUMO,
         TOPICO_CUARENTENA,
@@ -78,6 +85,7 @@ def _():
         datetime,
         enviar,
         json,
+        textwrap,
         uuid,
     )
 
@@ -329,7 +337,7 @@ def _(filas, mo):
 
 
 @app.cell
-def _(filas, mo):
+def _(SANGRIA, filas, mo, textwrap):
     def _resumen():
         if not filas:
             return mo.md("")
@@ -343,10 +351,13 @@ def _(filas, mo):
         for f in filas:
             por_franja[f["franja"]] = por_franja.get(f["franja"], 0.0) + f["kWh"]
         tope = max(por_franja.values(), default=1) or 1
-        barras = "\n".join(
-            f"| {nombre} | {energia:8.3f} | {'█' * max(1, round(energia / tope * 28))} |"
-            for nombre, energia in sorted(por_franja.items(), key=lambda kv: -kv[1])
-        )
+        barras = textwrap.indent(
+            "\n".join(
+                f"| {nombre} | {energia:8.3f} | {'█' * max(1, round(energia / tope * 28))} |"
+                for nombre, energia in sorted(por_franja.items(), key=lambda kv: -kv[1])
+            ),
+            SANGRIA,
+        ).lstrip()
 
         return mo.md(
             f"""
@@ -374,15 +385,18 @@ def _(filas, mo):
 
 
 @app.cell
-def _(mo, motivos):
+def _(SANGRIA, mo, motivos, textwrap):
     def _cuarentena():
         if not motivos:
             return mo.md(
                 "## Cuarentena\n\n**Vacía.** Nada se perdió por el camino."
             )
-        filas_q = "\n".join(
-            f"| `{motivo}` | {cuantos} |" for motivo, cuantos in motivos.most_common()
-        )
+        filas_q = textwrap.indent(
+            "\n".join(
+                f"| `{motivo}` | {cuantos} |" for motivo, cuantos in motivos.most_common()
+            ),
+            SANGRIA,
+        ).lstrip()
         return mo.md(
             f"""
             ## Cuarentena
