@@ -124,7 +124,7 @@ que el contador acumuló— pero **0,200 kWh se mudan de `resto` a `punta`**, qu
 `DESVIO_EN_EL_BORDE`, y las dos celdas pasan de `interpolada` a `medida`. La cuarentena del
 medidor quedó vacía.
 
-### ⚠️ Con el tópico casi vacío la salida no aparece
+### Atención: con el tópico casi vacío la salida no aparece
 
 Es la condición que hizo fallar el primer intento, y hay que conocerla: con el pipeline en
 modo **no acotado** y muy pocos mensajes en el tópico, las lecturas se consumen —el grupo

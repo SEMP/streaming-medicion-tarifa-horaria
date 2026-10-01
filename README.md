@@ -9,7 +9,9 @@ Inteligencia Artificial, Facultad Politécnica (UNA).
 
 ---
 
-## Lo que pide la entrega, y dónde está cada cosa
+## Entrega
+
+**Integrantes:** Clara Almirón · Sergio Morel · Daniel Ramírez
 
 | Lo que pide el enunciado | Dónde está |
 |---|---|
@@ -17,7 +19,7 @@ Inteligencia Artificial, Facultad Politécnica (UNA).
 | **Documento técnico** | [`docs/tecnico/documento-tecnico.pdf`](docs/tecnico/documento-tecnico.pdf) · 15 páginas, 8 secciones. La fuente es [`documento.md`](docs/tecnico/documento.md) y se compila con [`armar-pdf.sh`](docs/tecnico/armar-pdf.sh) |
 | **Diagrama de arquitectura** | [`docs/diagramas/arquitectura.svg`](docs/diagramas/arquitectura.svg), incrustado en la sección 2 del documento. Además hay tres vistas más: el [DAG dibujado por Beam desde el código](docs/diagramas/pipeline-dag.svg), una [lámina por etapa](docs/diagramas/etapas/LEEME.md) y [el recorrido de un dato](docs/diagramas/recorrido/LEEME.md) |
 | **Evidencia de pruebas y ejecución end-to-end** | [`evidencia/LEEME.md`](evidencia/LEEME.md) · siete corridas en cuatro máquinas, dos de ellas hechas por alguien ajeno al equipo. Y 116 pruebas automáticas, que se corren con [el paso 4 de abajo](#cómo-levantarlo) |
-| **Video breve** | Guion en [`docs/guion-video.md`](docs/guion-video.md) · presentación en [`docs/presentacion/`](docs/presentacion/presentacion.pdf) con sus notas por orador |
+| **Video breve** | **Pendiente: el enlace va acá** · la presentación está en [`docs/presentacion/presentacion.pdf`](docs/presentacion/presentacion.pdf) con sus [notas por orador](docs/presentacion/notas.md), y el guion en [`docs/guion-video.md`](docs/guion-video.md) |
 | **Integrantes y contribuciones** | Sección 8 del documento técnico, y el resumen en [Equipo y contribuciones](#equipo-y-contribuciones). El historial de git las respalda |
 
 **Para verlo funcionando en quince minutos**, saltar a [Cómo levantarlo](#cómo-levantarlo).
@@ -168,7 +170,7 @@ La interfaz de Flink queda en <http://localhost:8081>, y responde apenas termina
 Recién levantado el entorno no hay ningún trabajo en la lista: **eso es lo correcto**, porque
 el pipeline se lanza en el paso 2.
 
-> ⚠️ **`localhost:29092` no se abre en el navegador.** Es la dirección de Kafka, y Kafka no
+> **Atención: `localhost:29092` no se abre en el navegador.** Es la dirección de Kafka, y Kafka no
 > habla HTTP: una pestaña apuntada ahí queda en blanco y parece que el servicio estuviera
 > caído, cuando está perfectamente arriba. Sirve para configurar un cliente —es el valor de
 > `KAFKA_BOOTSTRAP_SERVERS`, y lo que usa el tablero desde la máquina anfitriona—. Para ver
