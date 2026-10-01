@@ -19,7 +19,7 @@ Inteligencia Artificial, Facultad Politécnica (UNA).
 | **Documento técnico** | [`docs/tecnico/documento-tecnico.pdf`](docs/tecnico/documento-tecnico.pdf) · 15 páginas, 8 secciones. La fuente es [`documento.md`](docs/tecnico/documento.md) y se compila con [`armar-pdf.sh`](docs/tecnico/armar-pdf.sh) |
 | **Diagrama de arquitectura** | [`docs/diagramas/arquitectura.svg`](docs/diagramas/arquitectura.svg), incrustado en la sección 2 del documento. Además hay tres vistas más: el [DAG dibujado por Beam desde el código](docs/diagramas/pipeline-dag.svg), una [lámina por etapa](docs/diagramas/etapas/LEEME.md) y [el recorrido de un dato](docs/diagramas/recorrido/LEEME.md) |
 | **Evidencia de pruebas y ejecución end-to-end** | [`evidencia/LEEME.md`](evidencia/LEEME.md) · siete corridas en cuatro máquinas, dos de ellas hechas por alguien ajeno al equipo. Y 116 pruebas automáticas, que se corren con [el paso 4 de abajo](#cómo-levantarlo) |
-| **Video breve** | **Pendiente: el enlace va acá** · la presentación está en [`docs/presentacion/presentacion.pdf`](docs/presentacion/presentacion.pdf) con sus [notas por orador](docs/presentacion/notas.md), y el guion en [`docs/guion-video.md`](docs/guion-video.md) |
+| **Video breve** | **<https://youtu.be/qIuYcMCqOFA>** · la presentación está en [`docs/presentacion/presentacion.pdf`](docs/presentacion/presentacion.pdf) con sus [notas por orador](docs/presentacion/notas.md), y el guion en [`docs/guion-video.md`](docs/guion-video.md) |
 | **Integrantes y contribuciones** | Sección 8 del documento técnico, y el resumen en [Equipo y contribuciones](#equipo-y-contribuciones). El historial de git las respalda |
 
 **Para verlo funcionando en quince minutos**, saltar a [Cómo levantarlo](#cómo-levantarlo).
@@ -121,7 +121,7 @@ y las atribuye a su franja, y el resultado sale por el tópico derivado.
 | Pruebas | Listo · **116**, incluidas las de `TestStream` para el comportamiento tardío |
 | Evidencia de ejecución | Listo · [`evidencia/`](evidencia/) · siete corridas, en cuatro máquinas |
 | Documento técnico | Listo · [`docs/tecnico/`](docs/tecnico/documento.md) · 15 páginas |
-| Video | **Pendiente** · guion en [`docs/guion-video.md`](docs/guion-video.md) |
+| Video | Listo · <https://youtu.be/qIuYcMCqOFA> · guion en [`docs/guion-video.md`](docs/guion-video.md) |
 
 ## Cómo levantarlo
 
@@ -324,9 +324,11 @@ El resto no es equivalente: el camino A levanta el sistema real y el B corre ló
 
 ## Demostración
 
-El guion del video está en [`docs/guion-video.md`](docs/guion-video.md): siete escenas, con
-el comando de cada una y quién habla. La cátedra no fija duración —pide un «video breve»—;
-estas escenas suman 9 min 45 s.
+**El video está en <https://youtu.be/qIuYcMCqOFA>.**
+
+Se grabó con el guion de [`docs/guion-video.md`](docs/guion-video.md) —las siete escenas
+originales más la 3b, que recorre la lectura estación por estación— y las diapositivas de
+[`docs/presentacion/`](docs/presentacion/), con el texto de cada orador en sus notas.
 
 ## Evidencia de ejecución
 

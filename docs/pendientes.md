@@ -40,7 +40,7 @@ energía que se factura a precio distinto. Las demás son de coordinación.
 | ~~Sergio~~ | ~~Diagrama de arquitectura~~ · Listo `docs/diagramas/arquitectura.svg`, incrustado en el documento en página apaisada | — |
 | ~~Clara~~ | ~~Revisar las secciones 3 y 4 del documento técnico~~ · Listo revisadas el 29/09, marcas de borrador retiradas | — |
 | ~~Clara~~ | ~~Aviso de colisión con `pipeline.demostracion`~~ · Listo **no hubo colisión**: no llegué a escribir la cadena, la implementó Sergio entera | — |
-| Los tres | **Video** — guion escrito en [`guion-video.md`](guion-video.md): 7 escenas con sus comandos y quién habla. Falta grabarlo. Atención: la cátedra **no fija duración**: pide «video breve» y nada más | Lo único que no se puede dejar para el último día |
+| ~~Los tres~~ | ~~**Video**~~ · Listo <https://youtu.be/qIuYcMCqOFA> — guion en [`guion-video.md`](guion-video.md). ~~Falta grabarlo.~~ Atención: la cátedra **no fija duración**: pide «video breve» y nada más | Lo único que no se puede dejar para el último día |
 
 ## 3. Bitácora — qué se decidió y cuándo
 
@@ -48,6 +48,7 @@ Lo más reciente arriba. Una línea por cambio, con el commit para ir al detalle
 
 | Fecha | Commit | Qué cambió |
 |---|---|---|
+| 01/10 | — | **Video grabado y publicado**: <https://youtu.be/qIuYcMCqOFA>. Enlazado en el README, en este mapa y en el documento técnico |
 | 30/09 | — | **Documento técnico al día con lo construido**: tablero e inyector (sección 2 y sección 6.5), observabilidad (sección 2.3), las 116 pruebas por suite, la verificación externa y las seis corridas (sección 6.6), tres límites nuevos y dos mejoras en la sección 7, y las contribuciones de Clara. 15 páginas |
 | 30/09 | `b297755` | **Verificado contra el stack**: la prueba de humo pasa con el `acks=all` y la idempotencia del productor de salida. Queda sin efecto la advertencia de ese commit, que decía que el productor Java no se había podido probar |
 | 29/09 | `e2c5efe` | **Replay sobre Kafka y Flink**: el servicio `repeticion` relee la entrada desde el offset 0 con grupo nuevo y converge a las mismas celdas (documento sección 6.3). El productor del simulador declara `acks=all` e idempotencia (sección 5.5), y `enable.auto.commit` queda como límite conocido (sección 7.2) |

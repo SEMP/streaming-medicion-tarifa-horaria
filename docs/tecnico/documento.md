@@ -573,6 +573,9 @@ suficiente»*. Por eso la evidencia está partida en piezas con propósitos dist
 controlada, las pruebas, el recorrido sobre el stack real, las irregularidades a pedido y la
 reproducción en otras máquinas.
 
+La demostración grabada, con los tres escenarios y el recorrido sobre Kafka y Flink, está en
+<https://youtu.be/qIuYcMCqOFA>.
+
 ## 6.1 La demostración narrada
 
 `uv run python -m pipeline.demostracion` cuenta una historia de cinco lecturas sobre **un
